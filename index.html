@@ -3,842 +3,303 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin Price Ladder</title>
+<title>Bitcoin Price Ladder v48</title>
 <style>
-:root{--bg:#070a12;--card:#111827;--card2:#0d1320;--text:#eef3ff;--muted:#8d99ae;--line:rgba(255,255,255,.12);--btc:#f7931a;--green:#22c55e;--red:#ef4444;--blue:#60a5fa;--purple:#c084fc;--warn:#facc15;--cyan:#22d3ee}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 10% 0%,rgba(247,147,26,.2),transparent 35%),linear-gradient(180deg,#070a12,#0a1020);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);padding:22px}.wrap{max-width:1460px;margin:0 auto}header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}h1{font-size:clamp(28px,4vw,46px);line-height:1;margin:0;letter-spacing:-.04em}.sub{color:var(--muted);margin-top:8px;line-height:1.45}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}button{border:0;border-radius:14px;background:var(--btc);color:#171006;font-weight:900;padding:12px 16px;cursor:pointer;box-shadow:0 10px 28px rgba(247,147,26,.2)}button.secondary{background:#1f2937;color:var(--text);box-shadow:none;border:1px solid var(--line)}.grid{display:block}.levelTableCard{margin-top:16px}@media(max-width:1080px){header{display:block}.actions{justify-content:flex-start;margin-top:14px}}.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.priceRow{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}.price{font-size:clamp(40px,8vw,84px);font-weight:950;letter-spacing:-.06em;color:#fff}.badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.04);font-weight:800}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--warn)}.muted{color:var(--muted)}.small{font-size:13px}.sectionTitle{font-size:18px;font-weight:950;margin:0 0 12px}.ladder{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(102px,1fr));gap:8px;overflow-x:hidden;padding-bottom:2px}.level{min-width:0;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.035);padding:10px;position:relative;min-height:98px}.level.support{background:linear-gradient(180deg,rgba(34,197,94,.14),rgba(255,255,255,.03))}.level.resistance{background:linear-gradient(180deg,rgba(239,68,68,.14),rgba(255,255,255,.03))}.level.current{border-color:rgba(247,147,26,.7);background:linear-gradient(180deg,rgba(247,147,26,.28),rgba(247,147,26,.08));box-shadow:0 0 0 1px rgba(247,147,26,.18) inset}.level.onchain{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 1px rgba(34,211,238,.12) inset;background:linear-gradient(180deg,rgba(34,211,238,.12),rgba(255,255,255,.03))}.lvlLabel{font-weight:950;font-size:11px;line-height:1.15;word-break:break-word}.lvlPrice{font-size:clamp(13px,1.2vw,18px);font-weight:950;margin-top:7px;letter-spacing:-.03em;white-space:nowrap}.lvlMeta{font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.3}.group{display:inline-block;border-radius:8px;padding:2px 6px;margin-right:4px;font-size:10px;font-weight:900}.D{background:rgba(96,165,250,.18);color:#bfdbfe}.W{background:rgba(192,132,252,.18);color:#e9d5ff}.M{background:rgba(247,147,26,.18);color:#fed7aa}.OC{background:rgba(247,147,26,.22);color:#ffedd5;border-color:rgba(247,147,26,.32)}.BTC{background:rgba(247,147,26,.2);color:#fed7aa}.levelCode{display:inline-flex;align-items:center;gap:4px;font-weight:950;white-space:nowrap}.levelCode .lead{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:20px;border-radius:999px;padding:0 8px;font-size:10px;font-weight:1000;line-height:1;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;letter-spacing:.01em;border:1px solid transparent}.levelCode .lead.D{color:#eff6ff;background:linear-gradient(180deg,rgba(96,165,250,.52),rgba(37,99,235,.20));border-color:rgba(147,197,253,.28)}.levelCode .lead.W{color:#faf5ff;background:linear-gradient(180deg,rgba(192,132,252,.52),rgba(126,34,206,.20));border-color:rgba(216,180,254,.28)}.levelCode .lead.M{color:#f0fdfa;background:linear-gradient(180deg,rgba(45,212,191,.50),rgba(15,118,110,.20));border-color:rgba(94,234,212,.28)}.levelCode .lead.OC{color:#fffbeb;background:linear-gradient(180deg,rgba(245,158,11,.55),rgba(180,83,9,.22));border-color:rgba(251,191,36,.30)}.levelCode .lead.BTC{color:#ffedd5;background:linear-gradient(180deg,rgba(247,147,26,.56),rgba(247,147,26,.20));border-color:rgba(251,146,60,.34)}.levelCode .txt.D{color:#dbeafe}.levelCode .txt.W{color:#f3e8ff}.levelCode .txt.M{color:#ccfbf1}.split{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:720px){.split{grid-template-columns:1fr}.ladder{grid-template-columns:repeat(auto-fit,minmax(95px,1fr))}}.mini{border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.03)}.mini .n{font-size:20px;font-weight:950;margin-top:5px}.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;font-size:13px;vertical-align:top}.table th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.pill{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;display:inline-block}details{margin-top:16px}summary{cursor:pointer;color:#dbeafe;font-weight:900}.err{color:#fecaca}.success{color:#bbf7d0}.loading{opacity:.7;animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.35}}.footer{color:var(--muted);font-size:12px;margin-top:14px;line-height:1.4}.empty{padding:22px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center}.note{font-size:12px;color:var(--muted);line-height:1.4;margin-top:10px}.sideSection{margin-top:16px}.onchainStatus{display:grid;gap:8px}.ocRow{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(34,211,238,.05)}.ocName{font-weight:900}.ocVal{font-weight:950;white-space:nowrap}.ocNote{font-size:11px;color:var(--muted);margin-top:3px}.compactTable th,.compactTable td{padding:8px 6px;font-size:12px}.currentRow td{background:rgba(247,147,26,.14);font-weight:900}.currentRow td:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px}.currentRow td:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px}
+:root{--bg:#070a12;--card:#111827;--text:#eef3ff;--muted:#8d99ae;--line:rgba(255,255,255,.12);--btc:#f7931a;--green:#22c55e;--red:#ef4444;--blue:#60a5fa;--purple:#c084fc;--teal:#2dd4bf;--oc:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,rgba(247,147,26,.2),transparent 35%),linear-gradient(180deg,#070a12,#0a1020);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);padding:22px}.wrap{max-width:1460px;margin:0 auto}header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}h1{font-size:clamp(28px,4vw,46px);line-height:1;margin:0;letter-spacing:-.04em}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}button{border:0;border-radius:14px;background:var(--btc);color:#171006;font-weight:900;padding:12px 16px;cursor:pointer;box-shadow:0 10px 28px rgba(247,147,26,.2)}button.secondary{background:#1f2937;color:var(--text);box-shadow:none;border:1px solid var(--line)}.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.priceRow{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}.price{font-size:clamp(40px,8vw,84px);font-weight:950;letter-spacing:-.06em;color:#fff}.badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.04);font-weight:800}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:#facc15}.muted{color:var(--muted)}.small{font-size:13px}.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.mini{border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.03)}.mini .n{font-size:20px;font-weight:950;margin-top:5px}.axisHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px}.sectionTitle{font-size:18px;font-weight:950;margin:0}.axisControls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.categoryToggles{display:inline-flex;gap:6px;flex-wrap:wrap;padding:4px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.025)}.categoryToggle{border:0;border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.035);color:var(--muted);font-size:12px;font-weight:950;box-shadow:none}.categoryToggle.active[data-cat="D"]{background:rgba(59,130,246,.20);color:#dbeafe;box-shadow:0 0 0 1px rgba(96,165,250,.30) inset}.categoryToggle.active[data-cat="W"]{background:rgba(168,85,247,.20);color:#f3e8ff;box-shadow:0 0 0 1px rgba(192,132,252,.30) inset}.categoryToggle.active[data-cat="M"]{background:rgba(20,184,166,.20);color:#ccfbf1;box-shadow:0 0 0 1px rgba(45,212,191,.30) inset}.categoryToggle.active[data-cat="onchain"]{background:rgba(245,158,11,.20);color:#ffedd5;box-shadow:0 0 0 1px rgba(251,191,36,.30) inset}.categoryToggle:not(.active){opacity:.52}.filterShell{position:relative}.filterPanelToggle{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:950;box-shadow:none;background:rgba(15,23,42,.55);color:#cbd5e1;border:1px solid rgba(148,163,184,.22)}.filterPanelToggle.active{background:rgba(148,163,184,.18);color:#f8fafc;border-color:rgba(203,213,225,.32)}.filterPanel{position:absolute;right:0;top:calc(100% + 8px);width:min(340px,calc(100vw - 44px));z-index:40;border:1px solid var(--line);border-radius:18px;padding:12px;background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,16,32,.98));box-shadow:0 24px 70px rgba(0,0,0,.45);backdrop-filter:blur(12px)}.filterPanel[hidden]{display:none}.filterPanelSection{padding:2px 0 12px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07)}.filterPanelSection:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}.filterPanelTitle{font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 0 8px}.proximityOptions,.autoClusterOptions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.proximityBtn,.autoClusterBtn{border:0;border-radius:999px;padding:8px 11px;background:rgba(255,255,255,.045);color:var(--muted);font-size:12px;font-weight:950;box-shadow:none}.proximityBtn.active,.autoClusterBtn.active{background:rgba(247,147,26,.20);color:#ffedd5;box-shadow:0 0 0 1px rgba(247,147,26,.30) inset}.axisWrap{position:relative;margin-top:18px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));padding:18px 14px 26px;overflow:auto}.rotateChartBtn{position:absolute;left:14px;top:14px;z-index:30;width:38px;height:38px;border-radius:999px;padding:0;background:rgba(15,23,42,.72);color:#ffedd5;border:1px solid rgba(247,147,26,.46);box-shadow:0 8px 22px rgba(0,0,0,.25);font-size:22px;line-height:1}.priceAxis{position:relative;height:520px;margin:44px 8px 0}.axisLine{position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,rgba(34,197,94,.65),rgba(247,147,26,.9),rgba(239,68,68,.65));border-radius:999px;box-shadow:0 0 24px rgba(247,147,26,.16)}.currentAxisDot{position:absolute;top:50%;width:18px;height:18px;border-radius:999px;background:var(--btc);border:2px solid #ffedd5;box-shadow:0 0 0 5px rgba(247,147,26,.20),0 0 22px rgba(247,147,26,.55);transform:translate(-50%,-50%);z-index:4}.axisEndTick{position:absolute;top:calc(50% - 7px);width:2px;height:17px;background:rgba(255,255,255,.55);border-radius:99px}.axisHoverPoint{position:absolute;width:26px;height:32px;transform:translate(-50%,-50%);z-index:6;cursor:crosshair;border-radius:10px}.axisHoverPoint::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 0 0 4px rgba(255,255,255,.10);transform:translate(-50%,-50%);opacity:0;transition:opacity .12s ease}.axisHoverPoint:hover::before{opacity:1}.marker{position:absolute;transform:translateX(-50%);min-width:58px;max-width:110px;text-align:center;z-index:2;background:transparent!important}.marker::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:1px;background:rgba(255,255,255,.18)}.marker.above::after{top:100%;height:var(--stem,40px)}.marker.below::after{bottom:100%;height:var(--stem,40px)}.markerCard{border:1px solid var(--line);border-radius:14px;padding:6px 7px;background:rgba(255,255,255,.075);box-shadow:0 10px 22px rgba(0,0,0,.20),0 0 0 1px rgba(255,255,255,.035) inset;backdrop-filter:blur(8px);overflow:hidden;background-clip:padding-box;contain:paint}.marker.BTC .markerCard{background:linear-gradient(180deg,rgba(247,147,26,.30),rgba(247,147,26,.08));border-color:rgba(247,147,26,.72)}.marker.D .markerCard{background:linear-gradient(180deg,rgba(59,130,246,.22),rgba(59,130,246,.055));border-color:rgba(96,165,250,.52)}.marker.W .markerCard{background:linear-gradient(180deg,rgba(168,85,247,.23),rgba(168,85,247,.055));border-color:rgba(192,132,252,.54)}.marker.M .markerCard{background:linear-gradient(180deg,rgba(20,184,166,.22),rgba(20,184,166,.055));border-color:rgba(45,212,191,.52)}.marker.onchain .markerCard{background:linear-gradient(180deg,rgba(245,158,11,.23),rgba(245,158,11,.055));border-color:rgba(251,191,36,.58)}.marker.cluster{min-width:132px;max-width:220px}.marker.cluster .markerCard{background:linear-gradient(180deg,rgba(100,116,139,.24),rgba(100,116,139,.06));border-color:rgba(203,213,225,.42)}.markerLabel{font-weight:950;font-size:11px;line-height:1.05;white-space:nowrap;letter-spacing:-.02em;display:inline-flex;align-items:center;justify-content:center;gap:3px}.lead{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:19px;border-radius:999px;padding:0 8px;font-size:10px;font-weight:1000;line-height:1;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;border:1px solid transparent;overflow:hidden;background-clip:padding-box}.lead.D{color:#eff6ff;background:linear-gradient(180deg,rgba(96,165,250,.52),rgba(37,99,235,.20));border-color:rgba(147,197,253,.28)}.lead.W{color:#faf5ff;background:linear-gradient(180deg,rgba(192,132,252,.52),rgba(126,34,206,.20));border-color:rgba(216,180,254,.28)}.lead.M{color:#f0fdfa;background:linear-gradient(180deg,rgba(45,212,191,.50),rgba(15,118,110,.20));border-color:rgba(94,234,212,.28)}.lead.OC{color:#fffbeb;background:linear-gradient(180deg,rgba(245,158,11,.55),rgba(180,83,9,.22));border-color:rgba(251,191,36,.30)}.lead.BTC{color:#ffedd5;background:linear-gradient(180deg,rgba(247,147,26,.56),rgba(247,147,26,.20));border-color:rgba(251,146,60,.34)}.markerPrice{font-size:12px;font-weight:950;margin-top:3px;white-space:nowrap}.marker.D .markerPrice{color:#dbeafe}.marker.W .markerPrice{color:#f3e8ff}.marker.M .markerPrice{color:#ccfbf1}.marker.onchain .markerPrice,.marker.BTC .markerPrice{color:#ffedd5}.verticalAxis{position:relative;min-height:640px;margin:44px 8px 0;overflow:hidden}.vAxisLine{position:absolute;left:72px;top:0;bottom:0;width:3px;background:linear-gradient(180deg,rgba(239,68,68,.65),rgba(247,147,26,.9),rgba(34,197,94,.65));border-radius:999px;box-shadow:0 0 24px rgba(247,147,26,.16)}.vAxisEndTick{position:absolute;left:64px;width:18px;height:2px;background:rgba(255,255,255,.55);border-radius:999px;transform:translateY(-50%)}.vCurrentDot{position:absolute;left:72px;width:18px;height:18px;border-radius:999px;background:var(--btc);border:2px solid #ffedd5;box-shadow:0 0 0 5px rgba(247,147,26,.20),0 0 22px rgba(247,147,26,.55);transform:translate(-50%,-50%);z-index:4}.vAxisHoverPoint{position:absolute;left:72px;width:38px;height:26px;transform:translate(-50%,-50%);z-index:6;cursor:crosshair;border-radius:10px}.vAxisHoverPoint::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 0 0 4px rgba(255,255,255,.10);transform:translate(-50%,-50%);opacity:0}.vAxisHoverPoint:hover::before{opacity:1}.vMarker{position:absolute;min-width:58px;max-width:110px;text-align:center;z-index:2;transform:translateY(-50%);background:transparent!important}.vMarker::before{content:'';position:absolute;top:50%;right:100%;height:1px;background:rgba(255,255,255,.18);width:var(--stem,26px);transform:translateY(-50%)}.vMarker .markerCard{padding:6px 7px}.vMarker.BTC .markerCard{background:linear-gradient(180deg,rgba(247,147,26,.30),rgba(247,147,26,.08));border-color:rgba(247,147,26,.72)}.vMarker.D .markerCard{background:linear-gradient(180deg,rgba(59,130,246,.22),rgba(59,130,246,.055));border-color:rgba(96,165,250,.52)}.vMarker.W .markerCard{background:linear-gradient(180deg,rgba(168,85,247,.23),rgba(168,85,247,.055));border-color:rgba(192,132,252,.54)}.vMarker.M .markerCard{background:linear-gradient(180deg,rgba(20,184,166,.22),rgba(20,184,166,.055));border-color:rgba(45,212,191,.52)}.vMarker.onchain .markerCard{background:linear-gradient(180deg,rgba(245,158,11,.23),rgba(245,158,11,.055));border-color:rgba(251,191,36,.58)}.vMarker.cluster .markerCard{background:linear-gradient(180deg,rgba(100,116,139,.24),rgba(100,116,139,.06));border-color:rgba(203,213,225,.42)}.priceAxis.is-hovering .marker:not(.hoverActive),.verticalAxis.is-hovering .vMarker:not(.hoverActive){opacity:.62;filter:saturate(.78)}.marker.hoverActive,.vMarker.hoverActive{z-index:12!important;opacity:1!important;filter:none!important}.marker.hoverActive .markerCard,.vMarker.hoverActive .markerCard{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(255,255,255,.26) inset,0 0 0 3px rgba(255,255,255,.08),0 18px 42px rgba(0,0,0,.36)!important}.marker.hoverActive::after,.vMarker.hoverActive::before{background:rgba(255,255,255,.72)!important;box-shadow:0 0 12px rgba(255,255,255,.32)}.axisHoverPoint.hoverActive::before,.vAxisHoverPoint.hoverActive::before{opacity:1;background:#fff}.hoverTooltip{position:fixed;z-index:99999;pointer-events:none;background:rgba(8,12,22,.96);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:5px 7px;color:#fff;font-weight:900;font-size:11px;box-shadow:0 12px 28px rgba(0,0,0,.38);white-space:nowrap;opacity:0;transform:translate(10px,-10px);transition:opacity .08s ease}.hoverTooltip.show{opacity:1}.hoverTooltip .tipPrice{color:#dbeafe;margin-left:6px}.hoverTooltip .tipPct.plus{color:var(--green);margin-left:6px}.hoverTooltip .tipPct.minus{color:var(--red);margin-left:6px}.levelTableCard,.diagnosticsCard{margin-top:16px}.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;font-size:13px;vertical-align:top}.table th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.currentRow td{background:rgba(247,147,26,.14);font-weight:900}.pill{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;display:inline-block}.onchainStatus{display:grid;gap:8px}.ocRow{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(34,211,238,.05);align-items:center}.ocName{font-weight:900}.ocVal{font-weight:950;white-space:nowrap}.ocNote{font-size:11px;color:var(--muted);margin-top:3px}.detailsBody{margin-top:12px}.empty{padding:22px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center}.footer{color:var(--muted);font-size:12px;margin-top:14px;line-height:1.4}.userGuideCard{margin-top:16px}.userGuideCard summary{cursor:pointer;font-weight:950}.guideBody{margin-top:12px;display:grid;gap:10px}.guideSection{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025);padding:10px 12px}.guideSection>summary{font-size:14px}.guideText{color:#dbe3ef;font-size:13px;line-height:1.55;margin-top:10px}.guideText p{margin:0 0 10px}.guideText p:last-child{margin-bottom:0}.tagDiagram{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:12px;margin-top:10px;overflow:auto;color:#e5e7eb;font-size:13px;line-height:1.35}.tagDiagram .tagBig{font-size:24px;font-weight:950;letter-spacing:.04em;color:#fff}.tagDiagram .guideLine{color:#94a3b8;white-space:pre}.tagDiagram .guideDef{color:#cbd5e1;white-space:pre}.ocCode{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#ffedd5}.functionList{display:grid;gap:10px}.functionItem{border-top:1px solid rgba(255,255,255,.07);padding-top:10px}.functionItem:first-child{border-top:0;padding-top:0}.functionItem .fnTitle{font-weight:950;color:#fff;margin-bottom:4px}
+ .card>details>summary,.sectionTitle{font-size:18px;font-weight:950;margin:0;color:var(--text);letter-spacing:-.01em}
+.card>details>summary{list-style:none;display:flex;align-items:center;gap:10px}
+.card>details>summary::-webkit-details-marker{display:none}
+.card>details>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.25);color:#ffedd5;font-size:13px;line-height:1;transition:transform .14s ease,background .14s ease}
+.card>details[open]>summary::before{content:"▾";background:rgba(247,147,26,.16);border-color:rgba(247,147,26,.35)}
+.guideSection>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer}
+.guideSection>summary::-webkit-details-marker{display:none}
+.guideSection>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.20);color:#cbd5e1;font-size:11px;line-height:1}
+.guideSection[open]>summary::before{content:"▾";color:#ffedd5;background:rgba(247,147,26,.12);border-color:rgba(247,147,26,.28)}
+.guideFormula{display:block;font-weight:900;color:#ffedd5;background:transparent;border:0;border-radius:0;padding:0;margin:0 0 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+.ocLevelBlock{border-top:1px solid rgba(255,255,255,.10);padding-top:12px;margin-top:12px}
+.ocLevelBlock:first-child{border-top:0;padding-top:0;margin-top:0}
+.ocLevelTitle{font-weight:950;color:#fff;margin:0 0 8px}
+@media(max-width:760px){body{padding:12px}header{display:block}.actions{justify-content:flex-start;margin-top:14px}.card{padding:14px;border-radius:20px}.split{grid-template-columns:1fr}.axisControls{justify-content:flex-start}.categoryToggles{border-radius:18px}.filterShell{position:static}.filterPanel{left:22px;right:22px;top:auto;width:auto;margin-top:8px}.priceAxis{height:620px}.marker,.vMarker{min-width:56px;max-width:88px}.markerLabel{font-size:10px}.markerPrice{font-size:11px}.table{table-layout:fixed}.table th,.table td{font-size:11px;padding:7px 4px;overflow-wrap:anywhere}.table th:nth-child(2),.table td:nth-child(2){display:none}}
 
-.axisWrap{margin-top:18px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));padding:18px 14px 26px;overflow:hidden}
-.axisTop{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:8px}
-.priceAxis{position:relative;height:520px;margin:4px 8px 0}
-.axisLine{position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,rgba(34,197,94,.65),rgba(247,147,26,.9),rgba(239,68,68,.65));border-radius:999px;box-shadow:0 0 24px rgba(247,147,26,.16)}
-.axisTick{position:absolute;top:calc(50% - 6px);width:1px;height:15px;background:rgba(255,255,255,.22)}
-.axisTickLabel{display:none}
-.axisEndTick{position:absolute;top:calc(50% - 7px);width:2px;height:17px;background:rgba(255,255,255,.55);border-radius:99px}
-.currentAxisDot{position:absolute;top:50%;width:18px;height:18px;border-radius:999px;background:var(--btc);border:2px solid #ffedd5;box-shadow:0 0 0 5px rgba(247,147,26,.20),0 0 22px rgba(247,147,26,.55);transform:translate(-50%,-50%);z-index:4}
+/* v47 regression fixes */
+.marker::after{pointer-events:none;z-index:1}
+.markerCard{position:relative;z-index:2}
+.clusterTags{display:flex;gap:3px;justify-content:center;align-items:center;flex-wrap:wrap;line-height:1.1}
+.marker.cluster{min-width:132px;max-width:220px}
+.marker.cluster .markerLabel{white-space:normal}
+.clusterInterval{position:absolute;top:50%;height:8px;border-radius:999px;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12),0 0 18px rgba(255,255,255,.36);transform:translateY(-50%);z-index:6;cursor:crosshair;min-width:10px}
+.vClusterInterval{position:absolute;left:72px;width:8px;border-radius:999px;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12),0 0 18px rgba(255,255,255,.36);transform:translateX(-50%);z-index:6;cursor:crosshair;min-height:10px}
+.hoverTooltip .tipPct.plus{color:#22c55e}
+.hoverTooltip .tipPct.minus{color:#ef4444}
 
-.axisHoverPoint{position:absolute;width:26px;height:32px;transform:translate(-50%,-50%);z-index:6;cursor:crosshair;border-radius:10px}
-.axisHoverPoint::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 0 0 4px rgba(255,255,255,.10);transform:translate(-50%,-50%);opacity:0;transition:opacity .12s ease}
-.axisHoverPoint::after{display:none}
-.axisHoverPoint:hover::before{opacity:1}
-.vAxisHoverPoint{position:absolute;left:72px;width:38px;height:26px;transform:translate(-50%,-50%);z-index:6;cursor:crosshair;border-radius:10px}
-.vAxisHoverPoint::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 0 0 4px rgba(255,255,255,.10);transform:translate(-50%,-50%);opacity:0;transition:opacity .12s ease}
-.vAxisHoverPoint::after{display:none}
-.vAxisHoverPoint:hover::before{opacity:1}
-.marker{position:absolute;transform:translateX(-50%);min-width:58px;max-width:94px;text-align:center;z-index:2}
-.marker::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:1px;background:rgba(255,255,255,.18)}
-.markerCard{border:1px solid var(--line);border-radius:14px;padding:6px 7px;background:rgba(255,255,255,.075);box-shadow:0 10px 22px rgba(0,0,0,.20),0 0 0 1px rgba(255,255,255,.035) inset;backdrop-filter:blur(8px);overflow:hidden;background-clip:padding-box;isolation:isolate;contain:paint}
-.marker.current .markerCard,.marker.BTC .markerCard{background:linear-gradient(180deg,rgba(247,147,26,.30),rgba(247,147,26,.08));border-color:rgba(247,147,26,.72);box-shadow:0 0 0 1px rgba(247,147,26,.16) inset,0 10px 22px rgba(0,0,0,.20)}
-.marker.D .markerCard{background:linear-gradient(180deg,rgba(59,130,246,.22),rgba(59,130,246,.055));border-color:rgba(96,165,250,.52);box-shadow:0 0 0 1px rgba(96,165,250,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.marker.W .markerCard{background:linear-gradient(180deg,rgba(168,85,247,.23),rgba(168,85,247,.055));border-color:rgba(192,132,252,.54);box-shadow:0 0 0 1px rgba(192,132,252,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.marker.M .markerCard{background:linear-gradient(180deg,rgba(20,184,166,.22),rgba(20,184,166,.055));border-color:rgba(45,212,191,.52);box-shadow:0 0 0 1px rgba(45,212,191,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.marker.onchain .markerCard{background:linear-gradient(180deg,rgba(245,158,11,.23),rgba(245,158,11,.055));border-color:rgba(251,191,36,.58);box-shadow:0 0 0 1px rgba(245,158,11,.12) inset,0 10px 22px rgba(0,0,0,.20)}
-.marker.D .markerPrice{color:#dbeafe}.marker.W .markerPrice{color:#f3e8ff}.marker.M .markerPrice{color:#ccfbf1}.marker.onchain .markerPrice{color:#ffedd5}.marker.BTC .markerPrice,.marker.current .markerPrice{color:#ffedd5}
-.marker.above::after{top:100%;height:var(--stem,40px)}
-.marker.below::after{bottom:100%;height:var(--stem,40px)}
-.markerLabel{font-weight:950;font-size:11px;line-height:1.05;white-space:nowrap;letter-spacing:-.02em;display:inline-flex;align-items:center;justify-content:center;gap:3px}
-.markerLabel .lead{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:19px;border-radius:999px;padding:0 8px;font-size:10px;font-weight:1000;line-height:1;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;letter-spacing:.01em;border:1px solid transparent;overflow:hidden;background-clip:padding-box}
-.markerLabel .lead.D{color:#eff6ff;background:linear-gradient(180deg,rgba(96,165,250,.52),rgba(37,99,235,.20));border-color:rgba(147,197,253,.28);margin:0}
-.markerLabel .lead.W{color:#faf5ff;background:linear-gradient(180deg,rgba(192,132,252,.52),rgba(126,34,206,.20));border-color:rgba(216,180,254,.28);margin:0}
-.markerLabel .lead.M{color:#f0fdfa;background:linear-gradient(180deg,rgba(45,212,191,.50),rgba(15,118,110,.20));border-color:rgba(94,234,212,.28);margin:0}
-.markerLabel .lead.O{color:#fffbeb;background:linear-gradient(180deg,rgba(245,158,11,.55),rgba(180,83,9,.22));border-color:rgba(251,191,36,.30);margin:0}
-.markerLabel .lead.B{color:#ffedd5;background:linear-gradient(180deg,rgba(247,147,26,.48),rgba(247,147,26,.18));margin:0}
-.markerLabel .lead.BTC{color:#ffedd5;background:linear-gradient(180deg,rgba(247,147,26,.56),rgba(247,147,26,.20));border-color:rgba(251,146,60,.34);margin:0}
-.markerLabel .lead.OC{color:#fffbeb;background:linear-gradient(180deg,rgba(245,158,11,.55),rgba(180,83,9,.22));border-color:rgba(251,191,36,.30);margin:0}
-.markerLabel .txt{font-weight:1000}
-.markerLabel .txt.D{color:#dbeafe}
-.markerLabel .txt.W{color:#f3e8ff}
-.markerLabel .txt.M{color:#ccfbf1}
-.markerLabel .txt.O{color:#ffedd5}
-.markerLabel .txt.B{color:#fed7aa}
-.markerLabel .txt.BTC{color:#fed7aa}
-.markerPrice{font-size:12px;font-weight:950;margin-top:3px;white-space:nowrap}
-.markerMeta{display:none}
-.axisNotice{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
+/* v48 requested layout + collision fixes */
+.onchainCard{margin-top:16px}
+.statusStack{display:flex;flex-direction:column;align-items:flex-start}
+.priceSourceCount{font-size:12px;color:var(--muted);margin-top:5px;font-weight:700}
+.clusterTags{display:grid!important;grid-template-columns:repeat(2,max-content);gap:3px 4px;justify-content:center;align-items:center;line-height:1.05}
+.marker.cluster,.vMarker.cluster{min-width:128px;max-width:218px}
+.marker.cluster .markerCard,.vMarker.cluster .markerCard{padding:7px 8px}
+.marker.cluster .markerLabel,.vMarker.cluster .markerLabel{white-space:normal;display:block}
+.tableDistance{font-weight:950;white-space:nowrap}
+.tableDistance.plus{color:var(--green)}
+.tableDistance.minus{color:var(--red)}
+.tableDistance.neutral{color:#facc15}
 
-.axisHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px}
-.axisModeSwitch{display:inline-flex;gap:6px;padding:4px;border:1px solid rgba(148,163,184,.20);border-radius:999px;background:rgba(15,23,42,.55);box-shadow:0 0 0 1px rgba(255,255,255,.025) inset}
-.axisModeBtn{border:0;border-radius:999px;padding:7px 11px;background:transparent;color:#94a3b8;font-size:12px;font-weight:950;box-shadow:none;cursor:pointer;transition:background .12s ease,color .12s ease,box-shadow .12s ease}
-.axisModeBtn.active{background:rgba(148,163,184,.18);color:#f8fafc;box-shadow:0 0 0 1px rgba(203,213,225,.20) inset}
-.verticalAxis{position:relative;min-height:640px;margin:10px 8px 0;overflow:hidden}
-.vAxisLine{position:absolute;left:72px;top:0;bottom:0;width:3px;background:linear-gradient(180deg,rgba(239,68,68,.65),rgba(247,147,26,.9),rgba(34,197,94,.65));border-radius:999px;box-shadow:0 0 24px rgba(247,147,26,.16)}
-.vAxisEndLabel{position:absolute;left:0;width:64px;text-align:right;color:var(--muted);font-size:12px;font-weight:850;transform:translateY(-50%);white-space:nowrap}
-.vAxisEndTick{position:absolute;left:64px;width:18px;height:2px;background:rgba(255,255,255,.55);border-radius:999px;transform:translateY(-50%)}
-.vCurrentDot{position:absolute;left:72px;width:18px;height:18px;border-radius:999px;background:var(--btc);border:2px solid #ffedd5;box-shadow:0 0 0 5px rgba(247,147,26,.20),0 0 22px rgba(247,147,26,.55);transform:translate(-50%,-50%);z-index:4}
-.vMarker{position:absolute;min-width:58px;max-width:96px;text-align:center;z-index:2;transform:translateY(-50%)}
-.vMarker::before{content:'';position:absolute;top:50%;right:100%;height:1px;background:rgba(255,255,255,.18);width:var(--stem,26px);transform:translateY(-50%)}
-.vMarker .markerCard{padding:6px 7px}
-.vMarker.BTC .markerCard{background:linear-gradient(180deg,rgba(247,147,26,.30),rgba(247,147,26,.08));border-color:rgba(247,147,26,.72);box-shadow:0 0 0 1px rgba(247,147,26,.16) inset,0 10px 22px rgba(0,0,0,.20)}
-.vMarker.D .markerCard{background:linear-gradient(180deg,rgba(59,130,246,.22),rgba(59,130,246,.055));border-color:rgba(96,165,250,.52);box-shadow:0 0 0 1px rgba(96,165,250,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.vMarker.W .markerCard{background:linear-gradient(180deg,rgba(168,85,247,.23),rgba(168,85,247,.055));border-color:rgba(192,132,252,.54);box-shadow:0 0 0 1px rgba(192,132,252,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.vMarker.M .markerCard{background:linear-gradient(180deg,rgba(20,184,166,.22),rgba(20,184,166,.055));border-color:rgba(45,212,191,.52);box-shadow:0 0 0 1px rgba(45,212,191,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.vMarker.onchain .markerCard{background:linear-gradient(180deg,rgba(245,158,11,.23),rgba(245,158,11,.055));border-color:rgba(251,191,36,.58);box-shadow:0 0 0 1px rgba(245,158,11,.12) inset,0 10px 22px rgba(0,0,0,.20)}
-.vMarker.D .markerPrice{color:#dbeafe}.vMarker.W .markerPrice{color:#f3e8ff}.vMarker.M .markerPrice{color:#ccfbf1}.vMarker.onchain .markerPrice{color:#ffedd5}.vMarker.BTC .markerPrice{color:#ffedd5}
-
-@media(max-width:760px){.priceAxis{height:620px}.marker{min-width:56px;max-width:88px}.markerCard{padding:6px 5px}.markerLabel{font-size:10px}.markerPrice{font-size:11px}.axisTickLabel{display:none}}
+ .card>details>summary,.sectionTitle{font-size:18px;font-weight:950;margin:0;color:var(--text);letter-spacing:-.01em}
+.card>details>summary{list-style:none;display:flex;align-items:center;gap:10px}
+.card>details>summary::-webkit-details-marker{display:none}
+.card>details>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.25);color:#ffedd5;font-size:13px;line-height:1;transition:transform .14s ease,background .14s ease}
+.card>details[open]>summary::before{content:"▾";background:rgba(247,147,26,.16);border-color:rgba(247,147,26,.35)}
+.guideSection>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer}
+.guideSection>summary::-webkit-details-marker{display:none}
+.guideSection>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.20);color:#cbd5e1;font-size:11px;line-height:1}
+.guideSection[open]>summary::before{content:"▾";color:#ffedd5;background:rgba(247,147,26,.12);border-color:rgba(247,147,26,.28)}
+.guideFormula{display:block;font-weight:900;color:#ffedd5;background:transparent;border:0;border-radius:0;padding:0;margin:0 0 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+.ocLevelBlock{border-top:1px solid rgba(255,255,255,.10);padding-top:12px;margin-top:12px}
+.ocLevelBlock:first-child{border-top:0;padding-top:0;margin-top:0}
+.ocLevelTitle{font-weight:950;color:#fff;margin:0 0 8px}
+@media(max-width:760px){.clusterTags{grid-template-columns:repeat(2,max-content)}.marker.cluster,.vMarker.cluster{max-width:158px}}
 
 
-/* v23 fix: prevent category utility classes (D/W/M/BTC) from painting the outer marker container.
-   The colored badge/card should be the only painted rounded shape; otherwise rectangular background leaks outside rounded corners. */
-.marker.D,.marker.W,.marker.M,.marker.BTC{
-  background:transparent!important;
-  color:inherit!important;
-  border-color:transparent!important;
-  box-shadow:none!important;
-}
-.marker.D::before,.marker.W::before,.marker.M::before,.marker.BTC::before{display:none!important}
-.markerCard{overflow:hidden!important;border-radius:14px!important;background-clip:padding-box!important}
-.markerLabel .lead{overflow:hidden!important;border-radius:999px!important;background-clip:padding-box!important}
+/* v49 chart geometry fixes */
+/* v50 geometry tightening */
+.axisHoverPoint,.vAxisHoverPoint{z-index:7}
+.axisHoverPoint::before,.vAxisHoverPoint::before{width:6px!important;height:6px!important;box-shadow:0 0 0 3px rgba(255,255,255,.10)!important}
+.marker::after,.vMarker::before{opacity:.82}
 
+.clusterInterval{height:2px!important;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 8px rgba(255,255,255,.30)!important;min-width:8px!important;transform:translateY(-50%)!important}
+.vClusterInterval{width:2px!important;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 8px rgba(255,255,255,.30)!important;min-height:8px!important;transform:translate(-50%,0)!important}
+.axisHoverPoint::before,.vAxisHoverPoint::before{width:7px!important;height:7px!important;box-shadow:0 0 0 3px rgba(255,255,255,.10)!important}
+.marker::after,.vMarker::before{z-index:1!important}
+.markerCard{position:relative;z-index:2}
 
-/* v26 fix: apply the same outer-container paint reset to vertical-view markers.
-   Only the inner .markerCard and badge should carry category color. */
-.vMarker.D,.vMarker.W,.vMarker.M,.vMarker.BTC{
-  background:transparent!important;
-  color:inherit!important;
-  border-color:transparent!important;
-  box-shadow:none!important;
-}
-.vMarker.D::after,.vMarker.W::after,.vMarker.M::after,.vMarker.BTC::after{display:none!important}
-.vMarker .markerCard{overflow:hidden!important;border-radius:14px!important;background-clip:padding-box!important;isolation:isolate;contain:paint}
-
-
-/* v31 layout cleanup */
-.split{grid-template-columns:repeat(2,minmax(0,1fr))}
-.diagnosticsCard{margin-top:16px}
-.detailsBody{margin-top:12px}
-.ocRow{align-items:center}
-.ocName{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-@media(max-width:640px){
-  body{padding:12px}
-  .card{padding:14px;border-radius:20px}
-  .split{grid-template-columns:1fr}
-  .axisWrap{padding-left:10px;padding-right:10px}
-  .compactTable{table-layout:fixed}
-  .compactTable th,.compactTable td{font-size:11px;padding:7px 4px;overflow-wrap:anywhere}
-  .compactTable th:nth-child(2),.compactTable td:nth-child(2){display:none}
-  .compactTable th:nth-child(1),.compactTable td:nth-child(1){width:28%}
-  .compactTable th:nth-child(3),.compactTable td:nth-child(3){width:27%}
-  .compactTable th:nth-child(4),.compactTable td:nth-child(4){width:18%}
-  .compactTable th:nth-child(5),.compactTable td:nth-child(5){width:27%}
-  .levelCode .lead{min-width:30px;padding:0 6px;font-size:9px}
-}
-
-
-
-.hoverTooltip{position:fixed;z-index:99999;pointer-events:none;background:rgba(8,12,22,.96);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:5px 7px;color:#fff;font-weight:900;font-size:11px;box-shadow:0 12px 28px rgba(0,0,0,.38);white-space:nowrap;opacity:0;transform:translate(10px,-10px);transition:opacity .08s ease}
-.hoverTooltip.show{opacity:1}
-.hoverTooltip .tipCode{color:#fff}
-.hoverTooltip .tipPrice{color:#dbeafe;margin-left:6px}
-
-/* v33 filters and unified hover intelligence */
-.axisControls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.categoryToggles{display:inline-flex;gap:6px;flex-wrap:wrap;padding:4px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.025)}
-.categoryToggle{border:0;border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.035);color:var(--muted);font-size:12px;font-weight:950;box-shadow:none;cursor:pointer;transition:opacity .12s ease,background .12s ease,color .12s ease,box-shadow .12s ease}
-.categoryToggle.active[data-cat="D"]{background:rgba(59,130,246,.20);color:#dbeafe;box-shadow:0 0 0 1px rgba(96,165,250,.30) inset}
-.categoryToggle.active[data-cat="W"]{background:rgba(168,85,247,.20);color:#f3e8ff;box-shadow:0 0 0 1px rgba(192,132,252,.30) inset}
-.categoryToggle.active[data-cat="M"]{background:rgba(20,184,166,.20);color:#ccfbf1;box-shadow:0 0 0 1px rgba(45,212,191,.30) inset}
-.categoryToggle.active[data-cat="onchain"]{background:rgba(245,158,11,.20);color:#ffedd5;box-shadow:0 0 0 1px rgba(251,191,36,.30) inset}
-.categoryToggle:not(.active){opacity:.52}
-.priceAxis.is-hovering .marker:not(.hoverActive),.verticalAxis.is-hovering .vMarker:not(.hoverActive){opacity:.62;filter:saturate(.78)}
-.priceAxis.is-hovering .axisHoverPoint:not(.hoverActive),.verticalAxis.is-hovering .vAxisHoverPoint:not(.hoverActive){opacity:.62}
-.marker.hoverActive,.vMarker.hoverActive{z-index:12!important;opacity:1!important;filter:none!important}
-.marker.hoverActive .markerCard,.vMarker.hoverActive .markerCard{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(255,255,255,.26) inset,0 0 0 3px rgba(255,255,255,.08),0 18px 42px rgba(0,0,0,.36)!important}
-.marker.hoverActive::after,.vMarker.hoverActive::before{background:rgba(255,255,255,.72)!important;box-shadow:0 0 12px rgba(255,255,255,.32)}
-.axisHoverPoint.hoverActive::before,.vAxisHoverPoint.hoverActive::before{opacity:1;background:#fff;box-shadow:0 0 0 5px rgba(255,255,255,.16),0 0 14px rgba(255,255,255,.36)}
-
-.filterShell{position:relative;display:inline-flex;align-items:center}
-.filterPanelToggle{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:950;box-shadow:none;background:rgba(15,23,42,.55);color:#cbd5e1;border:1px solid rgba(148,163,184,.22);cursor:pointer;transition:background .12s ease,color .12s ease,border-color .12s ease}
-.filterPanelToggle.active{background:rgba(148,163,184,.18);color:#f8fafc;border-color:rgba(203,213,225,.32)}
-.filterPanel{position:absolute;right:0;top:calc(100% + 8px);width:min(340px,calc(100vw - 44px));z-index:40;border:1px solid var(--line);border-radius:18px;padding:12px;background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,16,32,.98));box-shadow:0 24px 70px rgba(0,0,0,.45);backdrop-filter:blur(12px)}
-.filterPanel[hidden]{display:none}
-.filterPanelSection{padding:2px 0 12px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07)}
-.filterPanelSection:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
-.filterPanelTitle{font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 0 8px}
-.proximityOptions,.orientationOptions,.autoClusterOptions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.proximityBtn,.autoClusterBtn{border:0;border-radius:999px;padding:8px 11px;background:rgba(255,255,255,.045);color:var(--muted);font-size:12px;font-weight:950;box-shadow:none;cursor:pointer;transition:background .12s ease,color .12s ease,box-shadow .12s ease}
-.proximityBtn.active,.autoClusterBtn.active{background:rgba(247,147,26,.20);color:#ffedd5;box-shadow:0 0 0 1px rgba(247,147,26,.30) inset}
-.proximitySliderWrap{margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-.proximitySlider{width:100%;accent-color:var(--btc)}
-.proximitySliderValue{font-size:12px;font-weight:950;color:#ffedd5;min-width:46px;text-align:right}
-.clusterHint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.35}
-.marker.cluster{min-width:106px;max-width:142px}
-.marker.cluster .markerCard,.vMarker.cluster .markerCard{background:linear-gradient(180deg,rgba(100,116,139,.24),rgba(100,116,139,.06));border-color:rgba(203,213,225,.42);box-shadow:0 0 0 1px rgba(203,213,225,.10) inset,0 10px 22px rgba(0,0,0,.20)}
-.marker.cluster .markerLabel,.vMarker.cluster .markerLabel{gap:2px;max-width:132px;flex-wrap:wrap}
-.marker.cluster .markerPrice,.vMarker.cluster .markerPrice{color:#e5e7eb;font-size:10px;line-height:1.05;letter-spacing:-.03em}
-.axisHoverPoint.clusterRange{height:32px;min-width:0;transform:translateY(-50%);border-radius:999px;overflow:visible}
-.axisHoverPoint.clusterRange::before{left:0;top:50%;width:100%;height:2px;border-radius:999px;transform:translateY(-50%)}
-.axisHoverPoint.clusterRange::after{content:'';display:block;position:absolute;left:50%;top:50%;width:max(28px,100%);height:32px;transform:translate(-50%,-50%);border-radius:999px;background:transparent}
-.vAxisHoverPoint.clusterRange{width:38px;min-height:0;transform:translate(-50%,0);border-radius:999px;overflow:visible}
-.vAxisHoverPoint.clusterRange::before{left:50%;top:0;width:2px;height:100%;border-radius:999px;transform:translateX(-50%)}
-.vAxisHoverPoint.clusterRange::after{content:'';display:block;position:absolute;left:50%;top:50%;width:38px;height:max(28px,100%);transform:translate(-50%,-50%);border-radius:999px;background:transparent}
-@media(max-width:760px){.axisControls{justify-content:flex-start}.categoryToggles{border-radius:18px}.categoryToggle{padding:7px 9px}.filterShell{position:static}.filterPanel{left:22px;right:22px;top:auto;width:auto;margin-top:8px}.proximityBtn,.autoClusterBtn{padding:8px 10px}}
-
+/* v51: cluster interval appears only during hover intelligence, like regular white dots */
+.clusterInterval,.vClusterInterval{opacity:0!important;pointer-events:none!important;transition:opacity .10s ease!important}
+.clusterInterval.hoverActive,.vClusterInterval.hoverActive{opacity:1!important;pointer-events:auto!important}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header>
-  <div><h1>Bitcoin Price Ladder</h1></div>
-  <div class="actions"><button id="refreshBtn">Refresh now</button><button class="secondary" id="toggleAuto">Auto refresh: off</button></div>
-</header>
-<div class="grid">
-  <main class="card">
-    <div class="priceRow"><div id="price" class="price">Loading…</div><div><div id="status" class="badge loading">Starting</div><div id="updated" class="muted small" style="margin-top:8px">—</div></div></div>
-    <div class="split" style="margin-top:18px">
-      <div class="mini"><div class="muted small">Nearest support</div><div id="support" class="n">—</div></div>
-      <div class="mini"><div class="muted small">Nearest resistance</div><div id="resistance" class="n">—</div></div>
+<header><div><h1>Bitcoin Price Ladder</h1></div><div class="actions"><button id="refreshBtn">Refresh now</button><button class="secondary" id="toggleAuto">Auto refresh: off</button></div></header>
+<div class="card"><div class="priceRow"><div id="price" class="price">Loading…</div><div><div id="status" class="badge loading">Starting</div><div id="updated" class="muted small" style="margin-top:8px">—</div></div></div><div class="split"><div class="mini"><div class="muted small">Nearest support</div><div id="support" class="n">—</div></div><div class="mini"><div class="muted small">Nearest resistance</div><div id="resistance" class="n">—</div></div></div><div class="axisHeader"><h2 class="sectionTitle">Linear support / resistance axis</h2><div class="axisControls"><div class="categoryToggles"><button class="categoryToggle active" data-cat="D">Daily</button><button class="categoryToggle active" data-cat="W">Weekly</button><button class="categoryToggle active" data-cat="M">Monthly</button><button class="categoryToggle active" data-cat="onchain">On-chain</button></div><div class="filterShell"><button id="filterPanelBtn" class="filterPanelToggle" aria-expanded="false">Advanced</button><div id="filterPanel" class="filterPanel" hidden><div class="filterPanelSection"><div class="filterPanelTitle">Distance from BTC</div><div class="proximityOptions"><button class="proximityBtn" data-prox="2">±2%</button><button class="proximityBtn" data-prox="5">±5%</button><button class="proximityBtn" data-prox="10">±10%</button><button class="proximityBtn active" data-prox="all">All</button></div></div><div class="filterPanelSection"><div class="autoClusterOptions"><span class="filterPanelTitle" style="margin:0;flex:1">Auto-cluster</span><button id="autoClusterOn" class="autoClusterBtn active">On</button><button id="autoClusterOff" class="autoClusterBtn">Off</button></div></div></div></div></div></div><div id="ladder" class="axisWrap"><div class="empty">Loading levels…</div></div></div>
+<section class="card levelTableCard"><details id="levelTableDetails"><summary>Level Table</summary><div id="maTable" style="margin-top:12px"><div class="empty">Loading level table…</div></div></details></section>
+<section class="card userGuideCard"><details id="userGuideDetails"><summary>User Guide</summary><div class="guideBody">
+  <details class="guideSection"><summary>How to Read the Ladder</summary><div class="guideText">
+    <p>This tool visualizes Bitcoin market structure using a combination of traditional moving averages and on-chain valuation levels.</p>
+    <p>The chart is designed to show where important support and resistance levels are located relative to the current BTC price.</p>
+    <p>Levels above the current BTC price are treated as resistances.</p>
+    <p>Levels below the current BTC price are treated as supports.</p>
+    <p>The tool does not make predictions. It is intended as a visual framework for understanding market positioning and historical valuation zones.</p>
+  </div></details>
+  <details class="guideSection"><summary>Tag Structure</summary><div class="guideText">
+    <div class="tagDiagram" aria-label="Moving average tag structure">
+      <div class="tagBig">X##MA</div>
+      <div class="guideLine">│ │ └── MA = Moving Average</div>
+      <div class="guideLine">│ └──── ## = 7, 25, 99, 200, 365</div>
+      <div class="guideLine">└────── X  = D, W, M</div>
+      <div class="guideDef">          D = Daily</div>
+      <div class="guideDef">          W = Weekly</div>
+      <div class="guideDef">          M = Monthly</div>
     </div>
-    <div class="axisHeader">
-      <h2 class="sectionTitle" style="margin:0">Linear support / resistance axis</h2>
-      <div class="axisControls">
-        <div class="categoryToggles" aria-label="Level visibility filters">
-          <button class="categoryToggle active" data-cat="D" type="button">Daily</button>
-          <button class="categoryToggle active" data-cat="W" type="button">Weekly</button>
-          <button class="categoryToggle active" data-cat="M" type="button">Monthly</button>
-          <button class="categoryToggle active" data-cat="onchain" type="button">On-chain</button>
-        </div>
-        <div class="filterShell">
-          <button id="filterPanelBtn" class="filterPanelToggle" type="button" aria-expanded="false">Advanced</button>
-          <div id="filterPanel" class="filterPanel" hidden>
-            <div class="filterPanelSection">
-              <div class="filterPanelTitle">Orientation</div>
-              <div class="axisModeSwitch orientationOptions" aria-label="Axis view mode">
-                <button id="axisHorizontal" class="axisModeBtn active" type="button">Horizontal</button>
-                <button id="axisVertical" class="axisModeBtn" type="button">Vertical</button>
-              </div>
-            </div>
-            <div class="filterPanelSection">
-              <div class="filterPanelTitle">Distance from BTC</div>
-              <div class="proximityOptions" aria-label="Proximity filter">
-                <button class="proximityBtn" data-prox="2" type="button">±2%</button>
-                <button class="proximityBtn" data-prox="5" type="button">±5%</button>
-                <button class="proximityBtn" data-prox="10" type="button">±10%</button>
-                <button class="proximityBtn active" data-prox="all" type="button">All</button>
-              </div>
-              <div class="proximitySliderWrap">
-                <input id="proximitySlider" class="proximitySlider" type="range" min="1" max="25" step="0.5" value="10" aria-label="Custom distance from BTC">
-                <div id="proximitySliderValue" class="proximitySliderValue">±10%</div>
-              </div>
-            </div>
-            <div class="filterPanelSection">
-              <div class="autoClusterOptions">
-                <span class="filterPanelTitle" style="margin:0;flex:1">Auto-cluster</span>
-                <button id="autoClusterOn" class="autoClusterBtn" type="button">On</button>
-                <button id="autoClusterOff" class="autoClusterBtn active" type="button">Off</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="tagDiagram" aria-label="On-chain tag structure">
+      <div class="guideDef"><span class="ocCode">RP</span>    = Realized Price</div>
+      <div class="guideDef"><span class="ocCode">STHCB</span> = Short-Term Holder Cost Basis</div>
+      <div class="guideDef"><span class="ocCode">LTHCB</span> = Long-Term Holder Cost Basis</div>
+      <div class="guideDef"><span class="ocCode">TMM</span>   = True Market Mean</div>
     </div>
-    <div id="ladder" class="axisWrap"><div class="empty">Loading levels…</div></div>
-  </main>
-</div>
-<section class="card levelTableCard">
-  <h2 class="sectionTitle">Level table</h2>
-  <div id="maTable"><div class="empty">Loading level table…</div></div>
-  <div class="sideSection">
-    <h2 class="sectionTitle">On-chain levels</h2>
-    <div id="onchainBox" class="onchainStatus"><div class="empty">Loading on-chain levels…</div></div>
-  </div>
-</section>
-<section class="card diagnosticsCard">
-  <details>
-    <summary>Show verification, source, and diagnostics details</summary>
-    <div id="detailsBody" class="detailsBody"></div>
-  </details>
-</section>
+  </div></details>
+  <details class="guideSection"><summary>On-Chain Levels</summary><div class="guideText">
+    <div class="ocLevelBlock">
+      <div class="ocLevelTitle">Realized Price (RP)</div>
+      <p>Realized Price represents the average acquisition price of all BTC based on the price at which each coin last moved on-chain.</p>
+      <p>It is calculated as:</p>
+      <p class="guideFormula">Realized Cap ÷ Circulating Supply</p>
+      <p>Realized Cap is calculated by valuing each BTC at the price when it last moved on-chain, rather than using the current market price.</p>
+      <p>Historically, Realized Price has acted as an important long-term support level during bear markets.</p>
+    </div>
+    <div class="ocLevelBlock">
+      <div class="ocLevelTitle">Short-Term Holder Cost Basis (STHCB)</div>
+      <p>STHCB estimates the average cost basis of short-term Bitcoin holders.</p>
+      <p>Short-term holders are typically defined as coins moved within the last ~155 days.</p>
+      <p>This level often reflects speculative market positioning and reacts relatively quickly to market changes.</p>
+    </div>
+    <div class="ocLevelBlock">
+      <div class="ocLevelTitle">Long-Term Holder Cost Basis (LTHCB)</div>
+      <p>LTHCB estimates the average cost basis of long-term Bitcoin holders.</p>
+      <p>Long-term holders are generally defined as coins held for more than ~155 days.</p>
+      <p>This metric tends to move slowly and is often associated with macro accumulation zones and strong-holder positioning.</p>
+    </div>
+    <div class="ocLevelBlock">
+      <div class="ocLevelTitle">True Market Mean (TMM)</div>
+      <p>True Market Mean is a valuation model derived from Cointime Economics.</p>
+      <p>It attempts to estimate a more economically weighted average market cost basis by adjusting for economically inactive supply.</p>
+      <p>TMM generally moves more slowly than spot price and may help identify macro market equilibrium zones.</p>
+    </div>
+  </div></details>
+  <details class="guideSection"><summary>Functions</summary><div class="guideText functionList">
+    <div class="functionItem"><div class="fnTitle">Horizontal / Vertical View</div><div>Use the rotation button on the chart to switch between horizontal and vertical ladder layouts.</div></div>
+    <div class="functionItem"><div class="fnTitle">Auto Cluster</div><div>When Auto Cluster is enabled, nearby levels may be grouped into clusters to reduce visual overlap and improve readability. Cluster ranges are highlighted on the axis during hover. When Auto Cluster is disabled, levels are displayed individually.</div></div>
+    <div class="functionItem"><div class="fnTitle">Hover Intelligence</div><div>Hovering over a tag highlights its exact position on the axis. Hovering over a cluster tag highlights the entire cluster range. The tooltip displays the level name, current level value, and distance from current BTC price. Positive percentages indicate resistances above current BTC price. Negative percentages indicate supports below current BTC price.</div></div>
+    <div class="functionItem"><div class="fnTitle">Distance Filter</div><div>The distance filter limits which levels are displayed relative to the current BTC price. Available options are ±2%, ±5%, ±10%, and All. Smaller ranges focus on nearby market structure. All displays every available level regardless of distance from current BTC price.</div></div>
+  </div></details>
+</div></details></section>
+<section class="card diagnosticsCard"><details><summary>Verification, source, and diagnostics details</summary><div id="detailsBody" class="detailsBody"></div></details></section>
 </div>
 <script>
 const $=id=>document.getElementById(id);
 const fmtUSD=n=>Number.isFinite(n)?n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}):'—';
 const pct=(a,b)=>((a-b)/b*100);
 const nowStr=()=>new Date().toLocaleString();
-let autoTimer=null, lastCurrent=null, lastMas=[], lastOnchain=[], lastDiag=[], lastPriceRows=[], lastOnchainDiag=[];
-let axisMode=localStorage.getItem("btcLadderAxisMode") || "horizontal";
-let categoryFilters={D:true,W:true,M:true,onchain:true};
-try{categoryFilters={...categoryFilters,...JSON.parse(localStorage.getItem('btcLadderFilters')||'{}')};}catch(_){/* keep defaults */}
+let autoTimer=null,lastCurrent=null,lastMas=[],lastOnchain=[],lastDiag=[],lastPriceRows=[],lastOnchainDiag=[];
+let axisMode=localStorage.getItem('btcLadderAxisMode') || 'horizontal';
+let categoryFilters={D:true,W:true,M:true,onchain:true};try{categoryFilters={...categoryFilters,...JSON.parse(localStorage.getItem('btcLadderFilters')||'{}')}}catch(_){ }
 let proximityFilter=localStorage.getItem('btcLadderProximity') || 'all';
-let autoCluster=(localStorage.getItem('btcLadderAutoCluster')==='true');
-async function fetchJson(url, opts={}){const r=await fetch(url,{cache:'no-store',...opts}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json();}
-async function fetchText(url){const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.text();}
-const priceSources=[
- {name:'Coinbase', url:'https://api.coinbase.com/v2/prices/BTC-USD/spot', parse:j=>Number(j.data.amount)},
- {name:'Binance', url:'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', parse:j=>Number(j.price)},
- {name:'Binance Vision', url:'https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT', parse:j=>Number(j.price)},
- {name:'CoinGecko', url:'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', parse:j=>Number(j.bitcoin.usd)},
- {name:'Kraken', url:'https://api.kraken.com/0/public/Ticker?pair=XBTUSD', parse:j=>Number(j.result.XXBTZUSD.c[0])}
+let autoCluster=localStorage.getItem('btcLadderAutoCluster')===null ? true : localStorage.getItem('btcLadderAutoCluster')==='true';
+const fetchJson=async url=>{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status+' '+url);return r.json()};
+async function getPrice(){const sources=[['Coinbase','https://api.coinbase.com/v2/prices/BTC-USD/spot',j=>Number(j?.data?.amount)],['Bitstamp','https://www.bitstamp.net/api/v2/ticker/btcusd/',j=>Number(j?.last)],['Binance','https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',j=>Number(j?.price)],['Kraken','https://api.kraken.com/0/public/Ticker?pair=XBTUSD',j=>Number(j?.result?.XXBTZUSD?.c?.[0])]];const rows=[];for(const [name,url,parse] of sources){try{const n=parse(await fetchJson(url));rows.push({name,url,price:n,ok:Number.isFinite(n)&&n>0,msg:Number.isFinite(n)?fmtUSD(n):'bad parse'})}catch(e){rows.push({name,url,price:NaN,ok:false,msg:e.message})}}const good=rows.filter(r=>r.ok);if(!good.length)throw new Error('No price source loaded');good.sort((a,b)=>a.price-b.price);return{price:good[Math.floor(good.length/2)].price,rows}}
+async function getKlines(interval,limit){const urls=[`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`,`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`];let last;for(const url of urls){try{return{data:await fetchJson(url),url}}catch(e){last=e}}throw last}
+const avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
+async function getMAs(){const specs=[{group:'D',title:'Daily',interval:'1d',periods:[7,25,99,200,365],limit:400},{group:'W',title:'Weekly',interval:'1w',periods:[7,25,99,200,365],limit:400},{group:'M',title:'Monthly',interval:'1M',periods:[7,25,99],limit:120}];const out=[],diag=[];for(const spec of specs){try{const {data,url}=await getKlines(spec.interval,spec.limit);const closes=data.map(k=>Number(k[4])).filter(Number.isFinite);diag.push({name:`${spec.title} candles`,ok:true,msg:`${closes.length} candles loaded from ${url.includes('binance.com')?'Binance':'Binance Vision'}`});for(const p of spec.periods){if(closes.length>=p)out.push({id:`${spec.group}${p}MA`,sourceType:'ma',group:spec.group,title:spec.title,period:p,label:`${spec.group}${p}MA`,price:avg(closes.slice(-p))});else diag.push({name:`${spec.group}${p}MA`,ok:false,msg:`Need ${p} candles, got ${closes.length}`})}}catch(e){diag.push({name:`${spec.title} candles`,ok:false,msg:e.message||String(e)})}}return{mas:out,diag}}
+const ONCHAIN_METRICS=[
+ {key:'realized_price',label:'Realized Price',short:'RP',queries:['realized_price','realized price','realized'],prefer:[/\brealized[_ -]?price\b/i,/realized.*price/i],avoid:[/short|sth|long|lth|cap|mvrv|ratio|change|momentum|band|supply|distribution|utxo/i]},
+ {key:'sth_cost_basis',label:'STH Cost Basis',short:'STHCB',queries:['short term holder realized price','sth realized price','short-term holder cost basis','sth cost basis','sth'],prefer:[/(sth|short).*realized.*price/i,/realized.*price.*(sth|short)/i,/(sth|short).*cost.*basis/i],avoid:[/lth|long|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
+ {key:'lth_cost_basis',label:'LTH Cost Basis',short:'LTHCB',queries:['long term holder realized price','lth realized price','long-term holder cost basis','lth cost basis','lth'],prefer:[/(lth|long).*realized.*price/i,/realized.*price.*(lth|long)/i,/(lth|long).*cost.*basis/i],avoid:[/sth|short|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
+ {key:'true_market_mean',label:'True Market Mean',short:'TMM',queries:['true market mean','true_market_mean','active investor price','cointime true mean'],prefer:[/true.*market.*mean/i,/active.*investor.*price/i,/true_market_mean/i],avoid:[/ratio|aviv|mvrv|supply|distribution/i]}
 ];
-const CHECKONCHAIN_URL='https://charts.checkonchain.com/btconchain/pricing/pricing_costbasisoriginals/pricing_costbasisoriginals_light.html';
-const CORS_URLS=[u=>u,u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?'+encodeURIComponent(u),u=>'https://r.jina.ai/http://r.jina.ai/http://'+u.replace(/^https?:\/\//,'')];
-async function getPrices(){const results=await Promise.allSettled(priceSources.map(async s=>{const j=await fetchJson(s.url); const price=s.parse(j); if(!Number.isFinite(price)||price<=0) throw new Error('Invalid price'); return {source:s.name,price};}));return results.map((r,i)=>r.status==='fulfilled'?{...r.value,ok:true}:{source:priceSources[i].name,ok:false,error:r.reason?.message||String(r.reason)});}
-function verifyPrice(rows){const good=rows.filter(r=>r.ok).sort((a,b)=>a.price-b.price);if(good.length<2) throw new Error('Need at least 2 working price sources.');const median=good.length%2?good[(good.length-1)/2].price:(good[good.length/2-1].price+good[good.length/2].price)/2;const agreeing=good.filter(r=>Math.abs(pct(r.price,median))<=0.5);if(agreeing.length<2) throw new Error('Fewer than 2 sources agree within 0.50%.');const avg=agreeing.reduce((s,r)=>s+r.price,0)/agreeing.length;return {price:avg, agreeing, all:good, median};}
-async function getKlines(interval, limit){const urls=[`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`,`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`];let lastErr;for(const url of urls){try{const data=await fetchJson(url); if(!Array.isArray(data)||data.length===0) throw new Error('No candle data'); return {data, url};}catch(e){lastErr=e;}}throw lastErr||new Error('Historical candle fetch failed');}
-function average(values){return values.reduce((a,b)=>a+b,0)/values.length;}
-async function getMovingAverages(){const specs=[{group:'D', title:'Daily', interval:'1d', periods:[7,25,99,200,365], limit:400},{group:'W', title:'Weekly', interval:'1w', periods:[7,25,99,200,365], limit:400},{group:'M', title:'Monthly', interval:'1M', periods:[7,25,99], limit:120}];const out=[], diag=[];for(const spec of specs){try{const {data,url}=await getKlines(spec.interval,spec.limit);const closes=data.map(k=>Number(k[4])).filter(Number.isFinite);diag.push({name:`${spec.title} candles`,ok:true,msg:`${closes.length} candles loaded from ${url.includes('binance.com')?'Binance':'Binance Vision'}`});for(const p of spec.periods){if(closes.length>=p){const slice=closes.slice(-p);out.push({id:`${spec.group}${p}MA`, sourceType:'ma', group:spec.group, title:spec.title, period:p, label:`${spec.group}${p}MA`, price:average(slice)});}else{diag.push({name:`${spec.group}${p}MA`,ok:false,msg:`Need ${p} candles, got ${closes.length}`});}}}catch(e){diag.push({name:`${spec.title} candles`,ok:false,msg:e.message||String(e)});}}return {mas:out, diag};}
-
-const ONCHAIN_TIMEOUT_MS = 6500;
-const BITVIEW_BASE = 'https://bitview.space';
-const ONCHAIN_METRICS = [
-  {
-    key:'realized_price', label:'Realized Price', short:'RP',
-    queries:['realized_price','realized price','realized'],
-    prefer:[/realized.*price/i, /realized_price/i],
-    avoid:[/short|sth|long|lth|cap|mvrv|ratio|change|momentum|band|supply/i]
-  },
-  {
-    key:'sth_cost_basis', label:'STH Cost Basis', short:'STHCB',
-    queries:['short term holder realized price','sth realized price','sth'],
-    prefer:[/(sth|short).*realized.*price/i, /realized.*price.*(sth|short)/i],
-    avoid:[/lth|long|sopr|mvrv|supply|ratio|change|profit/i]
-  },
-  {
-    key:'true_market_mean', label:'True Market Mean', short:'TMM',
-    queries:['true market mean','true_market_mean','active investor price','cointime true mean'],
-    prefer:[/true.*market.*mean/i, /active.*investor.*price/i, /true_market_mean/i],
-    avoid:[/ratio|aviv|mvrv|supply/i]
-  }
-];
-async function fetchTextTimed(url, timeoutMs=ONCHAIN_TIMEOUT_MS){
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
-  try{
-    const r = await fetch(url, {cache:'no-store', signal: ctrl.signal});
-    const text = await r.text();
-    if(!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0,160)}`);
-    return text;
-  } finally { clearTimeout(t); }
+const BITVIEW_BASE='https://bitview.space';
+async function fetchTextTimed(url,timeoutMs=7500){const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),timeoutMs);try{const r=await fetch(url,{cache:'no-store',signal:ctrl.signal});const text=await r.text();if(!r.ok)throw new Error(`HTTP ${r.status}: ${text.slice(0,140)}`);return text}finally{clearTimeout(t)}}
+async function fetchJsonTimed(url,timeoutMs=7500){const txt=await fetchTextTimed(url,timeoutMs);try{return JSON.parse(txt)}catch(e){throw new Error('Non-JSON response: '+txt.slice(0,160))}}
+function extractNum(v){if(typeof v==='number')return v;if(Array.isArray(v)){for(let i=v.length-1;i>=0;i--){const n=extractNum(v[i]);if(Number.isFinite(n))return n}}if(v&&typeof v==='object'){for(const k of ['value','close','price','usd','dollars','data','latest']){if(k in v){const n=extractNum(v[k]);if(Number.isFinite(n))return n}}for(const val of Object.values(v)){const n=extractNum(val);if(Number.isFinite(n))return n}}if(typeof v==='string'){const n=Number(v.replace(/[$,]/g,''));if(Number.isFinite(n))return n}return NaN}
+function plausible(n){return Number.isFinite(n)&&n>1000&&n<1000000}
+function normalizeSearchResult(x){if(typeof x==='string')return x;if(x&&typeof x==='object')return x.name||x.path||x.id||x.key||x.series||x.title||x.slug||x.metric||'';return ''}
+function scoreCandidateName(name,m){const hay=String(name||'');let s=0;for(const r of m.prefer)if(r.test(hay))s+=10;for(const r of m.avoid)if(r.test(hay))s-=8;if(/price/i.test(hay))s+=2;if(/realized|realised/i.test(hay))s+=2;return s}
+async function bitviewSearch(metric,diag){const seen=new Set();let all=[];for(const q of metric.queries){const urls=[`${BITVIEW_BASE}/api/series/search?q=${encodeURIComponent(q)}&limit=160`,`${BITVIEW_BASE}/api/series/search?query=${encodeURIComponent(q)}&limit=160`];for(const url of urls){try{const arr=await fetchJsonTimed(url,3500);if(!Array.isArray(arr))throw new Error('Search did not return an array');diag.push({name:`${metric.label} search`,ok:true,msg:`${arr.length} BitView candidates for "${q}"`});for(const item of arr){const n=normalizeSearchResult(item);if(n&&!seen.has(n)){seen.add(n);all.push(n)}}break}catch(e){diag.push({name:`${metric.label} search`,ok:false,msg:e.message})}}}return all.map(name=>({name,score:scoreCandidateName(name,metric)})).sort((a,b)=>b.score-a.score)}
+async function bitviewLatest(metric,candidates,diag){const top=candidates.filter(x=>x.score>0).slice(0,12);for(const c of top){for(const idx of ['day1','dateindex','day','height']){const url=`${BITVIEW_BASE}/api/series/${encodeURIComponent(c.name)}/${idx}/latest`;try{const data=await fetchJsonTimed(url,3500);const n=extractNum(data);if(plausible(n)){diag.push({name:metric.label,ok:true,msg:`BitView ${c.name} / ${idx} = ${fmtUSD(n)}`});return{sourceType:'onchain',group:'onchain',title:'On-chain',period:null,label:metric.label,short:metric.short,price:n,source:`BitView: ${c.name} (${idx})`,traceName:`BitView: ${c.name} (${idx})`}}diag.push({name:`${metric.label} candidate`,ok:false,msg:`No plausible USD number from ${c.name} / ${idx}`})}catch(e){diag.push({name:`${metric.label} candidate`,ok:false,msg:`${c.name} / ${idx}: ${e.message}`})}}}throw new Error('No candidate returned a plausible USD price level')}
+async function getOnchainLevels(){const diag=[],levels=[];for(const m of ONCHAIN_METRICS){try{const c=await bitviewSearch(m,diag);levels.push(await bitviewLatest(m,c,diag))}catch(e){diag.push({name:m.label,ok:false,msg:e.message||String(e)})}}return{levels,diag}}
+function compactLevelCode(l){if(l.type==='cluster')return l.items.map(compactLevelCode).join(' + ');if(l.type==='current')return 'BTC';if(l.sourceType==='onchain')return l.short||'OC';return `${l.group}${l.period}MA`}
+function labelHTML(l){const code=compactLevelCode(l);if(code==='BTC')return `<span class="lead BTC">BTC</span>`;if(l.type==='cluster')return `<span class="clusterTags">${l.items.map(x=>labelHTML(x)).join('')}</span>`;if(l.sourceType==='onchain')return `<span class="lead OC">${code}</span>`;return `<span class="lead ${l.group}">${code}</span>`}
+function isVisible(l){if(l.type==='current'||l.group==='BTC')return true;if(l.sourceType==='onchain')return categoryFilters.onchain!==false;return categoryFilters[l.group]!==false}
+function withinProx(l,current){if(l.type==='current'||l.group==='BTC'||proximityFilter==='all')return true;const lim=Number(proximityFilter);return !Number.isFinite(lim)||Math.abs((l.price-current)/current*100)<=lim}
+function getLevels(current,ma,onchain){return [...ma,...onchain,{label:'CURRENT BTC',price:current,type:'current',group:'BTC'}].filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,current)).sort((a,b)=>a.price-b.price)}
+function bounds(levels,current){const minP=Math.min(...levels.map(l=>l.price)),maxP=Math.max(...levels.map(l=>l.price));const pad=(maxP-minP)*0.08||current*.04;return{lo:Math.max(0,minP-pad),hi:maxP+pad}}
+function clusterLevels(levels,current){if(!autoCluster)return levels;const non=levels.filter(l=>l.type!=='current'&&l.group!=='BTC');const btc=levels.filter(l=>l.type==='current'||l.group==='BTC');const sorted=non.sort((a,b)=>a.price-b.price);const clusters=[];for(const l of sorted){const last=clusters[clusters.length-1];if(last&&Math.abs((l.price-last.items[last.items.length-1].price)/current*100)<=0.55)last.items.push(l);else clusters.push({items:[l]})}const out=clusters.flatMap(c=>{if(c.items.length<2)return c.items;const min=Math.min(...c.items.map(x=>x.price)),max=Math.max(...c.items.map(x=>x.price));return[{type:'cluster',group:'cluster',sourceType:'cluster',label:`${c.items.length} level cluster`,items:c.items,price:avg(c.items.map(x=>x.price)),min,max}]});return[...out,...btc].sort((a,b)=>a.price-b.price)}
+function approxMarkerWidth(l){
+ if(l.type==='cluster'){const n=l.items?.length||2;return Math.min(320,Math.max(196,118+Math.ceil(n/2)*64))}
+ if(l.sourceType==='onchain')return 128;
+ return 112
 }
-async function fetchJsonTimed(url, timeoutMs=ONCHAIN_TIMEOUT_MS){
-  const txt = await fetchTextTimed(url, timeoutMs);
-  try { return JSON.parse(txt); } catch(e){ throw new Error('Non-JSON response: '+txt.slice(0,200)); }
+function approxMarkerHeight(l){
+ if(l.type==='cluster'){const n=l.items?.length||2;return 62+Math.max(0,Math.ceil(n/2)-1)*26}
+ return 48
 }
-function extractOnchainNumber(v){
-  if(typeof v === 'number') return v;
-  if(Array.isArray(v)){
-    for(let i=v.length-1;i>=0;i--){ const n=extractOnchainNumber(v[i]); if(Number.isFinite(n)) return n; }
-  }
-  if(v && typeof v === 'object'){
-    const keys=['value','close','price','usd','dollars','data'];
-    for(const k of keys){ if(k in v){ const n=extractOnchainNumber(v[k]); if(Number.isFinite(n)) return n; } }
-    for(const val of Object.values(v)){ const n=extractOnchainNumber(val); if(Number.isFinite(n)) return n; }
-  }
-  if(typeof v === 'string'){
-    const n=Number(v.replace(/[$,]/g,'')); if(Number.isFinite(n)) return n;
-  }
-  return NaN;
-}
-function scoreOnchainCandidate(name, metric){
-  let s=0;
-  for(const re of metric.prefer) if(re.test(name)) s+=10;
-  for(const re of metric.avoid) if(re.test(name)) s-=8;
-  if(/price/i.test(name)) s+=2;
-  if(/realized/i.test(name)) s+=2;
-  return s;
-}
-async function bitviewSearch(metric, diag){
-  const seen = new Set();
-  let all = [];
-  for(const q of metric.queries){
-    const url = `${BITVIEW_BASE}/api/series/search?q=${encodeURIComponent(q)}&limit=100`;
-    try{
-      const arr = await fetchJsonTimed(url);
-      if(!Array.isArray(arr)) throw new Error('Search did not return an array');
-      diag.push({name:`${metric.label} search`,ok:true,msg:`${arr.length} candidates for "${q}"`});
-      for(const n of arr){ if(typeof n==='string' && !seen.has(n)){ seen.add(n); all.push(n); } }
-    }catch(e){ diag.push({name:`${metric.label} search`,ok:false,msg:e.message}); }
-  }
-  return all.map(name=>({name,score:scoreOnchainCandidate(name,metric)})).sort((a,b)=>b.score-a.score);
-}
-async function bitviewLatest(metric, candidates, diag){
-  const top = candidates.filter(x=>x.score>0).slice(0,8);
-  for(const c of top){
-    for(const idx of ['day1','dateindex','day']){
-      const url = `${BITVIEW_BASE}/api/series/${encodeURIComponent(c.name)}/${idx}/latest`;
-      try{
-        const data = await fetchJsonTimed(url);
-        const n = extractOnchainNumber(data);
-        if(Number.isFinite(n) && n > 1000 && n < 1000000){
-          diag.push({name:metric.label,ok:true,msg:`BitView ${c.name} / ${idx} = ${fmtUSD(n)}`});
-          return {sourceType:'onchain', group:'OC', title:'On-chain', period:null, label:metric.label, price:n, traceName:`BitView: ${c.name} (${idx})`, short:metric.short};
-        }
-        diag.push({name:`${metric.label} candidate`,ok:false,msg:`No plausible USD number from ${c.name} / ${idx}`});
-      }catch(e){ diag.push({name:`${metric.label} candidate`,ok:false,msg:`${c.name} / ${idx}: ${e.message}`}); }
-    }
-  }
-  throw new Error('No candidate returned a plausible USD price level');
-}
-async function getOnchainLevels(){
-  const diag = [];
-  const levels = [];
-  for(const metric of ONCHAIN_METRICS){
-    try{
-      const candidates = await bitviewSearch(metric, diag);
-      const level = await bitviewLatest(metric, candidates, diag);
-      levels.push(level);
-    }catch(e){
-      diag.push({name:metric.label,ok:false,msg:e.message||String(e)});
-    }
-  }
-  return {levels, diag};
-}
-
-function isLevelVisible(l){
-  if(!l) return true;
-  if(l.type==='current' || l.group==='BTC') return true;
-  if(l.sourceType==='onchain') return categoryFilters.onchain!==false;
-  if(l.group==='D') return categoryFilters.D!==false;
-  if(l.group==='W') return categoryFilters.W!==false;
-  if(l.group==='M') return categoryFilters.M!==false;
-  return true;
-}
-function applyFilterButtonState(){
-  document.querySelectorAll('.categoryToggle').forEach(btn=>{
-    const cat=btn.dataset.cat;
-    btn.classList.toggle('active', categoryFilters[cat]!==false);
-  });
-}
-function toggleCategory(cat){
-  categoryFilters[cat]=categoryFilters[cat]===false;
-  localStorage.setItem('btcLadderFilters', JSON.stringify(categoryFilters));
-  applyFilterButtonState();
-  rerender();
-}
-function isWithinProximity(l,current){
-  if(!l || l.type==='current' || l.group==='BTC') return true;
-  if(proximityFilter==='all') return true;
-  const limit=Number(proximityFilter);
-  if(!Number.isFinite(limit) || !Number.isFinite(current) || current<=0 || !Number.isFinite(l.price)) return true;
-  return Math.abs((l.price-current)/current*100) <= limit;
-}
-function formatProximityLabel(value){return value==='all'?'All':`±${Number(value).toFixed(Number(value)%1?1:0)}%`;}
-function applyProximityButtonState(){
-  document.querySelectorAll('.proximityBtn').forEach(btn=>btn.classList.toggle('active', btn.dataset.prox===proximityFilter));
-  const slider=$('proximitySlider'), val=$('proximitySliderValue');
-  if(slider && val){
-    const numeric=proximityFilter==='all' ? (slider.value || '10') : proximityFilter;
-    if(proximityFilter!=='all') slider.value=String(numeric);
-    val.textContent=proximityFilter==='all'?'All':formatProximityLabel(numeric);
-  }
-}
-function setProximityFilter(value){
-  proximityFilter=value || 'all';
-  localStorage.setItem('btcLadderProximity', proximityFilter);
-  applyProximityButtonState();
-  rerender();
-}
-function setAutoCluster(value){
-  autoCluster=!!value;
-  localStorage.setItem('btcLadderAutoCluster', String(autoCluster));
-  applyAutoClusterState();
-  rerender();
-}
-function applyAutoClusterState(){
-  $('autoClusterOn')?.classList.toggle('active', autoCluster);
-  $('autoClusterOff')?.classList.toggle('active', !autoCluster);
-}
-function toggleFilterPanel(force){
-  const panel=$('filterPanel'), btn=$('filterPanelBtn');
-  if(!panel || !btn) return;
-  const show=typeof force==='boolean'?force:panel.hasAttribute('hidden');
-  panel.toggleAttribute('hidden', !show);
-  btn.classList.toggle('active', show);
-  btn.setAttribute('aria-expanded', String(show));
-}
-function levelKey(l){
-  if(l?.type==='cluster') return `CLUSTER_${(l.items||[]).map(compactLevelCode).join('_')}_${Math.round((l.price||0)*100)}`.replace(/[^A-Za-z0-9_\-]/g,'');
-  return `${compactLevelCode(l)}_${Math.round((l.price||0)*100)}`.replace(/[^A-Za-z0-9_\-]/g,'');
-}
-function ensureHoverTooltip(){
-  let tip=document.getElementById('unifiedHoverTooltip');
-  if(!tip){
-    tip=document.createElement('div');
-    tip.id='unifiedHoverTooltip';
-    tip.className='hoverTooltip';
-    document.body.appendChild(tip);
-  }
-  return tip;
-}
-function moveHoverTooltip(evt){
-  const tip=ensureHoverTooltip();
-  const pad=14;
-  let x=evt.clientX+14;
-  let y=evt.clientY-18;
-  const r=tip.getBoundingClientRect();
-  if(x+r.width+pad>window.innerWidth) x=evt.clientX-r.width-14;
-  if(y<pad) y=evt.clientY+18;
-  if(y+r.height+pad>window.innerHeight) y=window.innerHeight-r.height-pad;
-  tip.style.left=x+'px';
-  tip.style.top=y+'px';
-}
-function showUnifiedTooltip(el, evt){
-  const tip=ensureHoverTooltip();
-  const txt=el.getAttribute('data-tip') || '';
-  if(txt){
-    const parts=txt.split(' • ');
-    tip.innerHTML=parts.length>1?`<span class="tipCode">${parts[0]}</span><span class="tipPrice">${parts.slice(1).join(' • ')}</span>`:txt;
-    tip.classList.add('show');
-    if(evt) moveHoverTooltip(evt);
-  }
-}
-function hideUnifiedTooltip(){
-  const tip=document.getElementById('unifiedHoverTooltip');
-  if(tip) tip.classList.remove('show');
-}
-function bindHoverIntelligence(){
-  const root=$('ladder');
-  if(!root) return;
-  const items=root.querySelectorAll('[data-level-key]');
-  const clear=()=>{
-    const wrap=root.querySelector('.priceAxis,.verticalAxis');
-    wrap?.classList.remove('is-hovering');
-    items.forEach(el=>el.classList.remove('hoverActive'));
-    hideUnifiedTooltip();
-  };
-  items.forEach(el=>{
-    el.addEventListener('mouseenter',(evt)=>{
-      const key=el.getAttribute('data-level-key');
-      const wrap=root.querySelector('.priceAxis,.verticalAxis');
-      wrap?.classList.add('is-hovering');
-      items.forEach(x=>x.classList.toggle('hoverActive', x.getAttribute('data-level-key')===key));
-      showUnifiedTooltip(el,evt);
-    });
-    el.addEventListener('mousemove',moveHoverTooltip);
-    el.addEventListener('mouseleave',clear);
-  });
-}
-
-function distanceText(current, level){
- if(!Number.isFinite(current)||!Number.isFinite(level)||current<=0) return '—';
- if(level>current){
-   const d=((level-current)/current)*100;
-   return `Resistance ${d.toFixed(2)}% above`;
- }
- if(level<current){
-   const d=((current-level)/current)*100;
-   return `Support ${d.toFixed(2)}% below`;
- }
- return 'At current price';
-}
-function sideOf(current,price){return price<current?'<span class="pill ok">support</span>':price>current?'<span class="pill bad">resistance</span>':'<span class="pill warn">current</span>';}
-function compactLevelCode(l){
- if(l.type==='current') return 'BTC';
- if(l.sourceType==='onchain'){
-   if(l.short) return l.short;
-   const map={'Realized Price':'RP','STH Cost Basis':'STHCB','True Market Mean':'TMM'};
-   return map[l.label] || String(l.label||'OC').replace(/[^A-Za-z0-9]/g,'').slice(0,8).toUpperCase();
- }
- return `${l.group}${l.period}MA`;
-}
-function compactLabelHTML(l){
- const code=compactLevelCode(l);
- if(code==='BTC') return `<span class="lead BTC">BTC</span>`;
- if(l.sourceType==='onchain') return `<span class="lead OC">${code}</span>`;
- const lead=code.charAt(0);
- return `<span class="lead ${lead}">${code}</span>`;
-}
-function levelCodeHTML(l){
- const code=compactLevelCode(l);
- if(code==='BTC') return `<span class="levelCode"><span class="lead BTC">BTC</span></span>`;
- if(l.sourceType==='onchain') return `<span class="levelCode"><span class="lead OC">${code}</span></span>`;
- const lead=code.charAt(0);
- return `<span class="levelCode"><span class="lead ${lead}">${code}</span></span>`;
-}
-function assignLanes(items, maxLanes=11, minGapPx=14, estimatedMarkerPx=104){
- // Keeps a minimum visible gap between marker edges on the same vertical lane.
- const axisWidth=Math.max(360, ($('ladder')?.clientWidth || window.innerWidth || 1200) - 44);
- const minCenterGapPct=((estimatedMarkerPx+minGapPx)/axisWidth)*100;
- const laneLast=Array(maxLanes).fill(-999);
- return items.map((item,idx)=>{
-   let chosen=-1;
-   for(let i=0;i<maxLanes;i++){
-     if(Math.abs(item.left-laneLast[i])>=minCenterGapPct){chosen=i;break;}
+function laneAssign(items,maxLanes=18,axis='h'){
+ const box=$('ladder');
+ const width=Math.max(360,(box?.clientWidth||1200)-44);
+ const height=Math.max(480,(box?.clientHeight||760)-44);
+ const sorted=[...items].sort((a,b)=>a.pos-b.pos);
+ const laneEnds=Array(maxLanes).fill(-999);
+ return sorted.map((it,idx)=>{
+   const sizePx=axis==='h'?approxMarkerWidth(it):approxMarkerHeight(it);
+   const spanPx=axis==='h'?width:height;
+   const itemPct=(sizePx/spanPx)*100;
+   const padPct=axis==='h'?(it.type==='cluster'?4.8:3.0):1.65;
+   const start=it.pos-itemPct/2-padPct;
+   let lane=laneEnds.findIndex(end=>start>=end);
+   if(lane<0){
+     const minEnd=Math.min(...laneEnds);
+     lane=Math.max(0,laneEnds.indexOf(minEnd));
    }
-   if(chosen<0){
-     // If many levels cluster tightly, push into a new visual lane rather than letting rectangles touch.
-     chosen=idx%maxLanes;
-   }
-   laneLast[chosen]=item.left;
-   return {...item,lane:chosen};
- });
+   laneEnds[lane]=it.pos+itemPct/2+padPct;
+   return {...it,lane}
+ })
+}
+function tipPctHTML(l,current){if(l.type==='current'||l.group==='BTC')return '';const d=(l.price-current)/current*100;if(d>0)return `<span class="tipPct plus">+${d.toFixed(2)}%</span>`;return `<span class="tipPct minus">${d.toFixed(2)}%</span>`}
+function ensureTip(){let t=$('unifiedHoverTooltip');if(!t){t=document.createElement('div');t.id='unifiedHoverTooltip';t.className='hoverTooltip';document.body.appendChild(t)}return t}
+function bindHover(container){document.querySelectorAll('[data-hoverkey]').forEach(el=>{el.addEventListener('mouseenter',e=>{const key=el.dataset.hoverkey;document.querySelectorAll(`[data-hoverkey="${CSS.escape(key)}"]`).forEach(x=>x.classList.add('hoverActive'));container.classList.add('is-hovering');const tip=ensureTip();tip.innerHTML=el.dataset.tip;tip.classList.add('show');moveTip(e)});el.addEventListener('mousemove',moveTip);el.addEventListener('mouseleave',()=>{document.querySelectorAll('.hoverActive').forEach(x=>x.classList.remove('hoverActive'));container.classList.remove('is-hovering');ensureTip().classList.remove('show')})})}
+function moveTip(e){const tip=ensureTip(),pad=14;let x=e.clientX+14,y=e.clientY-18;const r=tip.getBoundingClientRect();if(x+r.width+pad>innerWidth)x=e.clientX-r.width-14;if(y<pad)y=e.clientY+18;tip.style.left=x+'px';tip.style.top=y+'px'}
+function hoverKey(l){return (compactLevelCode(l)+'_'+Math.round(l.price*100)).replace(/[^A-Za-z0-9_]/g,'_')}
+function clusterTipLabel(l){return l.type==='cluster'?l.items.map(compactLevelCode).join(' + '):compactLevelCode(l)}
+function splitLaneAssign(items,current,maxLanes=18){
+ const above=items.filter(l=>l.price>=current),below=items.filter(l=>l.price<current);
+ const assign=arr=>laneAssign(arr,maxLanes,'h');
+ return [...assign(above),...assign(below)]
 }
 
-function axisTipLabel(l){
- if(l?.type==='cluster') return (l.items||[]).map(x=>`${compactLevelCode(x)} ${fmtUSD(x.price)}`).join(' • ');
- const code=compactLevelCode(l);
- return `${code} • ${fmtUSD(l.price)}`;
-}
-function clusterBadgeHTML(l){
- const code=compactLevelCode(l);
- if(code==='BTC') return '<span class="lead BTC">BTC</span>';
- if(l.sourceType==='onchain') return `<span class="lead OC">${code}</span>`;
- const lead=code.charAt(0);
- return `<span class="lead ${lead}">${code}</span>`;
-}
-function markerLabelHTML(l){
- if(l.type==='cluster') return l.items.map(clusterBadgeHTML).join('');
- return compactLabelHTML(l);
-}
-function fmtUSDCompact(v){
- if(!Number.isFinite(v)) return '—';
- const abs=Math.abs(v);
- if(abs>=1000) return '$'+(v/1000).toLocaleString(undefined,{maximumFractionDigits:1})+'k';
- return fmtUSD(v);
-}
-function markerPriceHTML(l){
- if(l.type==='cluster'){
-   const vals=l.items.map(x=>x.price).filter(Number.isFinite).sort((a,b)=>a-b);
-   if(vals.length>1) return `${fmtUSDCompact(vals[0])}–${fmtUSDCompact(vals[vals.length-1])}`;
- }
- return fmtUSD(l.price);
-}
-function createChartLevels(raw, current){
- if(!autoCluster) return raw;
- const thresholdPct=0.50;
- const nonCurrent=raw.filter(l=>!(l.type==='current'||l.group==='BTC')).sort((a,b)=>a.price-b.price);
- const currentItems=raw.filter(l=>l.type==='current'||l.group==='BTC');
- const groups=[];
- for(const l of nonCurrent){
-   const last=groups[groups.length-1];
-   if(!last){groups.push([l]);continue;}
-   const avg=last.reduce((s,x)=>s+x.price,0)/last.length;
-   if(Math.abs((l.price-avg)/avg*100)<=thresholdPct) last.push(l); else groups.push([l]);
- }
- const clustered=groups.map(g=>{
-   if(g.length===1) return g[0];
-   const prices=g.map(x=>x.price);
-   const avg=prices.reduce((a,b)=>a+b,0)/prices.length;
-   const names=g.map(compactLevelCode).join(' + ');
-   return {type:'cluster',label:`Cluster: ${names}`,title:'Auto-clustered nearby levels',price:avg,items:g,group:'cluster',sourceType:'cluster'};
- });
- return [...clustered,...currentItems].sort((a,b)=>a.price-b.price);
-}
-function renderHorizontalLadder(current, maLevels, onchainLevels){
- const raw=[...maLevels,...onchainLevels,{label:'CURRENT BTC',price:current,type:'current',group:'BTC',title:'Verified price'}]
-   .filter(l=>Number.isFinite(l.price) && l.price>0)
-   .filter(isLevelVisible)
-   .filter(l=>isWithinProximity(l,current))
-   .sort((a,b)=>a.price-b.price);
- if(!raw.length){$('ladder').innerHTML='<div class="empty">No levels loaded.</div>';return;}
- const minP=Math.min(...raw.map(l=>l.price));
- const maxP=Math.max(...raw.map(l=>l.price));
- const pad=(maxP-minP)*0.08 || current*0.04;
- const lo=Math.max(0,minP-pad), hi=maxP+pad;
- const span=hi-lo || 1;
- const pos=p=>Math.max(0,Math.min(100,((p-lo)/span)*100));
- const chartLevels=createChartLevels(raw,current);
- const base=chartLevels.map((l,index)=>{
-   const left=pos(l.price);
-   const kind=l.type==='current'?'current':(l.price<current?'support':'resistance');
-   return {l,index,left,kind,above:kind==='resistance'||kind==='current'};
- });
- const above=assignLanes(base.filter(x=>x.above).sort((a,b)=>a.left-b.left),20,24,140);
- const below=assignLanes(base.filter(x=>!x.above).sort((a,b)=>a.left-b.left),20,24,140);
- const maxAboveLane=above.length?Math.max(...above.map(x=>x.lane)):0;
- const maxBelowLane=below.length?Math.max(...below.map(x=>x.lane)):0;
- const laneGap=64;
- const cardH=58;
- const topPad=14;
- const bottomPad=16;
- // Compact dynamic height: fit the chart to the actual occupied lanes, with only a small visual margin.
- const axisY=topPad + 78 + maxAboveLane*laneGap;
- const chartHeight=axisY + 42 + maxBelowLane*laneGap + cardH + bottomPad;
- const allMarkers=[...above,...below];
- const markers=allMarkers.map(x=>{
-   const {l,left,kind,above,lane}=x;
-   const sourceClass=l.type==='cluster'?'cluster':(l.type==='current'?'BTC':(l.sourceType==='onchain'?'onchain':(l.group||'')));
-   const top = above ? (axisY - 78 - lane*laneGap) : (axisY + 42 + lane*laneGap);
-   const stem = above ? (axisY - (top+cardH)) : (top - axisY);
-   const key=levelKey(l);
-   return `<div class="marker ${kind} ${sourceClass} ${above?'above':'below'}" data-level-key="${key}" data-tip="${axisTipLabel(l)}" style="left:${left.toFixed(3)}%;top:${top}px;--stem:${Math.max(10,stem)}px"><div class="markerCard"><div class="markerLabel">${markerLabelHTML(l)}</div><div class="markerPrice">${markerPriceHTML(l)}</div></div></div>`;
- }).join('');
- const hoverPoints=allMarkers.map(x=>{
-   const key=levelKey(x.l);
-   if(x.l.type==='cluster'){
-     const vals=(x.l.items||[]).map(i=>i.price).filter(Number.isFinite).sort((a,b)=>a-b);
-     const lft=vals.length?pos(vals[0]):x.left;
-     const rgt=vals.length?pos(vals[vals.length-1]):x.left;
-     const rangeLeft=Math.min(lft,rgt);
-     const rangeWidth=Math.max(0.001,Math.abs(rgt-lft));
-     return `<div class="axisHoverPoint clusterRange" data-level-key="${key}" data-tip="${axisTipLabel(x.l)}" style="left:${rangeLeft.toFixed(3)}%;top:${axisY}px;width:${rangeWidth.toFixed(3)}%"></div>`;
-   }
-   return `<div class="axisHoverPoint" data-level-key="${key}" data-tip="${axisTipLabel(x.l)}" style="left:${x.left.toFixed(3)}%;top:${axisY}px"></div>`;
- }).join('');
- const currentLeft=pos(current);
- const endTicks=`<div class="axisEndTick" style="left:0%;top:${axisY-7}px"></div><div class="axisEndTick" style="right:0%;top:${axisY-7}px"></div>`;
- const currentDot=`<div class="currentAxisDot" title="Current BTC price: ${fmtUSD(current)}" style="left:${currentLeft.toFixed(3)}%;top:${axisY}px"></div>`;
- $('ladder').innerHTML=`<div class="axisTop"><span>${fmtUSD(lo)}</span><span></span><span>${fmtUSD(hi)}</span></div><div class="priceAxis" style="height:${chartHeight}px"><div class="axisLine" style="top:${axisY}px"></div>${endTicks}${currentDot}${markers}${hoverPoints}</div>`;
- bindHoverIntelligence();
- const supportLevels=raw.filter(l=>l.price<current).sort((a,b)=>b.price-a.price);
- const resistanceLevels=raw.filter(l=>l.price>current).sort((a,b)=>a.price-b.price);
- const belowNearest=supportLevels[0];
- const aboveNearest=resistanceLevels[0];
- $('support').textContent=belowNearest?`${compactLevelCode(belowNearest)} ${fmtUSD(belowNearest.price)}`:'None';
- $('resistance').textContent=aboveNearest?`${compactLevelCode(aboveNearest)} ${fmtUSD(aboveNearest.price)}`:'None';
- {const mc=$('maCount'); if(mc) mc.textContent=String(raw.length-1);}
-}
-
-function assignVerticalLanes(items, maxLanes=8, minGapPx=10, estimatedMarkerH=54){
- const minCenterGap=estimatedMarkerH + minGapPx;
- const laneLast=Array(maxLanes).fill(-99999);
- return items.map((item,idx)=>{
-   let chosen=-1;
-   for(let i=0;i<maxLanes;i++){
-     if(Math.abs(item.y-laneLast[i])>=minCenterGap){chosen=i;break;}
-   }
-   if(chosen<0) chosen=idx%maxLanes;
-   laneLast[chosen]=item.y;
-   return {...item,lane:chosen};
- });
-}
-function renderVerticalLadder(current, maLevels, onchainLevels){
- const raw=[...maLevels,...onchainLevels,{label:'CURRENT BTC',price:current,type:'current',group:'BTC',title:'Verified price'}]
-   .filter(l=>Number.isFinite(l.price) && l.price>0)
-   .filter(isLevelVisible)
-   .filter(l=>isWithinProximity(l,current))
-   .sort((a,b)=>a.price-b.price);
- if(!raw.length){$('ladder').innerHTML='<div class="empty">No levels loaded.</div>';return;}
- const minP=Math.min(...raw.map(l=>l.price));
- const maxP=Math.max(...raw.map(l=>l.price));
- const pad=(maxP-minP)*0.08 || current*0.04;
- const lo=Math.max(0,minP-pad), hi=maxP+pad;
- const span=hi-lo || 1;
- const axisTop=20, axisBottom=20;
- const baseHeight=Math.max(580, raw.length*34 + 90);
- const axisHeight=baseHeight-axisTop-axisBottom;
- const posY=p=>axisTop + (1-Math.max(0,Math.min(1,(p-lo)/span))) * axisHeight;
- const axisX=72;
- const chartLevels=createChartLevels(raw,current);
- const base=chartLevels.map((l,index)=>{
-   const y=posY(l.price);
-   const kind=l.type==='current'?'current':(l.price<current?'support':'resistance');
-   return {l,index,y,kind};
- }).sort((a,b)=>a.y-b.y);
- const containerW=Math.max(300,($('ladder')?.clientWidth||700)-24);
- const responsiveMaxLanes=containerW<430?3:(containerW<640?4:(containerW<900?6:8));
- const placed=assignVerticalLanes(base,responsiveMaxLanes,16,76);
- const maxLane=placed.length?Math.max(...placed.map(x=>x.lane)):0;
- const cardW=containerW<430?84:(containerW<640?94:112);
- const usable=Math.max(0,containerW-axisX-cardW-28);
- const laneGap=maxLane>0?Math.max(52,Math.min(118,usable/maxLane)):0;
- const chartWidth='100%';
- const markers=placed.map(x=>{
-   const {l,y,kind,lane}=x;
-   const sourceClass=l.type==='cluster'?'cluster':(l.type==='current'?'BTC':(l.sourceType==='onchain'?'onchain':(l.group||'')));
-   const left=axisX + 28 + lane*laneGap;
-   const stem=Math.max(14,left-axisX-6);
-   const key=levelKey(l);
-   return `<div class="vMarker ${kind} ${sourceClass}" data-level-key="${key}" data-tip="${axisTipLabel(l)}" style="left:${left}px;top:${y.toFixed(1)}px;--stem:${stem}px;width:${cardW}px;max-width:${cardW}px"><div class="markerCard"><div class="markerLabel">${markerLabelHTML(l)}</div><div class="markerPrice">${markerPriceHTML(l)}</div></div></div>`;
- }).join('');
- const hoverPoints=placed.map(x=>{
-   const key=levelKey(x.l);
-   if(x.l.type==='cluster'){
-     const vals=(x.l.items||[]).map(i=>i.price).filter(Number.isFinite).sort((a,b)=>a-b);
-     const y1=vals.length?posY(vals[0]):x.y;
-     const y2=vals.length?posY(vals[vals.length-1]):x.y;
-     const rangeTop=Math.min(y1,y2);
-     const rangeHeight=Math.max(1,Math.abs(y2-y1));
-     return `<div class="vAxisHoverPoint clusterRange" data-level-key="${key}" data-tip="${axisTipLabel(x.l)}" style="top:${rangeTop.toFixed(1)}px;height:${rangeHeight.toFixed(1)}px"></div>`;
-   }
-   return `<div class="vAxisHoverPoint" data-level-key="${key}" data-tip="${axisTipLabel(x.l)}" style="top:${x.y.toFixed(1)}px"></div>`;
- }).join('');
- const currentY=posY(current);
- const currentDot=`<div class="vCurrentDot" title="Current BTC price: ${fmtUSD(current)}" style="top:${currentY.toFixed(1)}px"></div>`;
- const endLabels=`<div class="vAxisEndLabel" style="top:${axisTop}px">${fmtUSD(hi)}</div><div class="vAxisEndTick" style="top:${axisTop}px"></div><div class="vAxisEndLabel" style="top:${baseHeight-axisBottom}px">${fmtUSD(lo)}</div><div class="vAxisEndTick" style="top:${baseHeight-axisBottom}px"></div>`;
- $('ladder').innerHTML=`<div class="verticalAxis" style="height:${baseHeight}px;width:${chartWidth}"><div class="vAxisLine" style="top:${axisTop}px;bottom:${axisBottom}px"></div>${endLabels}${currentDot}${markers}${hoverPoints}</div>`;
- bindHoverIntelligence();
- const supportLevels=raw.filter(l=>l.price<current).sort((a,b)=>b.price-a.price);
- const resistanceLevels=raw.filter(l=>l.price>current).sort((a,b)=>a.price-b.price);
- const belowNearest=supportLevels[0];
- const aboveNearest=resistanceLevels[0];
- $('support').textContent=belowNearest?`${compactLevelCode(belowNearest)} ${fmtUSD(belowNearest.price)}`:'None';
- $('resistance').textContent=aboveNearest?`${compactLevelCode(aboveNearest)} ${fmtUSD(aboveNearest.price)}`:'None';
- {const mc=$('maCount'); if(mc) mc.textContent=String(raw.length-1);}
-}
-function setAxisMode(mode){
- axisMode=mode==='vertical'?'vertical':'horizontal';
- localStorage.setItem('btcLadderAxisMode',axisMode);
- const h=$('axisHorizontal'), v=$('axisVertical');
- if(h&&v){h.classList.toggle('active',axisMode==='horizontal');v.classList.toggle('active',axisMode==='vertical');}
- rerender();
-}
-function renderLadder(current, maLevels, onchainLevels){
- if(axisMode==='vertical') return renderVerticalLadder(current, maLevels, onchainLevels);
- return renderHorizontalLadder(current, maLevels, onchainLevels);
-}
-
-function renderMATable(current, mas, onchain){
- const all=[...mas,...onchain,{label:'Current BTC',price:current,type:'current',group:'BTC',title:'Verified price'}]
-   .filter(m=>Number.isFinite(m.price)&&m.price>0)
-   .sort((a,b)=>b.price-a.price);
- if(!all.length){$('maTable').innerHTML='<div class="empty">No levels loaded. Open diagnostics below the price.</div>';return;}
- const rows=all.map(m=>{
-   const isCurrent=m.type==='current';
-   const rowClass=isCurrent?'currentRow':(m.price>current?'resistanceRow':m.price<current?'supportRow':'');
-   const level=isCurrent?'BTC':compactLevelCode(m);
-   const type=isCurrent?'Current verified price':(m.sourceType==='onchain'?'On-chain':m.title);
-   const side=isCurrent?'<span class="pill warn">current</span>':sideOf(current,m.price);
-   const dist=isCurrent?'—':distanceText(current,m.price);
-   return `<tr class="${rowClass}"><td>${levelCodeHTML(m)}</td><td>${type}</td><td>${fmtUSD(m.price)}</td><td>${side}</td><td>${dist}</td></tr>`;
- }).join('');
- $('maTable').innerHTML=`<table class="table compactTable"><thead><tr><th>Level</th><th>Type</th><th>Price</th><th>Side</th><th>Distance</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-function renderOnchainBox(current, levels, diag){if(levels.length){$('onchainBox').innerHTML=levels.sort((a,b)=>a.price-b.price).map(l=>`<div class="ocRow"><div class="ocName">${levelCodeHTML(l)}<span>${l.label}</span></div><div class="ocVal">${fmtUSD(l.price)}</div></div>`).join('');}else{$('onchainBox').innerHTML='<div class="empty">On-chain levels were not loaded. Open diagnostics to see why.</div>';}}
-function renderDetails(priceRows, maDiag, ocDiag){const priceTable=priceRows.map(r=>`<tr><td>${r.source}</td><td>${r.ok?fmtUSD(r.price):'—'}</td><td class="${r.ok?'success':'err'}">${r.ok?'OK':r.error}</td></tr>`).join('');const maRows=maDiag.map(d=>`<tr><td>${d.name}</td><td class="${d.ok?'success':'err'}">${d.ok?'OK':'Problem'}</td><td>${d.msg}</td></tr>`).join('');const ocRows=ocDiag.map(d=>`<tr><td>${d.name}</td><td class="${d.ok?'success':'err'}">${d.ok?'OK':'Problem'}</td><td>${d.msg}</td></tr>`).join('');const loadedRows=`<tr><td>Current BTC</td><td>1</td></tr><tr><td>Moving averages</td><td>${lastMas?.length||0}</td></tr><tr><td>On-chain levels</td><td>${lastOnchain?.length||0}</td></tr><tr><td>Total loaded levels</td><td>${(lastMas?.length||0)+(lastOnchain?.length||0)+(lastCurrent?1:0)}</td></tr>`;$('detailsBody').innerHTML=`<h3>Loaded levels</h3><table class="table"><tbody>${loadedRows}</tbody></table><h3 style="margin-top:18px">Price sources</h3><table class="table"><thead><tr><th>Source</th><th>Price</th><th>Status</th></tr></thead><tbody>${priceTable}</tbody></table><h3 style="margin-top:18px">Moving average diagnostics</h3><table class="table"><thead><tr><th>Item</th><th>Status</th><th>Details</th></tr></thead><tbody>${maRows}</tbody></table><h3 style="margin-top:18px">On-chain diagnostics</h3><table class="table"><thead><tr><th>Item</th><th>Status</th><th>Details</th></tr></thead><tbody>${ocRows}</tbody></table>`;}
-function rerender(){ if(lastCurrent){renderLadder(lastCurrent,lastMas,lastOnchain); renderMATable(lastCurrent,lastMas,lastOnchain); renderOnchainBox(lastCurrent,lastOnchain,lastOnchainDiag);} }
-
-async function refresh(){
- $('price').textContent='Loading…';
- $('status').textContent='Checking sources';
- $('status').className='badge loading';
- $('ladder').innerHTML='<div class="empty">Loading moving averages…</div>';
- $('maTable').innerHTML='<div class="empty">Loading level table…</div>';
- $('onchainBox').innerHTML='<div class="empty">Loading on-chain levels in background…</div>';
- try{
-   const [priceRows, maData]=await Promise.all([getPrices(), getMovingAverages()]);
-   const verification=verifyPrice(priceRows);
-   const current=verification.price;
-   lastCurrent=current; lastMas=maData.mas; lastDiag=maData.diag; lastPriceRows=priceRows; lastOnchain=[]; lastOnchainDiag=[];
-   $('price').textContent=fmtUSD(current);
-   $('status').textContent=`Verified by ${verification.agreeing.length} sources`;
-   $('status').className='badge ok';
-   $('updated').textContent=`Last update: ${nowStr()}`;
-   renderLadder(current, maData.mas, []);
-   renderMATable(current, maData.mas, []);
-   renderOnchainBox(current, [], []);
-   renderDetails(priceRows, maData.diag, []);
-
-   getOnchainLevels().then(ocData=>{
-     lastOnchain=ocData.levels || [];
-     lastOnchainDiag=ocData.diag || [];
-     renderLadder(current, maData.mas, lastOnchain);
-     renderMATable(current, maData.mas, lastOnchain);
-     renderOnchainBox(current, lastOnchain, lastOnchainDiag);
-     renderDetails(priceRows, maData.diag, lastOnchainDiag);
-   }).catch(e=>{
-     lastOnchain=[];
-     lastOnchainDiag=[{name:'On-chain loader',ok:false,msg:e.message||String(e)}];
-     renderOnchainBox(current, [], lastOnchainDiag);
-     renderDetails(priceRows, maData.diag, lastOnchainDiag);
+function calibrateStems(container){
+ if(!container)return;
+ const hAxis=container.querySelector('.axisLine');
+ if(hAxis){
+   const center=parseFloat(hAxis.style.top)||hAxis.offsetTop;
+   container.querySelectorAll('.marker').forEach(m=>{
+     const top=m.offsetTop;
+     const h=m.offsetHeight;
+     const above=m.classList.contains('above');
+     const stem=above?Math.max(0,center-(top+h)):Math.max(0,top-center);
+     m.style.setProperty('--stem',stem.toFixed(1)+'px');
    });
- }catch(e){
-   $('price').textContent='Error';
-   $('status').textContent=e.message||String(e);
-   $('status').className='badge bad';
-   $('updated').textContent=`Last attempt: ${nowStr()}`;
-   try{const pr=await getPrices(); renderDetails(pr,[],lastOnchainDiag||[]);}catch(_){}
+ }
+ const vAxis=container.querySelector('.vAxisLine');
+ if(vAxis){
+   const axisX=72;
+   container.querySelectorAll('.vMarker').forEach(m=>{
+     const stem=Math.max(0,m.offsetLeft-axisX);
+     m.style.setProperty('--stem',stem.toFixed(1)+'px');
+   });
  }
 }
-document.querySelectorAll('.categoryToggle').forEach(btn=>btn.addEventListener('click',()=>toggleCategory(btn.dataset.cat)));
-document.querySelectorAll('.proximityBtn').forEach(btn=>btn.addEventListener('click',()=>setProximityFilter(btn.dataset.prox)));
-$('proximitySlider')?.addEventListener('input',(evt)=>setProximityFilter(evt.target.value));
-$('autoClusterOn')?.addEventListener('click',()=>setAutoCluster(true));
-$('autoClusterOff')?.addEventListener('click',()=>setAutoCluster(false));
-$('filterPanelBtn')?.addEventListener('click',(evt)=>{evt.stopPropagation();toggleFilterPanel();});
-$('filterPanel')?.addEventListener('click',(evt)=>evt.stopPropagation());
-document.addEventListener('click',()=>toggleFilterPanel(false));
-applyFilterButtonState();applyProximityButtonState();applyAutoClusterState();$('axisHorizontal')?.addEventListener('click',()=>setAxisMode('horizontal'));$('axisVertical')?.addEventListener('click',()=>setAxisMode('vertical'));setAxisMode(axisMode);$('refreshBtn').addEventListener('click',refresh);$('toggleAuto').addEventListener('click',()=>{if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('toggleAuto').textContent='Auto refresh: off';}else{autoTimer=setInterval(refresh,5*60*1000);$('toggleAuto').textContent='Auto refresh: 5 min';}});refresh();
+
+function renderHorizontal(current,ma,onchain){
+ const levels0=getLevels(current,ma,onchain),levels=clusterLevels(levels0,current);
+ const b=bounds(levels,current),span=b.hi-b.lo||1,pos=p=>Math.max(0,Math.min(100,(p-b.lo)/span*100));
+ const base=levels.map(l=>({...l,pos:pos(l.price),minPos:l.type==='cluster'?pos(l.min):null,maxPos:l.type==='cluster'?pos(l.max):null}));
+ const lanes=splitLaneAssign(base,current,28);
+ const maxAbove=Math.max(0,...lanes.filter(l=>l.price>=current).map(l=>l.lane));
+ const maxBelow=Math.max(0,...lanes.filter(l=>l.price<current).map(l=>l.lane));
+ const rowH=84, axisH=260+(maxAbove+1)*rowH+(maxBelow+1)*rowH, center=126+(maxAbove+1)*rowH;
+ const parts=lanes.map(o=>{
+   const l=o,above=l.price>=current;
+   const cardH=approxMarkerHeight(l);
+   const topPx=above?center-(88+o.lane*rowH):center+(62+o.lane*rowH);
+   const top=`${topPx}px`;
+   const stemPx=above?Math.max(0,center-(topPx+cardH)):Math.max(0,topPx-center);
+   const cls=l.type==='cluster'?'cluster':(l.group==='BTC'?'BTC':(l.sourceType==='onchain'?'onchain':l.group));
+   const label=clusterTipLabel(l);
+   const price=l.type==='cluster'?`${fmtUSD(l.min)}–${fmtUSD(l.max)}`:fmtUSD(l.price);
+   const key=hoverKey(l),tip=`<span class="tipCode">${label}</span><span class="tipPrice">${price}</span>${tipPctHTML(l,current)}`;
+   const marker=`<div class="marker ${cls} ${above?'above':'below'}" data-hoverkey="${key}" data-tip='${tip}' style="left:${l.pos.toFixed(3)}%;top:${top};--stem:${stemPx}px"><div class="markerCard"><div class="markerLabel">${labelHTML(l)}</div><div class="markerPrice">${price}</div></div></div>`;
+   if(l.type==='cluster'){
+     const left=Math.min(l.minPos,l.maxPos),width=Math.max(0.45,Math.abs(l.maxPos-l.minPos));
+     return marker+`<div class="clusterInterval" data-hoverkey="${key}" data-tip='${tip}' style="left:${left.toFixed(3)}%;top:${center}px;width:${width.toFixed(3)}%"></div>`
+   }
+   return marker+`<div class="axisHoverPoint" data-hoverkey="${key}" data-tip='${tip}' style="left:${l.pos.toFixed(3)}%;top:${center}px"></div>`
+ }).join('');
+ $('ladder').innerHTML=`<button id="rotateChartBtn" class="rotateChartBtn" title="Switch to vertical view">↺</button><div class="priceAxis" style="height:${axisH}px"><div class="axisLine" style="top:${center}px"></div><div class="axisEndTick" style="left:0%;top:${center-7}px"></div><div class="axisEndTick" style="left:100%;top:${center-7}px"></div><div class="currentAxisDot" style="left:${pos(current).toFixed(3)}%;top:${center}px"></div>${parts}</div>`;$('rotateChartBtn').onclick=()=>setAxisMode('vertical');const chart=document.querySelector('.priceAxis');calibrateStems(chart);requestAnimationFrame(()=>calibrateStems(chart));bindHover(chart)}
+function renderVertical(current,ma,onchain){
+ const levels0=getLevels(current,ma,onchain),levels=clusterLevels(levels0,current);
+ const b=bounds(levels,current),span=b.hi-b.lo||1,pos=p=>100-Math.max(0,Math.min(100,(p-b.lo)/span*100));
+ const base=levels.map(l=>({...l,pos:pos(l.price),minPos:l.type==='cluster'?pos(l.min):null,maxPos:l.type==='cluster'?pos(l.max):null}));
+ const lanes=laneAssign(base,24,'v');
+ const maxLane=Math.max(0,...lanes.map(l=>l.lane));
+ const axisW=Math.max(660,210+(maxLane+1)*128);
+ const parts=lanes.map(o=>{const l=o,left=132+o.lane*128,stem=Math.max(0,left-72),cls=l.type==='cluster'?'cluster':(l.group==='BTC'?'BTC':(l.sourceType==='onchain'?'onchain':l.group));const label=clusterTipLabel(l);const price=l.type==='cluster'?`${fmtUSD(l.min)}–${fmtUSD(l.max)}`:fmtUSD(l.price);const key=hoverKey(l),tip=`<span class="tipCode">${label}</span><span class="tipPrice">${price}</span>${tipPctHTML(l,current)}`;const marker=`<div class="vMarker ${cls}" data-hoverkey="${key}" data-tip='${tip}' style="top:${l.pos.toFixed(3)}%;left:${left}px;--stem:${stem}px"><div class="markerCard"><div class="markerLabel">${labelHTML(l)}</div><div class="markerPrice">${price}</div></div></div>`;if(l.type==='cluster'){const top=Math.min(l.minPos,l.maxPos),height=Math.max(0.8,Math.abs(l.minPos-l.maxPos));return marker+`<div class="vClusterInterval" data-hoverkey="${key}" data-tip='${tip}' style="top:${top.toFixed(3)}%;height:${height.toFixed(3)}%"></div>`}return marker+`<div class="vAxisHoverPoint" data-hoverkey="${key}" data-tip='${tip}' style="top:${l.pos.toFixed(3)}%"></div>`}).join('');
+ $('ladder').innerHTML=`<button id="rotateChartBtn" class="rotateChartBtn" title="Switch to horizontal view">↻</button><div class="verticalAxis" style="min-width:${axisW}px"><div class="vAxisLine"></div><div class="vAxisEndTick" style="top:0%"></div><div class="vAxisEndTick" style="top:100%"></div><div class="vCurrentDot" style="top:${pos(current).toFixed(3)}%"></div>${parts}</div>`;$('rotateChartBtn').onclick=()=>setAxisMode('horizontal');const chart=document.querySelector('.verticalAxis');calibrateStems(chart);requestAnimationFrame(()=>calibrateStems(chart));bindHover(chart)}
+function renderLadder(current,ma,onchain){if(axisMode==='vertical')renderVertical(current,ma,onchain);else renderHorizontal(current,ma,onchain)}
+function distanceHTML(current,level){const d=(level-current)/current*100;if(d>0)return `<span class="tableDistance plus">+${d.toFixed(2)}%</span>`;if(d<0)return `<span class="tableDistance minus">${d.toFixed(2)}%</span>`;return '<span class="tableDistance neutral">0.00%</span>'}
+function renderTable(current,ma,onchain){const raw=[...ma,...onchain,{label:'CURRENT BTC',price:current,type:'current',group:'BTC'}].filter(l=>Number.isFinite(l.price)).sort((a,b)=>b.price-a.price);$('maTable').innerHTML=`<table class="table"><thead><tr><th>Level</th><th>Type</th><th>Price</th><th>Side</th><th>Distance</th></tr></thead><tbody>${raw.map(l=>`<tr class="${l.type==='current'?'currentRow':''}"><td>${labelHTML(l)}</td><td>${l.type==='current'?'Current':(l.sourceType==='onchain'?'On-chain':l.title)}</td><td>${fmtUSD(l.price)}</td><td>${l.price<current?'<span class="pill ok">support</span>':l.price>current?'<span class="pill bad">resistance</span>':'<span class="pill warn">current</span>'}</td><td>${distanceHTML(current,l.price)}</td></tr>`).join('')}</tbody></table>`}
+function renderOnchain(levels){const box=$('onchainBox');if(!box)return;box.innerHTML=levels.length?levels.map(l=>`<div class="ocRow"><div><div class="ocName">${labelHTML(l)} ${l.label}</div></div><div class="ocVal">${fmtUSD(l.price)}</div></div>`).join(''):'<div class="empty">No on-chain levels loaded. Check diagnostics for source blocks/failures.</div>'}
+function renderDiag(){const rows=[...lastPriceRows.map(r=>({name:'Price '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag];$('detailsBody').innerHTML=`<table class="table"><thead><tr><th>Check</th><th>Status</th><th>Message</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.name}</td><td>${r.ok?'<span class="ok">OK</span>':'<span class="bad">Fail</span>'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}</tbody></table>`}
+function updateSummary(current,levels){const supports=levels.filter(l=>l.price<current).sort((a,b)=>b.price-a.price),res=levels.filter(l=>l.price>current).sort((a,b)=>a.price-b.price);$('support').textContent=supports[0]?`${compactLevelCode(supports[0])} ${fmtUSD(supports[0].price)}`:'—';$('resistance').textContent=res[0]?`${compactLevelCode(res[0])} ${fmtUSD(res[0].price)}`:'—'}
+function verifiedSourceText(){const n=lastPriceRows.filter(r=>r.ok).length;return `${n} verified price source${n===1?'':'s'}`}
+function rerender(){if(!lastCurrent)return;renderLadder(lastCurrent,lastMas,lastOnchain);renderTable(lastCurrent,lastMas,lastOnchain);renderOnchain(lastOnchain);renderDiag();updateSummary(lastCurrent,[...lastMas,...lastOnchain])}
+async function refreshAll(){try{$('status').textContent='Loading';$('status').className='badge loading';const pr=await getPrice();lastCurrent=pr.price;lastPriceRows=pr.rows;$('price').textContent=fmtUSD(lastCurrent);$('updated').textContent=nowStr();const [ma,on]=await Promise.allSettled([getMAs(),getOnchainLevels()]);if(ma.status==='fulfilled'){lastMas=ma.value.mas;lastDiag=ma.value.diag}else{lastDiag=[{name:'Moving averages',ok:false,msg:ma.reason?.message||String(ma.reason)}];lastMas=[]}if(on.status==='fulfilled'){lastOnchain=on.value.levels;lastOnchainDiag=on.value.diag}else{lastOnchain=[];lastOnchainDiag=[{name:'On-chain levels',ok:false,msg:on.reason?.message||String(on.reason)}]}$('status').textContent=verifiedSourceText();$('status').className='badge ok small';rerender()}catch(e){$('status').textContent='Error';$('status').className='badge bad';$('ladder').innerHTML=`<div class="empty">${String(e.message||e).replace(/[<>]/g,'')}</div>`}}
+function setAxisMode(m){axisMode=m==='vertical'?'vertical':'horizontal';localStorage.setItem('btcLadderAxisMode',axisMode);rerender()}
+function applyStates(){document.querySelectorAll('.categoryToggle').forEach(b=>b.classList.toggle('active',categoryFilters[b.dataset.cat]!==false));document.querySelectorAll('.proximityBtn').forEach(b=>b.classList.toggle('active',String(b.dataset.prox)===String(proximityFilter)));$('autoClusterOn')?.classList.toggle('active',autoCluster);$('autoClusterOff')?.classList.toggle('active',!autoCluster)}
+document.querySelectorAll('.categoryToggle').forEach(b=>b.onclick=()=>{categoryFilters[b.dataset.cat]=categoryFilters[b.dataset.cat]===false;localStorage.setItem('btcLadderFilters',JSON.stringify(categoryFilters));applyStates();rerender()});
+document.querySelectorAll('.proximityBtn').forEach(b=>b.onclick=()=>{proximityFilter=b.dataset.prox;localStorage.setItem('btcLadderProximity',proximityFilter);applyStates();rerender()});
+$('autoClusterOn').onclick=()=>{autoCluster=true;localStorage.setItem('btcLadderAutoCluster','true');applyStates();rerender()};$('autoClusterOff').onclick=()=>{autoCluster=false;localStorage.setItem('btcLadderAutoCluster','false');applyStates();rerender()};function setFilterPanelOpen(show){const p=$('filterPanel');p.toggleAttribute('hidden',!show);$('filterPanelBtn').classList.toggle('active',show);$('filterPanelBtn').setAttribute('aria-expanded',String(show))}$('filterPanelBtn').onclick=(e)=>{e.stopPropagation();setFilterPanelOpen($('filterPanel').hasAttribute('hidden'))};$('filterPanel').addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',()=>{if(!$('filterPanel').hasAttribute('hidden'))setFilterPanelOpen(false)});
+$('refreshBtn').onclick=refreshAll;$('toggleAuto').onclick=()=>{if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('toggleAuto').textContent='Auto refresh: off'}else{autoTimer=setInterval(refreshAll,5*60*1000);$('toggleAuto').textContent='Auto refresh: on'}};
+applyStates();refreshAll();
 </script>
 </body>
 </html>
