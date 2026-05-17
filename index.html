@@ -1,314 +1,905 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin Price Ladder v48</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Bitcoin Price Ladder</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#070a12;--card:#111827;--text:#eef3ff;--muted:#8d99ae;--line:rgba(255,255,255,.12);--btc:#f7931a;--green:#22c55e;--red:#ef4444;--blue:#60a5fa;--purple:#c084fc;--teal:#2dd4bf;--oc:#f59e0b}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,rgba(247,147,26,.2),transparent 35%),linear-gradient(180deg,#070a12,#0a1020);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);padding:22px}.wrap{max-width:1460px;margin:0 auto}header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}h1{font-size:clamp(28px,4vw,46px);line-height:1;margin:0;letter-spacing:-.04em}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}button{border:0;border-radius:14px;background:var(--btc);color:#171006;font-weight:900;padding:12px 16px;cursor:pointer;box-shadow:0 10px 28px rgba(247,147,26,.2)}button.secondary{background:#1f2937;color:var(--text);box-shadow:none;border:1px solid var(--line)}.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.priceRow{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}.price{font-size:clamp(40px,8vw,84px);font-weight:950;letter-spacing:-.06em;color:#fff}.badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.04);font-weight:800}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:#facc15}.muted{color:var(--muted)}.small{font-size:13px}.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.mini{border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.03)}.mini .n{font-size:20px;font-weight:950;margin-top:5px}.axisHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px}.sectionTitle{font-size:18px;font-weight:950;margin:0}.axisControls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.categoryToggles{display:inline-flex;gap:6px;flex-wrap:wrap;padding:4px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.025)}.categoryToggle{border:0;border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.035);color:var(--muted);font-size:12px;font-weight:950;box-shadow:none}.categoryToggle.active[data-cat="D"]{background:rgba(59,130,246,.20);color:#dbeafe;box-shadow:0 0 0 1px rgba(96,165,250,.30) inset}.categoryToggle.active[data-cat="W"]{background:rgba(168,85,247,.20);color:#f3e8ff;box-shadow:0 0 0 1px rgba(192,132,252,.30) inset}.categoryToggle.active[data-cat="M"]{background:rgba(20,184,166,.20);color:#ccfbf1;box-shadow:0 0 0 1px rgba(45,212,191,.30) inset}.categoryToggle.active[data-cat="onchain"]{background:rgba(245,158,11,.20);color:#ffedd5;box-shadow:0 0 0 1px rgba(251,191,36,.30) inset}.categoryToggle:not(.active){opacity:.52}.filterShell{position:relative}.filterPanelToggle{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:950;box-shadow:none;background:rgba(15,23,42,.55);color:#cbd5e1;border:1px solid rgba(148,163,184,.22)}.filterPanelToggle.active{background:rgba(148,163,184,.18);color:#f8fafc;border-color:rgba(203,213,225,.32)}.filterPanel{position:absolute;right:0;top:calc(100% + 8px);width:min(340px,calc(100vw - 44px));z-index:40;border:1px solid var(--line);border-radius:18px;padding:12px;background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,16,32,.98));box-shadow:0 24px 70px rgba(0,0,0,.45);backdrop-filter:blur(12px)}.filterPanel[hidden]{display:none}.filterPanelSection{padding:2px 0 12px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07)}.filterPanelSection:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}.filterPanelTitle{font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 0 8px}.proximityOptions,.autoClusterOptions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.proximityBtn,.autoClusterBtn{border:0;border-radius:999px;padding:8px 11px;background:rgba(255,255,255,.045);color:var(--muted);font-size:12px;font-weight:950;box-shadow:none}.proximityBtn.active,.autoClusterBtn.active{background:rgba(247,147,26,.20);color:#ffedd5;box-shadow:0 0 0 1px rgba(247,147,26,.30) inset}.axisWrap{position:relative;margin-top:18px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));padding:18px 14px 26px;overflow:auto}.rotateChartBtn{position:absolute;left:14px;top:14px;z-index:30;width:38px;height:38px;border-radius:999px;padding:0;background:rgba(15,23,42,.72);color:#ffedd5;border:1px solid rgba(247,147,26,.46);box-shadow:0 8px 22px rgba(0,0,0,.25);font-size:22px;line-height:1}.priceAxis{position:relative;height:520px;margin:44px 8px 0}.axisLine{position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,rgba(34,197,94,.65),rgba(247,147,26,.9),rgba(239,68,68,.65));border-radius:999px;box-shadow:0 0 24px rgba(247,147,26,.16)}.currentAxisDot{position:absolute;top:50%;width:18px;height:18px;border-radius:999px;background:var(--btc);border:2px solid #ffedd5;box-shadow:0 0 0 5px rgba(247,147,26,.20),0 0 22px rgba(247,147,26,.55);transform:translate(-50%,-50%);z-index:4}.axisEndTick{position:absolute;top:calc(50% - 7px);width:2px;height:17px;background:rgba(255,255,255,.55);border-radius:99px}.axisHoverPoint{position:absolute;width:26px;height:32px;transform:translate(-50%,-50%);z-index:6;cursor:crosshair;border-radius:10px}.axisHoverPoint::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 0 0 4px rgba(255,255,255,.10);transform:translate(-50%,-50%);opacity:0;transition:opacity .12s ease}.axisHoverPoint:hover::before{opacity:1}.marker{position:absolute;transform:translateX(-50%);min-width:58px;max-width:110px;text-align:center;z-index:2;background:transparent!important}.marker::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:1px;background:rgba(255,255,255,.18)}.marker.above::after{top:100%;height:var(--stem,40px)}.marker.below::after{bottom:100%;height:var(--stem,40px)}.markerCard{border:1px solid var(--line);border-radius:14px;padding:6px 7px;background:rgba(255,255,255,.075);box-shadow:0 10px 22px rgba(0,0,0,.20),0 0 0 1px rgba(255,255,255,.035) inset;backdrop-filter:blur(8px);overflow:hidden;background-clip:padding-box;contain:paint}.marker.BTC .markerCard{background:linear-gradient(180deg,rgba(247,147,26,.30),rgba(247,147,26,.08));border-color:rgba(247,147,26,.72)}.marker.D .markerCard{background:linear-gradient(180deg,rgba(59,130,246,.22),rgba(59,130,246,.055));border-color:rgba(96,165,250,.52)}.marker.W .markerCard{background:linear-gradient(180deg,rgba(168,85,247,.23),rgba(168,85,247,.055));border-color:rgba(192,132,252,.54)}.marker.M .markerCard{background:linear-gradient(180deg,rgba(20,184,166,.22),rgba(20,184,166,.055));border-color:rgba(45,212,191,.52)}.marker.onchain .markerCard{background:linear-gradient(180deg,rgba(245,158,11,.23),rgba(245,158,11,.055));border-color:rgba(251,191,36,.58)}.marker.cluster{min-width:132px;max-width:220px}.marker.cluster .markerCard{background:linear-gradient(180deg,rgba(100,116,139,.24),rgba(100,116,139,.06));border-color:rgba(203,213,225,.42)}.markerLabel{font-weight:950;font-size:11px;line-height:1.05;white-space:nowrap;letter-spacing:-.02em;display:inline-flex;align-items:center;justify-content:center;gap:3px}.lead{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:19px;border-radius:999px;padding:0 8px;font-size:10px;font-weight:1000;line-height:1;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;border:1px solid transparent;overflow:hidden;background-clip:padding-box}.lead.D{color:#eff6ff;background:linear-gradient(180deg,rgba(96,165,250,.52),rgba(37,99,235,.20));border-color:rgba(147,197,253,.28)}.lead.W{color:#faf5ff;background:linear-gradient(180deg,rgba(192,132,252,.52),rgba(126,34,206,.20));border-color:rgba(216,180,254,.28)}.lead.M{color:#f0fdfa;background:linear-gradient(180deg,rgba(45,212,191,.50),rgba(15,118,110,.20));border-color:rgba(94,234,212,.28)}.lead.OC{color:#fffbeb;background:linear-gradient(180deg,rgba(245,158,11,.55),rgba(180,83,9,.22));border-color:rgba(251,191,36,.30)}.lead.BTC{color:#ffedd5;background:linear-gradient(180deg,rgba(247,147,26,.56),rgba(247,147,26,.20));border-color:rgba(251,146,60,.34)}.markerPrice{font-size:12px;font-weight:950;margin-top:3px;white-space:nowrap}.marker.D .markerPrice{color:#dbeafe}.marker.W .markerPrice{color:#f3e8ff}.marker.M .markerPrice{color:#ccfbf1}.marker.onchain .markerPrice,.marker.BTC .markerPrice{color:#ffedd5}.verticalAxis{position:relative;min-height:640px;margin:44px 8px 0;overflow:hidden}.vAxisLine{position:absolute;left:72px;top:0;bottom:0;width:3px;background:linear-gradient(180deg,rgba(239,68,68,.65),rgba(247,147,26,.9),rgba(34,197,94,.65));border-radius:999px;box-shadow:0 0 24px rgba(247,147,26,.16)}.vAxisEndTick{position:absolute;left:64px;width:18px;height:2px;background:rgba(255,255,255,.55);border-radius:999px;transform:translateY(-50%)}.vCurrentDot{position:absolute;left:72px;width:18px;height:18px;border-radius:999px;background:var(--btc);border:2px solid #ffedd5;box-shadow:0 0 0 5px rgba(247,147,26,.20),0 0 22px rgba(247,147,26,.55);transform:translate(-50%,-50%);z-index:4}.vAxisHoverPoint{position:absolute;left:72px;width:38px;height:26px;transform:translate(-50%,-50%);z-index:6;cursor:crosshair;border-radius:10px}.vAxisHoverPoint::before{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 0 0 4px rgba(255,255,255,.10);transform:translate(-50%,-50%);opacity:0}.vAxisHoverPoint:hover::before{opacity:1}.vMarker{position:absolute;min-width:58px;max-width:110px;text-align:center;z-index:2;transform:translateY(-50%);background:transparent!important}.vMarker::before{content:'';position:absolute;top:50%;right:100%;height:1px;background:rgba(255,255,255,.18);width:var(--stem,26px);transform:translateY(-50%)}.vMarker .markerCard{padding:6px 7px}.vMarker.BTC .markerCard{background:linear-gradient(180deg,rgba(247,147,26,.30),rgba(247,147,26,.08));border-color:rgba(247,147,26,.72)}.vMarker.D .markerCard{background:linear-gradient(180deg,rgba(59,130,246,.22),rgba(59,130,246,.055));border-color:rgba(96,165,250,.52)}.vMarker.W .markerCard{background:linear-gradient(180deg,rgba(168,85,247,.23),rgba(168,85,247,.055));border-color:rgba(192,132,252,.54)}.vMarker.M .markerCard{background:linear-gradient(180deg,rgba(20,184,166,.22),rgba(20,184,166,.055));border-color:rgba(45,212,191,.52)}.vMarker.onchain .markerCard{background:linear-gradient(180deg,rgba(245,158,11,.23),rgba(245,158,11,.055));border-color:rgba(251,191,36,.58)}.vMarker.cluster .markerCard{background:linear-gradient(180deg,rgba(100,116,139,.24),rgba(100,116,139,.06));border-color:rgba(203,213,225,.42)}.priceAxis.is-hovering .marker:not(.hoverActive),.verticalAxis.is-hovering .vMarker:not(.hoverActive){opacity:.62;filter:saturate(.78)}.marker.hoverActive,.vMarker.hoverActive{z-index:12!important;opacity:1!important;filter:none!important}.marker.hoverActive .markerCard,.vMarker.hoverActive .markerCard{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(255,255,255,.26) inset,0 0 0 3px rgba(255,255,255,.08),0 18px 42px rgba(0,0,0,.36)!important}.marker.hoverActive::after,.vMarker.hoverActive::before{background:rgba(255,255,255,.72)!important;box-shadow:0 0 12px rgba(255,255,255,.32)}.axisHoverPoint.hoverActive::before,.vAxisHoverPoint.hoverActive::before{opacity:1;background:#fff}.hoverTooltip{position:fixed;z-index:99999;pointer-events:none;background:rgba(8,12,22,.96);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:5px 7px;color:#fff;font-weight:900;font-size:11px;box-shadow:0 12px 28px rgba(0,0,0,.38);white-space:nowrap;opacity:0;transform:translate(10px,-10px);transition:opacity .08s ease}.hoverTooltip.show{opacity:1}.hoverTooltip .tipPrice{color:#dbeafe;margin-left:6px}.hoverTooltip .tipPct.plus{color:var(--green);margin-left:6px}.hoverTooltip .tipPct.minus{color:var(--red);margin-left:6px}.levelTableCard,.diagnosticsCard{margin-top:16px}.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;font-size:13px;vertical-align:top}.table th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.currentRow td{background:rgba(247,147,26,.14);font-weight:900}.pill{border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;display:inline-block}.onchainStatus{display:grid;gap:8px}.ocRow{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(34,211,238,.05);align-items:center}.ocName{font-weight:900}.ocVal{font-weight:950;white-space:nowrap}.ocNote{font-size:11px;color:var(--muted);margin-top:3px}.detailsBody{margin-top:12px}.empty{padding:22px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center}.footer{color:var(--muted);font-size:12px;margin-top:14px;line-height:1.4}.userGuideCard{margin-top:16px}.userGuideCard summary{cursor:pointer;font-weight:950}.guideBody{margin-top:12px;display:grid;gap:10px}.guideSection{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025);padding:10px 12px}.guideSection>summary{font-size:14px}.guideText{color:#dbe3ef;font-size:13px;line-height:1.55;margin-top:10px}.guideText p{margin:0 0 10px}.guideText p:last-child{margin-bottom:0}.tagDiagram{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:12px;margin-top:10px;overflow:auto;color:#e5e7eb;font-size:13px;line-height:1.35}.tagDiagram .tagBig{font-size:24px;font-weight:950;letter-spacing:.04em;color:#fff}.tagDiagram .guideLine{color:#94a3b8;white-space:pre}.tagDiagram .guideDef{color:#cbd5e1;white-space:pre}.ocCode{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#ffedd5}.functionList{display:grid;gap:10px}.functionItem{border-top:1px solid rgba(255,255,255,.07);padding-top:10px}.functionItem:first-child{border-top:0;padding-top:0}.functionItem .fnTitle{font-weight:950;color:#fff;margin-bottom:4px}
- .card>details>summary,.sectionTitle{font-size:18px;font-weight:950;margin:0;color:var(--text);letter-spacing:-.01em}
-.card>details>summary{list-style:none;display:flex;align-items:center;gap:10px}
-.card>details>summary::-webkit-details-marker{display:none}
-.card>details>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.25);color:#ffedd5;font-size:13px;line-height:1;transition:transform .14s ease,background .14s ease}
-.card>details[open]>summary::before{content:"▾";background:rgba(247,147,26,.16);border-color:rgba(247,147,26,.35)}
-.guideSection>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer}
-.guideSection>summary::-webkit-details-marker{display:none}
-.guideSection>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.20);color:#cbd5e1;font-size:11px;line-height:1}
-.guideSection[open]>summary::before{content:"▾";color:#ffedd5;background:rgba(247,147,26,.12);border-color:rgba(247,147,26,.28)}
-.guideFormula{display:block;font-weight:900;color:#ffedd5;background:transparent;border:0;border-radius:0;padding:0;margin:0 0 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
-.ocLevelBlock{border-top:1px solid rgba(255,255,255,.10);padding-top:12px;margin-top:12px}
-.ocLevelBlock:first-child{border-top:0;padding-top:0;margin-top:0}
-.ocLevelTitle{font-weight:950;color:#fff;margin:0 0 8px}
-@media(max-width:760px){body{padding:12px}header{display:block}.actions{justify-content:flex-start;margin-top:14px}.card{padding:14px;border-radius:20px}.split{grid-template-columns:1fr}.axisControls{justify-content:flex-start}.categoryToggles{border-radius:18px}.filterShell{position:static}.filterPanel{left:22px;right:22px;top:auto;width:auto;margin-top:8px}.priceAxis{height:620px}.marker,.vMarker{min-width:56px;max-width:88px}.markerLabel{font-size:10px}.markerPrice{font-size:11px}.table{table-layout:fixed}.table th,.table td{font-size:11px;padding:7px 4px;overflow-wrap:anywhere}.table th:nth-child(2),.table td:nth-child(2){display:none}}
+:root{
+  --bg:#08090c;--surface:#111318;--surface2:#181c24;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#eef0f6;--muted:#6b7280;--muted2:#4b5563;
+  --btc:#f7931a;--btc-dim:rgba(247,147,26,0.12);--btc-glow:rgba(247,147,26,0.20);
+  --green:#4ade80;--red:#f87171;--amber:#fbbf24;
+  --col-D:#60a5fa;--col-W:#a78bfa;--col-M:#34d399;--col-OC:#fbbf24;
+  --col-D-dim:rgba(96,165,250,0.10);--col-W-dim:rgba(167,139,250,0.10);
+  --col-M-dim:rgba(52,211,153,0.10);--col-OC-dim:rgba(251,191,36,0.10);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:10px;--r-lg:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-synthesis:none;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:100vh;padding:24px 20px 60px}
+.wrap{max-width:960px;margin:0 auto}
 
-/* v47 regression fixes */
-.marker::after{pointer-events:none;z-index:1}
-.markerCard{position:relative;z-index:2}
-.clusterTags{display:flex;gap:3px;justify-content:center;align-items:center;flex-wrap:wrap;line-height:1.1}
-.marker.cluster{min-width:132px;max-width:220px}
-.marker.cluster .markerLabel{white-space:normal}
-.clusterInterval{position:absolute;top:50%;height:8px;border-radius:999px;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12),0 0 18px rgba(255,255,255,.36);transform:translateY(-50%);z-index:6;cursor:crosshair;min-width:10px}
-.vClusterInterval{position:absolute;left:72px;width:8px;border-radius:999px;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.12),0 0 18px rgba(255,255,255,.36);transform:translateX(-50%);z-index:6;cursor:crosshair;min-height:10px}
-.hoverTooltip .tipPct.plus{color:#22c55e}
-.hoverTooltip .tipPct.minus{color:#ef4444}
+/* HEADER — fix: only title + status dot, no timestamp line */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.hdr-left{display:flex;align-items:center;gap:10px;overflow:visible}
+.hdr-title{font-family:var(--font);font-size:20px;font-weight:800;letter-spacing:-0.04em;line-height:1.3;overflow:visible;color:var(--text);display:block}
+.hdr-title span{color:var(--btc)}
+/* status dot inline with title, no second line */
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--muted2);flex-shrink:0;transition:background .3s;margin-top:1px}
+.sdot.ok{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sdot.bad{background:var(--red)}
+.sdot.loading{background:var(--btc);animation:blink 1.1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-family:var(--font);font-size:12px;font-weight:700;padding:7px 14px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--surface2);border-color:rgba(255,255,255,.2)}
+.btn.primary{background:var(--btc);color:#1a0900;border-color:var(--btc);font-weight:800}
+.btn.primary:hover{background:#ffaa33}
+.btn.active{background:var(--btc-dim);border-color:rgba(247,147,26,.35);color:var(--btc)}
 
-/* v48 requested layout + collision fixes */
-.onchainCard{margin-top:16px}
-.statusStack{display:flex;flex-direction:column;align-items:flex-start}
-.priceSourceCount{font-size:12px;color:var(--muted);margin-top:5px;font-weight:700}
-.clusterTags{display:grid!important;grid-template-columns:repeat(2,max-content);gap:3px 4px;justify-content:center;align-items:center;line-height:1.05}
-.marker.cluster,.vMarker.cluster{min-width:128px;max-width:218px}
-.marker.cluster .markerCard,.vMarker.cluster .markerCard{padding:7px 8px}
-.marker.cluster .markerLabel,.vMarker.cluster .markerLabel{white-space:normal;display:block}
-.tableDistance{font-weight:500;white-space:nowrap}
-.tableDistance.plus{color:var(--green)}
-.tableDistance.minus{color:var(--red)}
-.tableDistance.neutral{color:#facc15}
+/* HERO */
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 22px 18px;margin-bottom:14px;display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;justify-content:space-between;overflow:visible}
+.hero-price{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;overflow:visible}
+.price-big{font-family:var(--font);font-size:clamp(36px,7vw,64px);font-weight:800;letter-spacing:-0.055em;color:#fff;line-height:1.2;overflow:visible;display:block}
+.price-chg-wrap{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;flex-shrink:0}
+.price-chg-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);line-height:1}
+.price-chg{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
+.price-chg.up{background:rgba(74,222,128,.12);color:var(--green)}
+.price-chg.dn{background:rgba(248,113,113,.12);color:var(--red)}
+.price-sub{font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
+.hero-stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;min-width:120px}
+.stat-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.stat-card .val{font-size:13px;font-weight:700;margin-top:3px;font-family:var(--mono);white-space:nowrap}
+.val.s{color:var(--green)}.val.r{color:var(--red)}
 
- .card>details>summary,.sectionTitle{font-size:18px;font-weight:950;margin:0;color:var(--text);letter-spacing:-.01em}
-.card>details>summary{list-style:none;display:flex;align-items:center;gap:10px}
-.card>details>summary::-webkit-details-marker{display:none}
-.card>details>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.25);color:#ffedd5;font-size:13px;line-height:1;transition:transform .14s ease,background .14s ease}
-.card>details[open]>summary::before{content:"▾";background:rgba(247,147,26,.16);border-color:rgba(247,147,26,.35)}
-.guideSection>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer}
-.guideSection>summary::-webkit-details-marker{display:none}
-.guideSection>summary::before{content:"▸";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.20);color:#cbd5e1;font-size:11px;line-height:1}
-.guideSection[open]>summary::before{content:"▾";color:#ffedd5;background:rgba(247,147,26,.12);border-color:rgba(247,147,26,.28)}
-.guideFormula{display:block;font-weight:900;color:#ffedd5;background:transparent;border:0;border-radius:0;padding:0;margin:0 0 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
-.ocLevelBlock{border-top:1px solid rgba(255,255,255,.10);padding-top:12px;margin-top:12px}
-.ocLevelBlock:first-child{border-top:0;padding-top:0;margin-top:0}
-.ocLevelTitle{font-weight:950;color:#fff;margin:0 0 8px}
-@media(max-width:760px){.clusterTags{grid-template-columns:repeat(2,max-content)}.marker.cluster,.vMarker.cluster{max-width:158px}}
+/* FILTERS */
+.filter-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filter-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 3px}
+.tog-grp{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px}
+.tog{font-family:var(--font);font-size:11px;font-weight:700;padding:4px 11px;border-radius:999px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
+.tog.on{background:var(--surface2);color:var(--text)}
+.tog[data-cat="D"].on{background:var(--col-D-dim);color:var(--col-D)}
+.tog[data-cat="W"].on{background:var(--col-W-dim);color:var(--col-W)}
+.tog[data-cat="M"].on{background:var(--col-M-dim);color:var(--col-M)}
+.tog[data-cat="onchain"].on{background:var(--col-OC-dim);color:var(--col-OC)}
+.lbl-sm{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:0 4px;white-space:nowrap}
+.zone-tog{font-family:var(--font);font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
+.zone-tog.on{background:var(--btc-dim);border-color:rgba(247,147,26,.35);color:var(--btc)}
 
+/* LEGEND */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-pip{width:22px;height:2px;border-radius:1px;flex-shrink:0}
+.leg-pip.D{background:var(--col-D)}.leg-pip.W{background:var(--col-W)}
+.leg-pip.M{background:var(--col-M)}.leg-pip.OC{background:var(--col-OC)}
+/* fix: zone legend back to neutral white dashed style */
+.leg-zone{width:22px;height:11px;border-radius:3px;background:rgba(255,255,255,.13);border:.5px dashed rgba(255,255,255,.4);flex-shrink:0}
+.leg-dot-btc{width:10px;height:10px;border-radius:50%;background:var(--btc);flex-shrink:0}
 
-/* v49 chart geometry fixes */
-/* v50 geometry tightening */
-.axisHoverPoint,.vAxisHoverPoint{z-index:7}
-.axisHoverPoint::before,.vAxisHoverPoint::before{width:6px!important;height:6px!important;box-shadow:0 0 0 3px rgba(255,255,255,.10)!important}
-.marker::after,.vMarker::before{opacity:.82}
+/* CHART */
+.chart-shell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
+.chart-inner{display:grid;grid-template-columns:44px 1fr 130px;align-items:stretch;position:relative}
+.axis-price-col{padding:0;position:relative;flex-shrink:0;border-right:1px solid var(--border)}
+.tick-lbl{position:absolute;right:8px;font-size:10px;color:var(--muted2);font-family:var(--mono);transform:translateY(-50%);white-space:nowrap;line-height:1}
+.canvas-col{position:relative;overflow:hidden}
+.labels-col{position:relative;border-left:1px solid var(--border);overflow:hidden}
+.zone-res-bg{position:absolute;left:0;right:0;top:0;background:rgba(248,113,113,.025);pointer-events:none}
+.zone-sup-bg{position:absolute;left:0;right:0;bottom:0;background:rgba(74,222,128,.025);pointer-events:none}
+.h-grid{position:absolute;left:0;right:0;height:.5px;background:rgba(255,255,255,.05);pointer-events:none}
+/* fix: zone back to Option A — stronger neutral white fill + bright dashed borders */
+.azone{position:absolute;left:0;right:0;background:rgba(255,255,255,.13);border-top:1px dashed rgba(255,255,255,.38);border-bottom:1px dashed rgba(255,255,255,.38);pointer-events:none;z-index:1}
+.lvl-line{position:absolute;left:0;right:0;height:1px;pointer-events:none;transition:opacity .15s,height .15s;z-index:2}
+.lvl-dot{position:absolute;right:2px;width:8px;height:8px;border-radius:50%;transform:translateY(-50%);z-index:3;pointer-events:none;border:1.5px solid var(--surface)}
+.btc-line{position:absolute;left:0;right:0;height:2px;background:var(--btc);z-index:5;pointer-events:none}
+.btc-dot{position:absolute;right:2px;width:14px;height:14px;border-radius:50%;background:var(--btc);border:2px solid var(--bg);transform:translateY(-50%);z-index:6;pointer-events:none}
+.btc-dot-glow{position:absolute;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--btc-glow);transform:translateY(-50%);z-index:4;pointer-events:none}
+/* fix: zone hover zone same z-index as line hover zones */
+.hover-zone{position:absolute;left:0;right:0;height:28px;transform:translateY(-50%);cursor:crosshair;z-index:8}
+.hover-zone.hz-zone{transform:none;z-index:8}
 
-.clusterInterval{height:2px!important;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 8px rgba(255,255,255,.30)!important;min-width:8px!important;transform:translateY(-50%)!important}
-.vClusterInterval{width:2px!important;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 8px rgba(255,255,255,.30)!important;min-height:8px!important;transform:translate(-50%,0)!important}
-.axisHoverPoint::before,.vAxisHoverPoint::before{width:7px!important;height:7px!important;box-shadow:0 0 0 3px rgba(255,255,255,.10)!important}
-.marker::after,.vMarker::before{z-index:1!important}
-.markerCard{position:relative;z-index:2}
+/* LABELS */
+/* fix: tighten pct gap — use gap on flex container, not margin-left:auto */
+.lbl-item{position:absolute;left:0;right:0;display:flex;align-items:center;gap:5px;transform:translateY(-50%);cursor:pointer;transition:opacity .12s;z-index:1;padding:0 8px}
+.lbl-item:hover{opacity:.75}
+.lbl-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;font-family:var(--mono);line-height:1.4}
+.lbl-ocname{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+/* fix: pct sits right after badge/name with a small gap, no wide spacer */
+.lbl-pct{font-size:10px;font-weight:700;white-space:nowrap;font-family:var(--mono);flex-shrink:0;margin-left:auto}
+.lbl-pct.pos{color:var(--green)}.lbl-pct.neg{color:var(--red)}.lbl-pct.near{color:var(--amber)}
 
+/* BTC label */
+.btc-lbl{position:absolute;left:0;right:0;display:flex;align-items:center;gap:5px;transform:translateY(-50%);z-index:2;padding:0 8px;pointer-events:none}
+.btc-lbl-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--btc-dim);color:var(--btc);border:.5px solid rgba(247,147,26,.55);font-family:var(--mono);white-space:nowrap;line-height:1.4}
+.btc-lbl-price{font-size:10px;font-weight:700;color:var(--btc);font-family:var(--mono);white-space:nowrap}
 
-.tableFilterState{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 10px;padding:9px 10px;border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(15,23,42,.38);color:var(--muted);font-size:12px;line-height:1.25;cursor:pointer}
-.tableFilterState:hover{border-color:rgba(247,147,26,.35);background:rgba(247,147,26,.06)}
-.tableFilterState .filterStateLabel{font-weight:950;color:#cbd5e1;text-transform:uppercase;letter-spacing:.06em;font-size:11px}
-.tableFilterState .filterChip{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-weight:900;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#e5e7eb}
-.tableFilterState .filterChip.off{opacity:.45;text-decoration:line-through}
-.tableFilterState .hint{margin-left:auto;color:#94a3b8;font-size:11px}
+/* display group label */
+.dgrp-lbl{position:absolute;left:0;right:0;display:flex;align-items:center;gap:5px;transform:translateY(-50%);cursor:pointer;transition:opacity .12s;z-index:1;padding:0 8px}
+.dgrp-lbl:hover{opacity:.75}
+.dgrp-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:var(--mono);white-space:nowrap;flex-shrink:0;line-height:1.4;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:.5px solid rgba(255,255,255,.18)}
 
-/* v51: cluster interval appears only during hover intelligence, like regular white dots */
-.clusterInterval,.vClusterInterval{opacity:0!important;pointer-events:none!important;transition:opacity .10s ease!important}
-.clusterInterval.hoverActive,.vClusterInterval.hoverActive{opacity:1!important;pointer-events:auto!important}
+/* zone label */
+.zone-lbl{position:absolute;left:0;right:0;display:flex;align-items:center;gap:5px;transform:translateY(-50%);cursor:pointer;transition:opacity .12s;z-index:1;padding:0 8px}
+.zone-lbl:hover{opacity:.75}
+.zone-badge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;font-family:var(--mono);white-space:nowrap;flex-shrink:0;line-height:1.4;background:rgba(255,255,255,.10);color:rgba(255,255,255,.8);border:.5px dashed rgba(255,255,255,.35);letter-spacing:.03em}
+.zone-range{font-size:9px;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.zone-pct{font-size:10px;font-weight:700;white-space:nowrap;font-family:var(--mono);flex-shrink:0;margin-left:auto}
+.zone-pct.pos{color:var(--green)}.zone-pct.neg{color:var(--red)}.zone-pct.near{color:var(--amber)}
+
+/* TOOLTIP */
+.tooltip{position:fixed;z-index:9999;pointer-events:none;background:var(--surface);border:.5px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.5);opacity:0;transition:opacity .08s;min-width:180px;max-width:290px}
+.tooltip.show{opacity:1}
+.tt-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.tt-headbadge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;font-family:var(--mono);line-height:1.4;flex-shrink:0}
+.tt-headlabel{font-size:11px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt-divider{height:.5px;background:var(--border);margin:4px 0}
+.tt-members{display:flex;flex-direction:column;gap:3px}
+.tt-member{display:flex;align-items:center;gap:5px}
+.tt-mbadge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;font-family:var(--mono);flex-shrink:0;line-height:1.4}
+/* zone sub-members inside a group tooltip */
+.tt-zone-members{margin-top:3px;margin-left:8px;display:flex;flex-direction:column;gap:2px}
+.tt-mname{font-size:10px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt-mprice{font-size:11px;font-weight:700;color:#fff;font-family:var(--mono);white-space:nowrap}
+.tt-mpct{font-size:10px;font-family:var(--mono);font-weight:700;white-space:nowrap;margin-left:auto}
+.tt-mpct.pos{color:var(--green)}.tt-mpct.neg{color:var(--red)}.tt-mpct.near{color:var(--amber)}
+.tt-range{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px}
+
+.empty-chart{display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:13px;border:1px dashed var(--border2);border-radius:var(--r);margin:12px}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:12px}
+.section summary{display:flex;align-items:center;gap:10px;padding:13px 18px;cursor:pointer;list-style:none;font-size:13px;font-weight:700;color:var(--text);transition:background .12s}
+.section summary:hover{background:rgba(255,255,255,.02)}
+.section summary::-webkit-details-marker{display:none}
+.section summary::before{content:'▸';font-size:10px;color:var(--muted2);width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;flex-shrink:0;transition:all .12s}
+details[open] summary::before{content:'▾';color:var(--btc);background:var(--btc-dim);border-color:rgba(247,147,26,.3)}
+.section-body{padding:0 18px 16px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:7px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.tbl td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.cur td{background:var(--btc-dim)}
+.pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:var(--mono)}
+.pill.s{background:rgba(74,222,128,.1);color:var(--green)}
+.pill.r{background:rgba(248,113,113,.1);color:var(--red)}
+.pill.c{background:var(--btc-dim);color:var(--btc)}
+.dist{font-family:var(--mono);font-size:12px;font-weight:600}
+.dist.pos{color:var(--green)}.dist.neg{color:var(--red)}.dist.zero{color:var(--amber)}
+.diag-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.diag-tbl th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600;font-family:var(--font)}
+.diag-tbl td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--muted);word-break:break-word;font-family:var(--mono)}
+.diag-tbl tr:last-child td{border-bottom:none}
+.ok{color:var(--green)!important}.bad{color:var(--red)!important}
+.guide-body{display:grid;gap:8px}
+.gsec{border:1px solid var(--border);border-radius:var(--r);padding:10px 13px}
+.gsec summary{font-size:12px;font-weight:700;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.gsec summary::-webkit-details-marker{display:none}
+.gsec summary::before{content:'▸';font-size:9px;color:var(--muted2)}
+.gsec[open] summary::before{content:'▾';color:var(--btc)}
+.gtxt{margin-top:9px;font-size:12px;color:#9ca3af;line-height:1.6}
+.gtxt p{margin-bottom:7px}.gtxt p:last-child{margin-bottom:0}
+.mono-blk{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;margin-top:7px;color:#d1d5db;line-height:1.5}
+.oc{color:var(--col-OC);font-weight:700}
+.fn-list{display:grid;gap:7px;margin-top:7px}
+.fn-item{border-top:1px solid var(--border);padding-top:7px}
+.fn-item:first-child{border-top:none;padding-top:0}
+.fn-title{font-weight:700;color:var(--text);font-size:12px;margin-bottom:2px}
+.fn-desc{font-size:12px;color:#9ca3af;line-height:1.55}
+.loading-state{padding:24px;display:flex;flex-direction:column;gap:8px}
+.skel{height:36px;border-radius:var(--r);background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shim 1.3s ease infinite}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.footer{text-align:center;font-size:11px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
+@media(max-width:640px){
+  body{padding:14px 12px 40px}
+  .chart-inner{grid-template-columns:36px 1fr 110px}
+  .hero{flex-direction:column;gap:12px}
+  .hero-stats{justify-content:flex-start}
+  .filter-bar{gap:5px}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header><div><h1>Bitcoin Price Ladder</h1></div><div class="actions"><button id="refreshBtn">Refresh now</button><button class="secondary" id="toggleAuto">Auto refresh: off</button></div></header>
-<div class="card"><div class="priceRow"><div id="price" class="price">Loading…</div><div><div id="status" class="badge loading">Starting</div><div id="updated" class="muted small" style="margin-top:8px">—</div></div></div><div class="split"><div class="mini"><div class="muted small">Nearest support</div><div id="support" class="n">—</div></div><div class="mini"><div class="muted small">Nearest resistance</div><div id="resistance" class="n">—</div></div></div><div class="axisHeader"><h2 class="sectionTitle">Linear support / resistance axis</h2><div class="axisControls"><div class="categoryToggles"><button class="categoryToggle active" data-cat="D">Daily</button><button class="categoryToggle active" data-cat="W">Weekly</button><button class="categoryToggle active" data-cat="M">Monthly</button><button class="categoryToggle active" data-cat="onchain">On-chain</button></div><div class="filterShell"><button id="filterPanelBtn" class="filterPanelToggle" aria-expanded="false">Advanced</button><div id="filterPanel" class="filterPanel" hidden><div class="filterPanelSection"><div class="filterPanelTitle">Distance from BTC</div><div class="proximityOptions"><button class="proximityBtn" data-prox="2">±2%</button><button class="proximityBtn" data-prox="5">±5%</button><button class="proximityBtn" data-prox="10">±10%</button><button class="proximityBtn active" data-prox="all">All</button></div></div><div class="filterPanelSection"><div class="autoClusterOptions"><span class="filterPanelTitle" style="margin:0;flex:1">Auto-cluster</span><button id="autoClusterOn" class="autoClusterBtn active">On</button><button id="autoClusterOff" class="autoClusterBtn">Off</button></div></div></div></div></div></div><div id="ladder" class="axisWrap"><div class="empty">Loading levels…</div></div></div>
-<section class="card levelTableCard"><details id="levelTableDetails"><summary>Level Table</summary><div id="tableFilterState" class="tableFilterState" title="Click to jump to filters">Loading filter state…</div><div id="maTable" style="margin-top:12px"><div class="empty">Loading level table…</div></div></details></section>
-<section class="card userGuideCard"><details id="userGuideDetails"><summary>User Guide</summary><div class="guideBody">
-  <details class="guideSection"><summary>How to Read the Ladder</summary><div class="guideText">
-    <p>This tool visualizes Bitcoin market structure using a combination of traditional moving averages and on-chain valuation levels.</p>
-    <p>The chart is designed to show where important support and resistance levels are located relative to the current BTC price.</p>
-    <p>Levels above the current BTC price are treated as resistances.</p>
-    <p>Levels below the current BTC price are treated as supports.</p>
-    <p>The tool does not make predictions. It is intended as a visual framework for understanding market positioning and historical valuation zones.</p>
-  </div></details>
-  <details class="guideSection"><summary>Tag Structure</summary><div class="guideText">
-    <div class="tagDiagram" aria-label="Moving average tag structure">
-      <div class="tagBig">X##MA</div>
-      <div class="guideLine">│ │ └── MA = Moving Average</div>
-      <div class="guideLine">│ └──── ## = 7, 25, 99, 200, 365</div>
-      <div class="guideLine">└────── X  = D, W, M</div>
-      <div class="guideDef">          D = Daily</div>
-      <div class="guideDef">          W = Weekly</div>
-      <div class="guideDef">          M = Monthly</div>
+
+<!-- HEADER: fix — title + status dot only, no second line with timestamp -->
+<header class="hdr">
+  <div class="hdr-left">
+    <span class="hdr-title">BTC <span>Price Ladder</span></span>
+    <div class="sdot loading" id="sdot"></div>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn primary" id="refreshBtn">↻ Refresh</button>
+    <button class="btn" id="autoBtn">Auto: off</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div>
+    <div class="hero-price">
+      <span class="price-big" id="priceVal">—</span>
+      <div class="price-chg-wrap" id="priceChgWrap" style="display:none">
+        <span class="price-chg-lbl">24h</span>
+        <span class="price-chg" id="priceChg"></span>
+      </div>
     </div>
-    <div class="tagDiagram" aria-label="On-chain tag structure">
-      <div class="guideDef"><span class="ocCode">RP</span>    = Realized Price</div>
-      <div class="guideDef"><span class="ocCode">STHCB</span> = Short-Term Holder Cost Basis</div>
-      <div class="guideDef"><span class="ocCode">LTHCB</span> = Long-Term Holder Cost Basis</div>
-      <div class="guideDef"><span class="ocCode">TMM</span>   = True Market Mean</div>
-    </div>
-  </div></details>
-  <details class="guideSection"><summary>On-Chain Levels</summary><div class="guideText">
-    <div class="ocLevelBlock">
-      <div class="ocLevelTitle">Realized Price (RP)</div>
-      <p>Realized Price represents the average acquisition price of all BTC based on the price at which each coin last moved on-chain.</p>
-      <p>It is calculated as:</p>
-      <p class="guideFormula">Realized Cap ÷ Circulating Supply</p>
-      <p>Realized Cap is calculated by valuing each BTC at the price when it last moved on-chain, rather than using the current market price.</p>
-      <p>Historically, Realized Price has acted as an important long-term support level during bear markets.</p>
-    </div>
-    <div class="ocLevelBlock">
-      <div class="ocLevelTitle">Short-Term Holder Cost Basis (STHCB)</div>
-      <p>STHCB estimates the average cost basis of short-term Bitcoin holders.</p>
-      <p>Short-term holders are typically defined as coins moved within the last ~155 days.</p>
-      <p>This level often reflects speculative market positioning and reacts relatively quickly to market changes.</p>
-    </div>
-    <div class="ocLevelBlock">
-      <div class="ocLevelTitle">Long-Term Holder Cost Basis (LTHCB)</div>
-      <p>LTHCB estimates the average cost basis of long-term Bitcoin holders.</p>
-      <p>Long-term holders are generally defined as coins held for more than ~155 days.</p>
-      <p>This metric tends to move slowly and is often associated with macro accumulation zones and strong-holder positioning.</p>
-    </div>
-    <div class="ocLevelBlock">
-      <div class="ocLevelTitle">True Market Mean (TMM)</div>
-      <p>True Market Mean is a valuation model derived from Cointime Economics.</p>
-      <p>It attempts to estimate a more economically weighted average market cost basis by adjusting for economically inactive supply.</p>
-      <p>TMM generally moves more slowly than spot price and may help identify macro market equilibrium zones.</p>
-    </div>
-  </div></details>
-  <details class="guideSection"><summary>Functions</summary><div class="guideText functionList">
-    <div class="functionItem"><div class="fnTitle">Horizontal / Vertical View</div><div>Use the rotation button on the chart to switch between horizontal and vertical ladder layouts.</div></div>
-    <div class="functionItem"><div class="fnTitle">Auto Cluster</div><div>When Auto Cluster is enabled, nearby levels may be grouped into clusters to reduce visual overlap and improve readability. Cluster ranges are highlighted on the axis during hover. When Auto Cluster is disabled, levels are displayed individually.</div></div>
-    <div class="functionItem"><div class="fnTitle">Hover Intelligence</div><div>Hovering over a tag highlights its exact position on the axis. Hovering over a cluster tag highlights the entire cluster range. The tooltip displays the level name, current level value, and distance from current BTC price. Positive percentages indicate resistances above current BTC price. Negative percentages indicate supports below current BTC price.</div></div>
-    <div class="functionItem"><div class="fnTitle">Distance Filter</div><div>The distance filter limits which levels are displayed relative to the current BTC price. Available options are ±2%, ±5%, ±10%, and All. Smaller ranges focus on nearby market structure. All displays every available level regardless of distance from current BTC price.</div></div>
-  </div></details>
-</div></details></section>
-<section class="card diagnosticsCard"><details><summary>Verification, source, and diagnostics details</summary><div id="detailsBody" class="detailsBody"></div></details></section>
+    <div class="price-sub" id="priceSub">Loading from exchanges…</div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-card"><div class="lbl">Nearest support</div><div class="val s" id="supportVal">—</div></div>
+    <div class="stat-card"><div class="lbl">Nearest resistance</div><div class="val r" id="resistVal">—</div></div>
+  </div>
 </div>
+
+<div class="filter-bar">
+  <span class="lbl-sm">Show</span>
+  <div class="tog-grp">
+    <button class="tog on" data-cat="D">Daily</button>
+    <button class="tog on" data-cat="W">Weekly</button>
+    <button class="tog on" data-cat="M">Monthly</button>
+    <button class="tog on" data-cat="onchain">On-chain</button>
+  </div>
+  <div class="filter-sep"></div>
+  <span class="lbl-sm">Range</span>
+  <div class="tog-grp">
+    <button class="tog" data-prox="5">±5%</button>
+    <button class="tog on" data-prox="10">±10%</button>
+    <button class="tog" data-prox="all">All</button>
+  </div>
+  <div class="filter-sep"></div>
+  <button class="zone-tog on" id="zoneBtn">⬡ Zones</button>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-pip D"></div>Daily MA</div>
+  <div class="leg"><div class="leg-pip W"></div>Weekly MA</div>
+  <div class="leg"><div class="leg-pip M"></div>Monthly MA</div>
+  <div class="leg"><div class="leg-pip OC"></div>On-chain</div>
+  <div class="leg"><div class="leg-zone"></div>Confluence zone</div>
+  <div class="leg" style="margin-left:auto"><div class="leg-dot-btc"></div>Current BTC</div>
+</div>
+
+<div class="chart-shell">
+  <div class="chart-inner" id="chartInner">
+    <div class="axis-price-col" id="axisPriceCol"></div>
+    <div class="canvas-col" id="canvasCol">
+      <div class="loading-state">
+        <div class="skel"></div><div class="skel" style="opacity:.7"></div>
+        <div class="skel" style="opacity:.45"></div><div class="skel" style="opacity:.25"></div>
+      </div>
+    </div>
+    <div class="labels-col" id="labelsCol"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-head" id="ttHead"></div>
+  <div class="tt-range" id="ttRange" style="display:none"></div>
+  <div class="tt-divider" id="ttDiv" style="display:none"></div>
+  <div class="tt-members" id="ttMembers"></div>
+</div>
+
+<details class="section">
+  <summary>All levels table</summary>
+  <div class="section-body" style="margin-top:4px">
+    <div id="maTable"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
+  </div>
+</details>
+
+<details class="section">
+  <summary>User guide</summary>
+  <div class="section-body" style="margin-top:4px">
+    <div class="guide-body">
+      <details class="gsec"><summary>How to read the chart</summary>
+        <div class="gtxt">
+          <p>The vertical axis is a true price axis — position corresponds directly to price. The orange BTC line is your anchor. Levels above are resistances; below are supports.</p>
+          <p><strong style="color:var(--text)">Confluence zones</strong> are shaded bands where multiple independent signals converge. Hover to see each level's individual price.</p>
+          <p>When several levels (including possibly BTC) are too close on screen to display individually, they appear as a <strong style="color:var(--text)">×N badge</strong>. Hover to see all individual prices.</p>
+          <p>Green % = level above current price. Red % = below. Amber = within 0.8%.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>Tag structure</summary>
+        <div class="gtxt">
+          <div class="mono-blk">
+            X##MA — Moving Average<br>
+            X = D (Daily) · W (Weekly) · M (Monthly)<br>
+            ## = 7 · 25 · 99 · 200 · 365<br><br>
+            <span class="oc">RP</span>    = Realized Price<br>
+            <span class="oc">STHCB</span> = STH Cost Basis<br>
+            <span class="oc">LTHCB</span> = LTH Cost Basis<br>
+            <span class="oc">TMM</span>   = True Market Mean
+          </div>
+        </div>
+      </details>
+      <details class="gsec"><summary>On-chain levels</summary>
+        <div class="gtxt">
+          <p><strong style="color:var(--text)">Realized Price (RP)</strong> — Average acquisition price of all BTC. Key long-term support in bear markets.</p>
+          <p><strong style="color:var(--text)">STH Cost Basis (STHCB)</strong> — Cost basis of short-term holders (~155 days).</p>
+          <p><strong style="color:var(--text)">LTH Cost Basis (LTHCB)</strong> — Cost basis of long-term holders (155+ days).</p>
+          <p><strong style="color:var(--text)">True Market Mean (TMM)</strong> — Economically weighted cost basis from Cointime Economics.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>Zone detection</summary>
+        <div class="gtxt">
+          <p>Confluence zones use a mean-shift algorithm on the 1D price axis. Each level shifts toward its local density centroid, then levels with converged centers are grouped. Maximum zone width is 2%.</p>
+          <p>Display groups (×N badges) are separate — purely a readability feature when lines are within ~14px on screen. They carry no analytical meaning.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</details>
+
+<details class="section">
+  <summary>Diagnostics</summary>
+  <div class="section-body" style="margin-top:4px">
+    <div id="diagBody"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
+  </div>
+</details>
+
+<div class="footer" id="footerTxt">BtcLadder v85</div>
+</div>
+
 <script>
+const VERSION='BtcLadder v85';
+const NS='btcLadder_v85';
+const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
+const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
 const $=id=>document.getElementById(id);
-const fmtUSD=n=>Number.isFinite(n)?n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}):'—';
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}):'—';
 const pct=(a,b)=>((a-b)/b*100);
-const nowStr=()=>new Date().toLocaleString();
+const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+
 let autoTimer=null,lastCurrent=null,lastMas=[],lastOnchain=[],lastDiag=[],lastPriceRows=[],lastOnchainDiag=[];
-let axisMode=localStorage.getItem('btcLadderAxisMode') || 'horizontal';
-let categoryFilters={D:true,W:true,M:true,onchain:true};try{categoryFilters={...categoryFilters,...JSON.parse(localStorage.getItem('btcLadderFilters')||'{}')}}catch(_){ }
-let proximityFilter=localStorage.getItem('btcLadderProximity') || 'all';
-let autoCluster=localStorage.getItem('btcLadderAutoCluster')===null ? true : localStorage.getItem('btcLadderAutoCluster')==='true';
-const fetchJson=async url=>{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status+' '+url);return r.json()};
-async function getPrice(){const sources=[['Coinbase','https://api.coinbase.com/v2/prices/BTC-USD/spot',j=>Number(j?.data?.amount)],['Bitstamp','https://www.bitstamp.net/api/v2/ticker/btcusd/',j=>Number(j?.last)],['Binance','https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',j=>Number(j?.price)],['Kraken','https://api.kraken.com/0/public/Ticker?pair=XBTUSD',j=>Number(j?.result?.XXBTZUSD?.c?.[0])]];const rows=[];for(const [name,url,parse] of sources){try{const n=parse(await fetchJson(url));rows.push({name,url,price:n,ok:Number.isFinite(n)&&n>0,msg:Number.isFinite(n)?fmtUSD(n):'bad parse'})}catch(e){rows.push({name,url,price:NaN,ok:false,msg:e.message})}}const good=rows.filter(r=>r.ok);if(!good.length)throw new Error('No price source loaded');good.sort((a,b)=>a.price-b.price);return{price:good[Math.floor(good.length/2)].price,rows}}
-async function getKlines(interval,limit){const urls=[`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`,`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`];let last;for(const url of urls){try{return{data:await fetchJson(url),url}}catch(e){last=e}}throw last}
-const avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
-async function getMAs(){const specs=[{group:'D',title:'Daily',interval:'1d',periods:[7,25,99,200,365],limit:400},{group:'W',title:'Weekly',interval:'1w',periods:[7,25,99,200,365],limit:400},{group:'M',title:'Monthly',interval:'1M',periods:[7,25,99],limit:120}];const out=[],diag=[];for(const spec of specs){try{const {data,url}=await getKlines(spec.interval,spec.limit);const closes=data.map(k=>Number(k[4])).filter(Number.isFinite);diag.push({name:`${spec.title} candles`,ok:true,msg:`${closes.length} candles loaded from ${url.includes('binance.com')?'Binance':'Binance Vision'}`});for(const p of spec.periods){if(closes.length>=p)out.push({id:`${spec.group}${p}MA`,sourceType:'ma',group:spec.group,title:spec.title,period:p,label:`${spec.group}${p}MA`,price:avg(closes.slice(-p))});else diag.push({name:`${spec.group}${p}MA`,ok:false,msg:`Need ${p} candles, got ${closes.length}`})}}catch(e){diag.push({name:`${spec.title} candles`,ok:false,msg:e.message||String(e)})}}return{mas:out,diag}}
+let catFilters={D:true,W:true,M:true,onchain:true};
+try{catFilters={...catFilters,...JSON.parse(gs('filters','{}')||'{}')}}catch(_){}
+let proxFilter=gs('proximity','10')||'10';
+let autoZone=gs('autoZone','true')!=='false';
+
+/* ── DATA FETCHING (verbatim from v70.1) ── */
+const fetchJson=async url=>{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()};
+async function getPrice(){
+  const sources=[
+    ['Coinbase','https://api.coinbase.com/v2/prices/BTC-USD/spot',j=>Number(j?.data?.amount)],
+    ['Bitstamp','https://www.bitstamp.net/api/v2/ticker/btcusd/',j=>Number(j?.last)],
+    ['Binance','https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',j=>Number(j?.price)],
+    ['Kraken','https://api.kraken.com/0/public/Ticker?pair=XBTUSD',j=>Number(j?.result?.XXBTZUSD?.c?.[0])]
+  ];
+  const rows=[];
+  for(const [name,url,parse] of sources){
+    try{const n=parse(await fetchJson(url));rows.push({name,url,price:n,ok:Number.isFinite(n)&&n>0,msg:Number.isFinite(n)?fmt(n):'bad parse'})}
+    catch(e){rows.push({name,url,price:NaN,ok:false,msg:e.message})}
+  }
+  const good=rows.filter(r=>r.ok);
+  if(!good.length)throw new Error('No price source loaded');
+  good.sort((a,b)=>a.price-b.price);
+  return{price:good[Math.floor(good.length/2)].price,rows};
+}
+async function getKlines(interval,limit){
+  const urls=[
+    `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`,
+    `https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`
+  ];
+  let last;for(const url of urls){try{return{data:await fetchJson(url),url}}catch(e){last=e}}throw last;
+}
+async function getMAs(){
+  const specs=[
+    {group:'D',title:'Daily',interval:'1d',periods:[7,25,99,200,365],limit:400},
+    {group:'W',title:'Weekly',interval:'1w',periods:[7,25,99,200,365],limit:400},
+    {group:'M',title:'Monthly',interval:'1M',periods:[7,25,99],limit:120}
+  ];
+  const out=[],diag=[];
+  for(const spec of specs){
+    try{
+      const{data,url}=await getKlines(spec.interval,spec.limit);
+      const closes=data.map(k=>Number(k[4])).filter(Number.isFinite);
+      diag.push({name:`${spec.title} candles`,ok:true,msg:`${closes.length} from ${url.includes('binance.com')?'Binance':'Binance Vision'}`});
+      for(const p of spec.periods){
+        if(closes.length>=p)out.push({id:`${spec.group}${p}MA`,sourceType:'ma',group:spec.group,title:spec.title,period:p,label:`${spec.group}${p}MA`,price:avg(closes.slice(-p))});
+        else diag.push({name:`${spec.group}${p}MA`,ok:false,msg:`Need ${p}, got ${closes.length}`});
+      }
+    }catch(e){diag.push({name:`${spec.title} candles`,ok:false,msg:e.message||String(e)})}
+  }
+  return{mas:out,diag};
+}
 const ONCHAIN_METRICS=[
- {key:'realized_price',label:'Realized Price',short:'RP',queries:['realized_price','realized price','realized'],prefer:[/\brealized[_ -]?price\b/i,/realized.*price/i],avoid:[/short|sth|long|lth|cap|mvrv|ratio|change|momentum|band|supply|distribution|utxo/i]},
- {key:'sth_cost_basis',label:'STH Cost Basis',short:'STHCB',queries:['short term holder realized price','sth realized price','short-term holder cost basis','sth cost basis','sth'],prefer:[/(sth|short).*realized.*price/i,/realized.*price.*(sth|short)/i,/(sth|short).*cost.*basis/i],avoid:[/lth|long|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
- {key:'lth_cost_basis',label:'LTH Cost Basis',short:'LTHCB',queries:['long term holder realized price','lth realized price','long-term holder cost basis','lth cost basis','lth'],prefer:[/(lth|long).*realized.*price/i,/realized.*price.*(lth|long)/i,/(lth|long).*cost.*basis/i],avoid:[/sth|short|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
- {key:'true_market_mean',label:'True Market Mean',short:'TMM',queries:['true market mean','true_market_mean','active investor price','cointime true mean'],prefer:[/true.*market.*mean/i,/active.*investor.*price/i,/true_market_mean/i],avoid:[/ratio|aviv|mvrv|supply|distribution/i]}
+  {key:'realized_price',label:'Realized Price',short:'RP',queries:['realized_price','realized price','realized'],prefer:[/\brealized[_ -]?price\b/i,/realized.*price/i],avoid:[/short|sth|long|lth|cap|mvrv|ratio|change|momentum|band|supply|distribution|utxo/i]},
+  {key:'sth_cost_basis',label:'STH Cost Basis',short:'STHCB',queries:['short term holder realized price','sth realized price','short-term holder cost basis','sth cost basis','sth'],prefer:[/(sth|short).*realized.*price/i,/realized.*price.*(sth|short)/i,/(sth|short).*cost.*basis/i],avoid:[/lth|long|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
+  {key:'lth_cost_basis',label:'LTH Cost Basis',short:'LTHCB',queries:['long term holder realized price','lth realized price','long-term holder cost basis','lth cost basis','lth'],prefer:[/(lth|long).*realized.*price/i,/realized.*price.*(lth|long)/i,/(lth|long).*cost.*basis/i],avoid:[/sth|short|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
+  {key:'true_market_mean',label:'True Market Mean',short:'TMM',queries:['true market mean','true_market_mean','active investor price','cointime true mean'],prefer:[/true.*market.*mean/i,/active.*investor.*price/i,/true_market_mean/i],avoid:[/ratio|aviv|mvrv|supply|distribution/i]}
 ];
 const BITVIEW_BASE='https://bitview.space';
-async function fetchTextTimed(url,timeoutMs=7500){const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),timeoutMs);try{const r=await fetch(url,{cache:'no-store',signal:ctrl.signal});const text=await r.text();if(!r.ok)throw new Error(`HTTP ${r.status}: ${text.slice(0,140)}`);return text}finally{clearTimeout(t)}}
-async function fetchJsonTimed(url,timeoutMs=7500){const txt=await fetchTextTimed(url,timeoutMs);try{return JSON.parse(txt)}catch(e){throw new Error('Non-JSON response: '+txt.slice(0,160))}}
-function extractNum(v){if(typeof v==='number')return v;if(Array.isArray(v)){for(let i=v.length-1;i>=0;i--){const n=extractNum(v[i]);if(Number.isFinite(n))return n}}if(v&&typeof v==='object'){for(const k of ['value','close','price','usd','dollars','data','latest']){if(k in v){const n=extractNum(v[k]);if(Number.isFinite(n))return n}}for(const val of Object.values(v)){const n=extractNum(val);if(Number.isFinite(n))return n}}if(typeof v==='string'){const n=Number(v.replace(/[$,]/g,''));if(Number.isFinite(n))return n}return NaN}
+async function fetchTextTimed(url,ms=7500){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});const txt=await r.text();if(!r.ok)throw new Error(`HTTP ${r.status}`);return txt}finally{clearTimeout(t)}}
+async function fetchJsonTimed(url,ms=7500){const txt=await fetchTextTimed(url,ms);try{return JSON.parse(txt)}catch(e){throw new Error('Non-JSON')}}
+function extractNum(v){if(typeof v==='number')return v;if(Array.isArray(v)){for(let i=v.length-1;i>=0;i--){const n=extractNum(v[i]);if(Number.isFinite(n))return n}}if(v&&typeof v==='object'){for(const k of['value','close','price','usd','dollars','data','latest']){if(k in v){const n=extractNum(v[k]);if(Number.isFinite(n))return n}}for(const val of Object.values(v)){const n=extractNum(val);if(Number.isFinite(n))return n}}if(typeof v==='string'){const n=Number(v.replace(/[$,]/g,''));if(Number.isFinite(n))return n}return NaN}
 function plausible(n){return Number.isFinite(n)&&n>1000&&n<1000000}
-function normalizeSearchResult(x){if(typeof x==='string')return x;if(x&&typeof x==='object')return x.name||x.path||x.id||x.key||x.series||x.title||x.slug||x.metric||'';return ''}
-function scoreCandidateName(name,m){const hay=String(name||'');let s=0;for(const r of m.prefer)if(r.test(hay))s+=10;for(const r of m.avoid)if(r.test(hay))s-=8;if(/price/i.test(hay))s+=2;if(/realized|realised/i.test(hay))s+=2;return s}
-async function bitviewSearch(metric,diag){const seen=new Set();let all=[];for(const q of metric.queries){const urls=[`${BITVIEW_BASE}/api/series/search?q=${encodeURIComponent(q)}&limit=160`,`${BITVIEW_BASE}/api/series/search?query=${encodeURIComponent(q)}&limit=160`];for(const url of urls){try{const arr=await fetchJsonTimed(url,3500);if(!Array.isArray(arr))throw new Error('Search did not return an array');diag.push({name:`${metric.label} search`,ok:true,msg:`${arr.length} BitView candidates for "${q}"`});for(const item of arr){const n=normalizeSearchResult(item);if(n&&!seen.has(n)){seen.add(n);all.push(n)}}break}catch(e){diag.push({name:`${metric.label} search`,ok:false,msg:e.message})}}}return all.map(name=>({name,score:scoreCandidateName(name,metric)})).sort((a,b)=>b.score-a.score)}
-async function bitviewLatest(metric,candidates,diag){const top=candidates.filter(x=>x.score>0).slice(0,12);for(const c of top){for(const idx of ['day1','dateindex','day','height']){const url=`${BITVIEW_BASE}/api/series/${encodeURIComponent(c.name)}/${idx}/latest`;try{const data=await fetchJsonTimed(url,3500);const n=extractNum(data);if(plausible(n)){diag.push({name:metric.label,ok:true,msg:`BitView ${c.name} / ${idx} = ${fmtUSD(n)}`});return{sourceType:'onchain',group:'onchain',title:'On-chain',period:null,label:metric.label,short:metric.short,price:n,source:`BitView: ${c.name} (${idx})`,traceName:`BitView: ${c.name} (${idx})`}}diag.push({name:`${metric.label} candidate`,ok:false,msg:`No plausible USD number from ${c.name} / ${idx}`})}catch(e){diag.push({name:`${metric.label} candidate`,ok:false,msg:`${c.name} / ${idx}: ${e.message}`})}}}throw new Error('No candidate returned a plausible USD price level')}
+function normSR(x){if(typeof x==='string')return x;if(x&&typeof x==='object')return x.name||x.path||x.id||x.key||x.series||x.title||x.slug||x.metric||'';return''}
+function scoreName(name,m){const h=String(name||'');let s=0;for(const r of m.prefer)if(r.test(h))s+=10;for(const r of m.avoid)if(r.test(h))s-=8;if(/price/i.test(h))s+=2;if(/realized|realised/i.test(h))s+=2;return s}
+async function bitviewSearch(metric,diag){const seen=new Set();const all=[];for(const q of metric.queries){const urls=[`${BITVIEW_BASE}/api/series/search?q=${encodeURIComponent(q)}&limit=160`,`${BITVIEW_BASE}/api/series/search?query=${encodeURIComponent(q)}&limit=160`];for(const url of urls){try{const arr=await fetchJsonTimed(url,3500);if(!Array.isArray(arr))throw new Error('not array');diag.push({name:`${metric.label} search`,ok:true,msg:`${arr.length} candidates`});for(const item of arr){const n=normSR(item);if(n&&!seen.has(n)){seen.add(n);all.push(n)}}break}catch(e){diag.push({name:`${metric.label} search`,ok:false,msg:e.message})}}}return all.map(name=>({name,score:scoreName(name,metric)})).sort((a,b)=>b.score-a.score)}
+async function bitviewLatest(metric,candidates,diag){const top=candidates.filter(x=>x.score>0).slice(0,12);for(const c of top){for(const idx of['day1','dateindex','day','height']){const url=`${BITVIEW_BASE}/api/series/${encodeURIComponent(c.name)}/${idx}/latest`;try{const data=await fetchJsonTimed(url,3500);const n=extractNum(data);if(plausible(n)){diag.push({name:metric.label,ok:true,msg:`${c.name}/${idx} = ${fmt(n)}`});return{sourceType:'onchain',group:'onchain',title:'On-chain',period:null,label:metric.label,short:metric.short,price:n}}diag.push({name:metric.label,ok:false,msg:`No value from ${c.name}/${idx}`})}catch(e){diag.push({name:metric.label,ok:false,msg:`${c.name}/${idx}: ${e.message}`})}}}throw new Error('No candidate returned a plausible USD price')}
 async function getOnchainLevels(){const diag=[],levels=[];for(const m of ONCHAIN_METRICS){try{const c=await bitviewSearch(m,diag);levels.push(await bitviewLatest(m,c,diag))}catch(e){diag.push({name:m.label,ok:false,msg:e.message||String(e)})}}return{levels,diag}}
-function compactLevelCode(l){if(l.type==='cluster')return l.items.map(compactLevelCode).join(' + ');if(l.type==='current')return 'BTC';if(l.sourceType==='onchain')return l.short||'OC';return `${l.group}${l.period}MA`}
-function labelHTML(l){const code=compactLevelCode(l);if(code==='BTC')return `<span class="lead BTC">BTC</span>`;if(l.type==='cluster')return `<span class="clusterTags">${l.items.map(x=>labelHTML(x)).join('')}</span>`;if(l.sourceType==='onchain')return `<span class="lead OC">${code}</span>`;return `<span class="lead ${l.group}">${code}</span>`}
-function isVisible(l){if(l.type==='current'||l.group==='BTC')return true;if(l.sourceType==='onchain')return categoryFilters.onchain!==false;return categoryFilters[l.group]!==false}
-function withinProx(l,current){if(l.type==='current'||l.group==='BTC'||proximityFilter==='all')return true;const lim=Number(proximityFilter);return !Number.isFinite(lim)||Math.abs((l.price-current)/current*100)<=lim}
-function getLevels(current,ma,onchain){return [...ma,...onchain,{label:'CURRENT BTC',price:current,type:'current',group:'BTC'}].filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,current)).sort((a,b)=>a.price-b.price)}
-function bounds(levels,current){const minP=Math.min(...levels.map(l=>l.price)),maxP=Math.max(...levels.map(l=>l.price));const pad=(maxP-minP)*0.08||current*.04;return{lo:Math.max(0,minP-pad),hi:maxP+pad}}
-function clusterLevels(levels,current){if(!autoCluster)return levels;const non=levels.filter(l=>l.type!=='current'&&l.group!=='BTC');const btc=levels.filter(l=>l.type==='current'||l.group==='BTC');const sorted=non.sort((a,b)=>a.price-b.price);const clusters=[];for(const l of sorted){const last=clusters[clusters.length-1];if(last&&Math.abs((l.price-last.items[last.items.length-1].price)/current*100)<=0.55)last.items.push(l);else clusters.push({items:[l]})}const out=clusters.flatMap(c=>{if(c.items.length<2)return c.items;const min=Math.min(...c.items.map(x=>x.price)),max=Math.max(...c.items.map(x=>x.price));return[{type:'cluster',group:'cluster',sourceType:'cluster',label:`${c.items.length} level cluster`,items:c.items,price:avg(c.items.map(x=>x.price)),min,max}]});return[...out,...btc].sort((a,b)=>a.price-b.price)}
-function approxMarkerWidth(l){
- if(l.type==='cluster'){const n=l.items?.length||2;return Math.min(320,Math.max(196,118+Math.ceil(n/2)*64))}
- if(l.sourceType==='onchain')return 128;
- return 112
-}
-function approxMarkerHeight(l){
- if(l.type==='cluster'){const n=l.items?.length||2;return 62+Math.max(0,Math.ceil(n/2)-1)*26}
- return 48
-}
-function laneAssign(items,maxLanes=18,axis='h'){
- const box=$('ladder');
- const width=Math.max(360,(box?.clientWidth||1200)-44);
- const height=Math.max(480,(box?.clientHeight||760)-44);
- const sorted=[...items].sort((a,b)=>a.pos-b.pos);
- const laneEnds=Array(maxLanes).fill(-999);
- return sorted.map((it,idx)=>{
-   const sizePx=axis==='h'?approxMarkerWidth(it):approxMarkerHeight(it);
-   const spanPx=axis==='h'?width:height;
-   const itemPct=(sizePx/spanPx)*100;
-   const padPct=axis==='h'?(it.type==='cluster'?4.8:3.0):1.65;
-   const start=it.pos-itemPct/2-padPct;
-   let lane=laneEnds.findIndex(end=>start>=end);
-   if(lane<0){
-     const minEnd=Math.min(...laneEnds);
-     lane=Math.max(0,laneEnds.indexOf(minEnd));
-   }
-   laneEnds[lane]=it.pos+itemPct/2+padPct;
-   return {...it,lane}
- })
-}
-function tipPctHTML(l,current){if(l.type==='current'||l.group==='BTC')return '';const d=(l.price-current)/current*100;if(d>0)return `<span class="tipPct plus">+${d.toFixed(2)}%</span>`;return `<span class="tipPct minus">${d.toFixed(2)}%</span>`}
-function ensureTip(){let t=$('unifiedHoverTooltip');if(!t){t=document.createElement('div');t.id='unifiedHoverTooltip';t.className='hoverTooltip';document.body.appendChild(t)}return t}
-function bindHover(container){document.querySelectorAll('[data-hoverkey]').forEach(el=>{el.addEventListener('mouseenter',e=>{const key=el.dataset.hoverkey;document.querySelectorAll(`[data-hoverkey="${CSS.escape(key)}"]`).forEach(x=>x.classList.add('hoverActive'));container.classList.add('is-hovering');const tip=ensureTip();tip.innerHTML=el.dataset.tip;tip.classList.add('show');moveTip(e)});el.addEventListener('mousemove',moveTip);el.addEventListener('mouseleave',()=>{document.querySelectorAll('.hoverActive').forEach(x=>x.classList.remove('hoverActive'));container.classList.remove('is-hovering');ensureTip().classList.remove('show')})})}
-function moveTip(e){const tip=ensureTip(),pad=14;let x=e.clientX+14,y=e.clientY-18;const r=tip.getBoundingClientRect();if(x+r.width+pad>innerWidth)x=e.clientX-r.width-14;if(y<pad)y=e.clientY+18;tip.style.left=x+'px';tip.style.top=y+'px'}
-function hoverKey(l){return (compactLevelCode(l)+'_'+Math.round(l.price*100)).replace(/[^A-Za-z0-9_]/g,'_')}
-function clusterTipLabel(l){return l.type==='cluster'?l.items.map(compactLevelCode).join(' + '):compactLevelCode(l)}
-function splitLaneAssign(items,current,maxLanes=18){
- const above=items.filter(l=>l.price>=current),below=items.filter(l=>l.price<current);
- const assign=arr=>laneAssign(arr,maxLanes,'h');
- return [...assign(above),...assign(below)]
+
+/* ── LEVEL HELPERS ── */
+function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
+function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
+function withinProx(l,cur){if(l.type==='current'||proxFilter==='all')return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
+function getLevels(cur,ma,oc){
+  return[...ma,...oc,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
+    .filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,cur))
+    .sort((a,b)=>a.price-b.price);
 }
 
-function calibrateStems(container){
- if(!container)return;
- const hAxis=container.querySelector('.axisLine');
- if(hAxis){
-   const center=parseFloat(hAxis.style.top)||hAxis.offsetTop;
-   container.querySelectorAll('.marker').forEach(m=>{
-     const top=m.offsetTop;
-     const h=m.offsetHeight;
-     const above=m.classList.contains('above');
-     const stem=above?Math.max(0,center-(top+h)):Math.max(0,top-center);
-     m.style.setProperty('--stem',stem.toFixed(1)+'px');
-   });
- }
- const vAxis=container.querySelector('.vAxisLine');
- if(vAxis){
-   const axisX=72;
-   container.querySelectorAll('.vMarker').forEach(m=>{
-     const stem=Math.max(0,m.offsetLeft-axisX);
-     m.style.setProperty('--stem',stem.toFixed(1)+'px');
-   });
- }
+/* ── MEAN-SHIFT ZONE DETECTION ── */
+function meanShiftZones(levels,cur){
+  if(!autoZone)return levels;
+  const non=levels.filter(l=>l.type!=='current');
+  const btc=levels.filter(l=>l.type==='current');
+  if(!non.length)return levels;
+  const BANDWIDTH=0.0055,MAX_WIDTH=0.020,ITER=20;
+  const prices=non.map(l=>l.price);
+  const shifted=prices.map(p=>{
+    let c=p;
+    for(let i=0;i<ITER;i++){
+      const bw=c*BANDWIDTH;
+      const nb=prices.filter(q=>Math.abs(q-c)<=bw);
+      if(!nb.length)break;
+      const next=avg(nb);
+      if(Math.abs(next-c)/c<1e-7)break;
+      c=next;
+    }
+    return c;
+  });
+  const used=new Array(non.length).fill(false);
+  const groups=[];
+  for(let i=0;i<non.length;i++){
+    if(used[i])continue;
+    const grp=[i];used[i]=true;
+    for(let j=i+1;j<non.length;j++){
+      if(used[j])continue;
+      if(Math.abs(shifted[i]-shifted[j])<=prices[i]*BANDWIDTH){
+        const allIdx=[...grp,j];
+        const gp=allIdx.map(k=>non[k].price);
+        if((Math.max(...gp)-Math.min(...gp))/prices[i]<=MAX_WIDTH){grp.push(j);used[j]=true;}
+      }
+    }
+    groups.push(grp.map(k=>non[k]));
+  }
+  const out=groups.flatMap(members=>{
+    if(members.length<2)return members;
+    const mp=members.map(x=>x.price);
+    const minP=Math.min(...mp),maxP=Math.max(...mp);
+    return[{type:'zone',group:'zone',sourceType:'zone',label:`${members.length}-level zone`,
+      items:members,price:avg(mp),min:minP,max:maxP}];
+  });
+  return[...out,...btc].sort((a,b)=>a.price-b.price);
 }
 
-function renderHorizontal(current,ma,onchain){
- const levels0=getLevels(current,ma,onchain),levels=clusterLevels(levels0,current);
- const b=bounds(levels,current),span=b.hi-b.lo||1,pos=p=>Math.max(0,Math.min(100,(p-b.lo)/span*100));
- const base=levels.map(l=>({...l,pos:pos(l.price),minPos:l.type==='cluster'?pos(l.min):null,maxPos:l.type==='cluster'?pos(l.max):null}));
- const lanes=splitLaneAssign(base,current,28);
- const maxAbove=Math.max(0,...lanes.filter(l=>l.price>=current).map(l=>l.lane));
- const maxBelow=Math.max(0,...lanes.filter(l=>l.price<current).map(l=>l.lane));
- const rowH=84, axisH=260+(maxAbove+1)*rowH+(maxBelow+1)*rowH, center=126+(maxAbove+1)*rowH;
- const parts=lanes.map(o=>{
-   const l=o,above=l.price>=current;
-   const cardH=approxMarkerHeight(l);
-   const topPx=above?center-(88+o.lane*rowH):center+(62+o.lane*rowH);
-   const top=`${topPx}px`;
-   const stemPx=above?Math.max(0,center-(topPx+cardH)):Math.max(0,topPx-center);
-   const cls=l.type==='cluster'?'cluster':(l.group==='BTC'?'BTC':(l.sourceType==='onchain'?'onchain':l.group));
-   const label=clusterTipLabel(l);
-   const price=l.type==='cluster'?`${fmtUSD(l.min)}–${fmtUSD(l.max)}`:fmtUSD(l.price);
-   const key=hoverKey(l),tip=`<span class="tipCode">${label}</span><span class="tipPrice">${price}</span>${tipPctHTML(l,current)}`;
-   const marker=`<div class="marker ${cls} ${above?'above':'below'}" data-hoverkey="${key}" data-tip='${tip}' style="left:${l.pos.toFixed(3)}%;top:${top};--stem:${stemPx}px"><div class="markerCard"><div class="markerLabel">${labelHTML(l)}</div><div class="markerPrice">${price}</div></div></div>`;
-   if(l.type==='cluster'){
-     const left=Math.min(l.minPos,l.maxPos),width=Math.max(0.45,Math.abs(l.maxPos-l.minPos));
-     return marker+`<div class="clusterInterval" data-hoverkey="${key}" data-tip='${tip}' style="left:${left.toFixed(3)}%;top:${center}px;width:${width.toFixed(3)}%"></div>`
-   }
-   return marker+`<div class="axisHoverPoint" data-hoverkey="${key}" data-tip='${tip}' style="left:${l.pos.toFixed(3)}%;top:${center}px"></div>`
- }).join('');
- $('ladder').innerHTML=`<button id="rotateChartBtn" class="rotateChartBtn" title="Switch to vertical view">↺</button><div class="priceAxis" style="height:${axisH}px"><div class="axisLine" style="top:${center}px"></div><div class="axisEndTick" style="left:0%;top:${center-7}px"></div><div class="axisEndTick" style="left:100%;top:${center-7}px"></div><div class="currentAxisDot" style="left:${pos(current).toFixed(3)}%;top:${center}px"></div>${parts}</div>`;$('rotateChartBtn').onclick=()=>setAxisMode('vertical');const chart=document.querySelector('.priceAxis');calibrateStems(chart);requestAnimationFrame(()=>calibrateStems(chart));bindHover(chart)}
-function renderVertical(current,ma,onchain){
- const levels0=getLevels(current,ma,onchain),levels=clusterLevels(levels0,current);
- const b=bounds(levels,current),span=b.hi-b.lo||1,pos=p=>100-Math.max(0,Math.min(100,(p-b.lo)/span*100));
- const base=levels.map(l=>({...l,pos:pos(l.price),minPos:l.type==='cluster'?pos(l.min):null,maxPos:l.type==='cluster'?pos(l.max):null}));
- const lanes=laneAssign(base,24,'v');
- const maxLane=Math.max(0,...lanes.map(l=>l.lane));
- const axisW=Math.max(660,210+(maxLane+1)*128);
- const parts=lanes.map(o=>{const l=o,left=132+o.lane*128,stem=Math.max(0,left-72),cls=l.type==='cluster'?'cluster':(l.group==='BTC'?'BTC':(l.sourceType==='onchain'?'onchain':l.group));const label=clusterTipLabel(l);const price=l.type==='cluster'?`${fmtUSD(l.min)}–${fmtUSD(l.max)}`:fmtUSD(l.price);const key=hoverKey(l),tip=`<span class="tipCode">${label}</span><span class="tipPrice">${price}</span>${tipPctHTML(l,current)}`;const marker=`<div class="vMarker ${cls}" data-hoverkey="${key}" data-tip='${tip}' style="top:${l.pos.toFixed(3)}%;left:${left}px;--stem:${stem}px"><div class="markerCard"><div class="markerLabel">${labelHTML(l)}</div><div class="markerPrice">${price}</div></div></div>`;if(l.type==='cluster'){const top=Math.min(l.minPos,l.maxPos),height=Math.max(0.8,Math.abs(l.minPos-l.maxPos));return marker+`<div class="vClusterInterval" data-hoverkey="${key}" data-tip='${tip}' style="top:${top.toFixed(3)}%;height:${height.toFixed(3)}%"></div>`}return marker+`<div class="vAxisHoverPoint" data-hoverkey="${key}" data-tip='${tip}' style="top:${l.pos.toFixed(3)}%"></div>`}).join('');
- $('ladder').innerHTML=`<button id="rotateChartBtn" class="rotateChartBtn" title="Switch to horizontal view">↻</button><div class="verticalAxis" style="min-width:${axisW}px"><div class="vAxisLine"></div><div class="vAxisEndTick" style="top:0%"></div><div class="vAxisEndTick" style="top:100%"></div><div class="vCurrentDot" style="top:${pos(current).toFixed(3)}%"></div>${parts}</div>`;$('rotateChartBtn').onclick=()=>setAxisMode('horizontal');const chart=document.querySelector('.verticalAxis');calibrateStems(chart);requestAnimationFrame(()=>calibrateStems(chart));bindHover(chart)}
-function renderLadder(current,ma,onchain){if(axisMode==='vertical')renderVertical(current,ma,onchain);else renderHorizontal(current,ma,onchain)}
-function distanceHTML(current,level){const d=(level-current)/current*100;if(d>0)return `<span class="tableDistance plus">+${d.toFixed(2)}%</span>`;if(d<0)return `<span class="tableDistance minus">${d.toFixed(2)}%</span>`;return '<span class="tableDistance neutral">0.00%</span>'}
-function filterStateHTML(){const cats=[['D','Daily'],['W','Weekly'],['M','Monthly'],['onchain','On-chain']];const chips=cats.map(([k,name])=>`<span class="filterChip ${categoryFilters[k]===false?'off':''}">${name}</span>`).join('');const dist=proximityFilter==='all'?'All':`±${proximityFilter}%`;return `<span class="filterStateLabel">Filtered view</span>${chips}<span class="filterChip">Distance: ${dist}</span><span class="hint">jump to filters ↑</span>`}
-function renderTable(current,ma,onchain){const raw=getLevels(current,ma,onchain).sort((a,b)=>b.price-a.price);const state=$('tableFilterState');if(state)state.innerHTML=filterStateHTML();$('maTable').innerHTML=raw.length?`<table class="table"><thead><tr><th>Level</th><th>Type</th><th>Price</th><th>Side</th><th>Distance</th></tr></thead><tbody>${raw.map(l=>`<tr class="${l.type==='current'?'currentRow':''}"><td>${labelHTML(l)}</td><td>${l.type==='current'?'Current':(l.sourceType==='onchain'?'On-chain':l.title)}</td><td>${fmtUSD(l.price)}</td><td>${l.price<current?'<span class="pill ok">support</span>':l.price>current?'<span class="pill bad">resistance</span>':'<span class="pill warn">current</span>'}</td><td>${distanceHTML(current,l.price)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No levels match the active filters.</div>'}
-function renderOnchain(levels){const box=$('onchainBox');if(!box)return;box.innerHTML=levels.length?levels.map(l=>`<div class="ocRow"><div><div class="ocName">${labelHTML(l)} ${l.label}</div></div><div class="ocVal">${fmtUSD(l.price)}</div></div>`).join(''):'<div class="empty">No on-chain levels loaded. Check diagnostics for source blocks/failures.</div>'}
-function renderDiag(){const rows=[...lastPriceRows.map(r=>({name:'Price '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag];$('detailsBody').innerHTML=`<table class="table"><thead><tr><th>Check</th><th>Status</th><th>Message</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.name}</td><td>${r.ok?'<span class="ok">OK</span>':'<span class="bad">Fail</span>'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}</tbody></table>`}
-function updateSummary(current,levels){const supports=levels.filter(l=>l.price<current).sort((a,b)=>b.price-a.price),res=levels.filter(l=>l.price>current).sort((a,b)=>a.price-b.price);$('support').textContent=supports[0]?`${compactLevelCode(supports[0])} ${fmtUSD(supports[0].price)}`:'—';$('resistance').textContent=res[0]?`${compactLevelCode(res[0])} ${fmtUSD(res[0].price)}`:'—'}
-function verifiedSourceText(){const n=lastPriceRows.filter(r=>r.ok).length;return `${n} verified price source${n===1?'':'s'}`}
-function rerender(){if(!lastCurrent)return;renderLadder(lastCurrent,lastMas,lastOnchain);renderTable(lastCurrent,lastMas,lastOnchain);renderOnchain(lastOnchain);renderDiag();updateSummary(lastCurrent,getLevels(lastCurrent,lastMas,lastOnchain))}
-async function refreshAll(){try{$('status').textContent='Loading';$('status').className='badge loading';const pr=await getPrice();lastCurrent=pr.price;lastPriceRows=pr.rows;$('price').textContent=fmtUSD(lastCurrent);$('updated').textContent=nowStr();const [ma,on]=await Promise.allSettled([getMAs(),getOnchainLevels()]);if(ma.status==='fulfilled'){lastMas=ma.value.mas;lastDiag=ma.value.diag}else{lastDiag=[{name:'Moving averages',ok:false,msg:ma.reason?.message||String(ma.reason)}];lastMas=[]}if(on.status==='fulfilled'){lastOnchain=on.value.levels;lastOnchainDiag=on.value.diag}else{lastOnchain=[];lastOnchainDiag=[{name:'On-chain levels',ok:false,msg:on.reason?.message||String(on.reason)}]}$('status').textContent=verifiedSourceText();$('status').className='badge ok small';rerender()}catch(e){$('status').textContent='Error';$('status').className='badge bad';$('ladder').innerHTML=`<div class="empty">${String(e.message||e).replace(/[<>]/g,'')}</div>`}}
-function setAxisMode(m){axisMode=m==='vertical'?'vertical':'horizontal';localStorage.setItem('btcLadderAxisMode',axisMode);rerender()}
-function applyStates(){document.querySelectorAll('.categoryToggle').forEach(b=>b.classList.toggle('active',categoryFilters[b.dataset.cat]!==false));document.querySelectorAll('.proximityBtn').forEach(b=>b.classList.toggle('active',String(b.dataset.prox)===String(proximityFilter)));$('autoClusterOn')?.classList.toggle('active',autoCluster);$('autoClusterOff')?.classList.toggle('active',!autoCluster)}
-document.querySelectorAll('.categoryToggle').forEach(b=>b.onclick=()=>{categoryFilters[b.dataset.cat]=categoryFilters[b.dataset.cat]===false;localStorage.setItem('btcLadderFilters',JSON.stringify(categoryFilters));applyStates();rerender()});
-document.querySelectorAll('.proximityBtn').forEach(b=>b.onclick=()=>{proximityFilter=b.dataset.prox;localStorage.setItem('btcLadderProximity',proximityFilter);applyStates();rerender()});
-$('autoClusterOn').onclick=()=>{autoCluster=true;localStorage.setItem('btcLadderAutoCluster','true');applyStates();rerender()};$('autoClusterOff').onclick=()=>{autoCluster=false;localStorage.setItem('btcLadderAutoCluster','false');applyStates();rerender()};$('tableFilterState')?.addEventListener('click',()=>{document.querySelector('.axisControls')?.scrollIntoView({behavior:'smooth',block:'center'});setFilterPanelOpen(true)});function setFilterPanelOpen(show){const p=$('filterPanel');p.toggleAttribute('hidden',!show);$('filterPanelBtn').classList.toggle('active',show);$('filterPanelBtn').setAttribute('aria-expanded',String(show))}$('filterPanelBtn').onclick=(e)=>{e.stopPropagation();setFilterPanelOpen($('filterPanel').hasAttribute('hidden'))};$('filterPanel').addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',()=>{if(!$('filterPanel').hasAttribute('hidden'))setFilterPanelOpen(false)});
-$('refreshBtn').onclick=refreshAll;$('toggleAuto').onclick=()=>{if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('toggleAuto').textContent='Auto refresh: off'}else{autoTimer=setInterval(refreshAll,5*60*1000);$('toggleAuto').textContent='Auto refresh: on'}};
-applyStates();refreshAll();
+/* ── COLORS ── */
+const COL={D:'#60a5fa',W:'#a78bfa',M:'#34d399',onchain:'#fbbf24',zone:'rgba(255,255,255,0.6)',BTC:'#f7931a'};
+const COL_BG={D:'rgba(96,165,250,0.10)',W:'rgba(167,139,250,0.10)',M:'rgba(52,211,153,0.10)',onchain:'rgba(251,191,36,0.10)',zone:'rgba(255,255,255,0.08)',BTC:'rgba(247,147,26,0.12)'};
+function levelColor(l){if(l.type==='current')return COL.BTC;if(l.type==='zone')return COL.zone;if(l.sourceType==='onchain')return COL.onchain;return COL[l.group]||COL.D}
+function levelBg(l){if(l.type==='zone')return COL_BG.zone;if(l.sourceType==='onchain')return COL_BG.onchain;return COL_BG[l.group]||COL_BG.D}
+function pctCls(d){return Math.abs(d)<0.8?'near':(d>0?'pos':'neg')}
+function pctStr(d){return(d>=0?'+':'')+d.toFixed(1)+'%'}
+
+/* ── DISPLAY GROUPING ──
+   fix: BTC now participates in display groups like any other level.
+   Pure pixel-proximity grouping, no exceptions.
+*/
+const DISPLAY_PX=14;
+function buildDisplayGroups(entries){
+  const sorted=[...entries].sort((a,b)=>a.exactY-b.exactY);
+  const groups=[];
+  for(const e of sorted){
+    const last=groups[groups.length-1];
+    if(last&&e.exactY-last.members[last.members.length-1].exactY<=DISPLAY_PX)
+      last.members.push(e);
+    else groups.push({members:[e]});
+  }
+  return groups.map(g=>({members:g.members,midY:avg(g.members.map(m=>m.exactY))}));
+}
+
+/* ── TOOLTIP BUILDER ── shared by both canvas and label hover ── */
+function buildTipHTML(tip,cur){
+  if(!tip)return null;
+  let headHTML='',rangeHTML='',membersHTML='',showRange=false,showDiv=false;
+
+  if(tip.isBtc){
+    headHTML=`<span class="tt-headbadge" style="background:var(--btc-dim);color:var(--btc)">BTC</span><span class="tt-headlabel">Current price</span>`;
+    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span></div>`;
+  } else if(tip.isGroup){
+    headHTML=`<span class="tt-headbadge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.75)">×${tip.members.length} levels</span>`;
+    showDiv=true;
+    membersHTML=tip.members.map(m=>{
+      const pCls=pctCls(m.d);
+      if(m.isZone){
+        /* zone inside a group: show ZONE badge + range + its member levels indented */
+        const subItems=(m.items||[]).map(x=>{
+          const xCls=pctCls(x.d);
+          return`<div class="tt-member" style="padding-left:8px;opacity:.8">
+            <span class="tt-mbadge" style="background:${x.bg};color:${x.col}">${x.code}</span>
+            ${x.isOC?`<span class="tt-mname">${x.label}</span>`:''}
+            <span class="tt-mprice">${fmt(x.price)}</span>
+            <span class="tt-mpct ${xCls}">${pctStr(x.d)}</span>
+          </div>`;
+        }).join('');
+        return`<div>
+          <div class="tt-member">
+            <span class="tt-mbadge" style="background:rgba(255,255,255,.10);color:rgba(255,255,255,.8);border:.5px dashed rgba(255,255,255,.35)">ZONE</span>
+            <span class="tt-mname">${fmt(m.min)}–${fmt(m.max)}</span>
+            <span class="tt-mpct ${pCls}">${pctStr(m.d)}</span>
+          </div>
+          ${subItems}
+        </div>`;
+      }
+      return`<div class="tt-member">
+        <span class="tt-mbadge" style="background:${m.bg};color:${m.col}">${m.code}</span>
+        ${m.isOC||m.isBtc?`<span class="tt-mname">${m.label}</span>`:''}
+        <span class="tt-mprice">${fmt(m.price)}</span>
+        <span class="tt-mpct ${pCls}">${pctStr(m.d)}</span>
+      </div>`;
+    }).join('<div class="tt-divider"></div>');
+  } else if(tip.isZone){
+    headHTML=`<span class="tt-headbadge" style="background:rgba(255,255,255,.10);color:rgba(255,255,255,.85);border:.5px dashed rgba(255,255,255,.35)">ZONE</span><span class="tt-headlabel">${tip.label}</span>`;
+    rangeHTML=`${fmt(tip.min)} – ${fmt(tip.max)}`;
+    showRange=true;showDiv=true;
+    membersHTML=(tip.items||[]).map(x=>{
+      const pCls=pctCls(x.d);
+      return`<div class="tt-member">
+        <span class="tt-mbadge" style="background:${x.bg};color:${x.col}">${x.code}</span>
+        ${x.isOC?`<span class="tt-mname">${x.label}</span>`:''}
+        <span class="tt-mprice">${fmt(x.price)}</span>
+        <span class="tt-mpct ${pCls}">${pctStr(x.d)}</span>
+      </div>`;
+    }).join('<div class="tt-divider"></div>');
+  } else {
+    headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
+    const pCls=pctCls(tip.d);
+    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`;
+  }
+  return{headHTML,rangeHTML,membersHTML,showRange,showDiv};
+}
+
+function showTooltip(tip,cur){
+  const h=buildTipHTML(tip,cur);
+  if(!h)return;
+  $('ttHead').innerHTML=h.headHTML;
+  $('ttRange').textContent=h.rangeHTML;
+  $('ttRange').style.display=h.showRange?'':'none';
+  $('ttDiv').style.display=h.showDiv?'':'none';
+  $('ttMembers').innerHTML=h.membersHTML;
+  $('tooltip').classList.add('show');
+}
+function hideTip(){$('tooltip').classList.remove('show')}
+
+/* ── MAIN RENDER ── */
+function renderChart(cur,ma,oc){
+  const rawLevels=getLevels(cur,ma,oc);
+  const allLevels=meanShiftZones(rawLevels,cur);
+  const nonCur=allLevels.filter(l=>l.type!=='current');
+
+  if(!nonCur.length){
+    $('canvasCol').innerHTML='<div class="empty-chart">No levels in range — widen the range filter</div>';
+    $('labelsCol').innerHTML='';$('axisPriceCol').innerHTML='';return;
+  }
+
+  const allPx=nonCur.flatMap(l=>l.type==='zone'?[l.min,l.max]:[l.price]).concat([cur]);
+  const rawLo=Math.min(...allPx),rawHi=Math.max(...allPx);
+  const pad=(rawHi-rawLo)*0.05||cur*0.02;
+  const lo=rawLo-pad,hi=rawHi+pad,range=hi-lo;
+  const H=Math.max(480,(nonCur.length+1)*36+80);
+  const toY=p=>((hi-p)/range*H);
+  const btcY=toY(cur);
+  const btcYpct=(btcY/H*100).toFixed(2);
+
+  /* axis ticks */
+  const TICK_COUNT=7;
+  const rawStep=(hi-lo)/TICK_COUNT;
+  const mag=Math.pow(10,Math.floor(Math.log10(rawStep)));
+  const niceStep=Math.ceil(rawStep/mag)*mag;
+  const tickStart=Math.ceil(lo/niceStep)*niceStep;
+  const ticks=[];for(let v=tickStart;v<=hi+niceStep*0.01;v+=niceStep)ticks.push(v);
+  $('axisPriceCol').style.position='relative';
+  $('axisPriceCol').innerHTML=ticks.map(v=>
+    `<div class="tick-lbl" style="top:${(toY(v)/H*100).toFixed(2)}%">${v>=1e6?(v/1e6).toFixed(2)+'M':(v/1000).toFixed(0)+'k'}</div>`
+  ).join('');
+
+  /* ── CANVAS ── */
+  let canvas='';
+  canvas+=`<div class="zone-res-bg" style="height:${btcYpct}%"></div>`;
+  canvas+=`<div class="zone-sup-bg" style="top:${btcYpct}%"></div>`;
+  ticks.forEach(v=>{canvas+=`<div class="h-grid" style="top:${(toY(v)/H*100).toFixed(2)}%"></div>`});
+
+  /* fix: zone — Option A: neutral white 13% fill + brighter dashed borders, no semantic color */
+  nonCur.filter(l=>l.type==='zone').forEach(l=>{
+    const yTop=toY(l.max),yBot=toY(l.min);
+    const topPct=(yTop/H*100).toFixed(2);
+    const hPct=Math.max(3,((yBot-yTop)/H*100)).toFixed(2);
+    canvas+=`<div class="azone" style="top:${topPct}%;height:${hPct}%"></div>`;
+  });
+
+  /* tip store — keyed by code string */
+  const tipMap=new Map();
+
+  nonCur.forEach(l=>{
+    const y=toY(l.price);
+    const yPct=(y/H*100).toFixed(2);
+    const col=levelColor(l);
+    const code=l.type==='zone'?('ZONE:'+l.items.map(x=>levelCode(x)).join('+')):levelCode(l);
+    const d=pct(l.price,cur);
+    const tip={code,label:l.label,price:l.price,d,col,bg:levelBg(l),
+      isZone:l.type==='zone',isOC:l.sourceType==='onchain',
+      min:l.min,max:l.max,
+      items:l.type==='zone'?l.items.map(x=>({
+        code:levelCode(x),label:x.label,price:x.price,d:pct(x.price,cur),
+        col:levelColor(x),bg:levelBg(x),isOC:x.sourceType==='onchain'
+      })):null
+    };
+    tipMap.set(code,tip);
+
+    if(l.type==='zone'){
+      const yTop=toY(l.max),yBot=toY(l.min);
+      const topPct=(yTop/H*100).toFixed(2);
+      const hPct=Math.max(3,((yBot-yTop)/H*100)).toFixed(2);
+      /* fix: zone hover zone — same z-index as line hover zones, tooltip triggered on hover */
+      canvas+=`<div class="hover-zone hz-zone" data-code="${code}" style="top:${topPct}%;height:${hPct}%"></div>`;
+    } else {
+      canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${col};opacity:0.65"></div>`;
+      canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col}"></div>`;
+      canvas+=`<div class="hover-zone" data-code="${code}" style="top:${yPct}%"></div>`;
+    }
+  });
+
+  /* BTC */
+  canvas+=`<div class="btc-dot-glow" style="top:${btcYpct}%"></div>`;
+  canvas+=`<div class="btc-line" style="top:${btcYpct}%"></div>`;
+  canvas+=`<div class="btc-dot" style="top:${btcYpct}%"></div>`;
+  tipMap.set('BTC',{code:'BTC',label:'Current BTC',price:cur,d:0,col:COL.BTC,bg:COL_BG.BTC,isBtc:true});
+  canvas+=`<div class="hover-zone" data-code="BTC" style="top:${btcYpct}%"></div>`;
+
+  const colH=H+'px';
+  $('axisPriceCol').style.height=colH;
+  $('canvasCol').style.position='relative';$('canvasCol').style.height=colH;$('canvasCol').style.overflow='hidden';
+  $('canvasCol').innerHTML=canvas;
+  $('labelsCol').style.position='relative';$('labelsCol').style.height=colH;$('labelsCol').style.overflow='hidden';
+  $('chartInner').style.height=colH;
+
+  /* ── DISPLAY GROUPING — fix: BTC included, pure pixel proximity ── */
+  const btcEntry={type:'current',price:cur,label:'Current BTC',exactY:btcY,tipCode:'BTC'};
+  const levelEntries=nonCur.map(l=>({
+    ...l,exactY:toY(l.price),
+    tipCode:l.type==='zone'?('ZONE:'+l.items.map(x=>levelCode(x)).join('+')):levelCode(l)
+  }));
+  const displayGroups=buildDisplayGroups([...levelEntries,btcEntry]);
+
+  let labelsHTML='';
+  displayGroups.forEach(g=>{
+    const midPct=(g.midY/H*100).toFixed(2);
+
+    if(g.members.length===1){
+      const l=g.members[0];
+
+      /* BTC single label */
+      if(l.type==='current'){
+        labelsHTML+=`<div class="btc-lbl" style="top:${midPct}%">
+          <div class="btc-lbl-badge">BTC</div>
+          <div class="btc-lbl-price">${fmt(cur)}</div>
+        </div>`;
+        return;
+      }
+
+      /* Zone single label */
+      if(l.type==='zone'){
+        const d=pct(l.price,cur);
+        const dStr=pctStr(d);const dCls=pctCls(d);
+        const rangeStr=`${fmt(l.min)}–${fmt(l.max)}`;
+        /* position at far edge from BTC */
+        const zoneLblPct=l.min>cur
+          ?(toY(l.max)/H*100).toFixed(2)   /* resistance: top edge */
+          :l.max<cur
+            ?(toY(l.min)/H*100).toFixed(2) /* support: bottom edge */
+            :(toY(l.max)/H*100).toFixed(2); /* straddle: top edge */
+        labelsHTML+=`<div class="zone-lbl" style="top:${zoneLblPct}%" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
+          <span class="zone-badge">ZONE</span>
+          <span class="zone-range">${rangeStr}</span>
+          <span class="zone-pct ${dCls}">${dStr}</span>
+        </div>`;
+        return;
+      }
+
+      /* Single level label */
+      const col=levelColor(l);const bg=levelBg(l);
+      const d=pct(l.price,cur);const dStr=pctStr(d);const dCls=pctCls(d);
+      const isOC=l.sourceType==='onchain';
+      labelsHTML+=`<div class="lbl-item" style="top:${midPct}%" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
+        <span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${levelCode(l)}</span>
+
+        <span class="lbl-pct ${dCls}">${dStr}</span>
+      </div>`;
+
+    } else {
+      /* Multi-member display group — ×N badge */
+      const midPrice=avg(g.members.map(m=>m.price));
+      const d=pct(midPrice,cur);
+      const dStr=pctStr(d);const dCls=pctCls(d);
+      const codeKey='DG:'+g.members.map(m=>m.tipCode||(m.type==='current'?'BTC':levelCode(m))).join('|');
+      /* build group tip with full member detail for tooltip */
+      tipMap.set(codeKey,{
+        isGroup:true,
+        members:g.members.map(m=>({
+          code:m.tipCode||(m.type==='current'?'BTC':levelCode(m)),
+          label:m.label,price:m.price,d:pct(m.price,cur),
+          col:levelColor(m),bg:levelBg(m),
+          isOC:m.sourceType==='onchain',isBtc:m.type==='current',
+          isZone:m.type==='zone',
+          min:m.min,max:m.max,
+          items:m.type==='zone'?m.items.map(x=>({
+            code:levelCode(x),label:x.label,price:x.price,d:pct(x.price,cur),
+            col:levelColor(x),bg:levelBg(x),isOC:x.sourceType==='onchain'
+          })):null
+        }))
+      });
+      labelsHTML+=`<div class="dgrp-lbl" style="top:${midPct}%" data-code="${codeKey}" onclick="handleClick('${codeKey}')">
+        <span class="dgrp-badge">×${g.members.length}</span>
+        <span class="lbl-pct ${dCls}">${dStr}</span>
+      </div>`;
+    }
+  });
+  $('labelsCol').innerHTML=labelsHTML;
+  window._tipMap=tipMap;
+  window._cur=cur;
+
+  /* ── HOVER ── */
+  function hlCode(code){
+    const tip=window._tipMap.get(code);
+    const codes=tip?.isGroup?tip.members.map(m=>m.code):[code];
+    $('canvasCol').querySelectorAll('.lvl-line').forEach(x=>{
+      const match=codes.some(c=>x.dataset.code===c);
+      x.style.opacity=match?'1':'0.07';x.style.height=match?'2px':'1px';
+    });
+    $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity=x.dataset.code===code?'1':'0.18'});
+  }
+  function clearHl(){
+    $('canvasCol').querySelectorAll('.lvl-line').forEach(x=>{x.style.opacity='0.65';x.style.height='1px'});
+    $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity='1'});
+  }
+  /* fix: canvas hover (including zone band) and label hover use same unified tooltip builder */
+  $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
+    el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
+  });
+  $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
+    el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
+  });
+  if(!window._mmSet){
+    window._mmSet=true;
+    document.addEventListener('mousemove',e=>{
+      const tt=$('tooltip');
+      if(!tt.classList.contains('show'))return;
+      const w=tt.offsetWidth||220;
+      let x=e.clientX+16,y=e.clientY-10;
+      if(x+w>window.innerWidth-8)x=e.clientX-w-12;
+      if(y+tt.offsetHeight>window.innerHeight-8)y=e.clientY-tt.offsetHeight-8;
+      tt.style.left=x+'px';tt.style.top=y+'px';
+    },{passive:true});
+  }
+}
+
+/* ── CLICK ── */
+window.handleClick=function(codeKey){
+  if(!window._tipMap||!window.sendPrompt)return;
+  const tip=window._tipMap.get(codeKey);
+  if(!tip)return;
+  const cur=window._cur||lastCurrent;
+  if(tip.isGroup){
+    const names=tip.members.map(m=>m.code).join(', ');
+    const mid=avg(tip.members.map(m=>m.price));
+    window.sendPrompt(`There are ${tip.members.length} levels very close together: ${names}, around ${fmt(mid)}. What does this confluence indicate?`);
+  } else if(tip.isZone){
+    const names=(tip.items||[]).map(x=>x.code).join(', ');
+    window.sendPrompt(`Confluence zone: ${names} between ${fmt(tip.min)} and ${fmt(tip.max)} (${pctStr(pct(tip.price,cur))} from current BTC). What does this zone historically indicate?`);
+  } else {
+    const d=pct(tip.price,cur||tip.price);
+    window.sendPrompt(`Tell me about the ${tip.label||tip.code} level at ${fmt(tip.price)} — ${pctStr(d)} ${d>=0?'above':'below'} current BTC. What does this level historically indicate?`);
+  }
+};
+
+/* ── TABLE ── */
+function renderTable(cur,ma,oc){
+  const rows=getLevels(cur,ma,oc).sort((a,b)=>b.price-a.price);
+  if(!rows.length){$('maTable').innerHTML='<div style="padding:12px;color:var(--muted);font-size:13px">No levels match filters.</div>';return}
+  const body=rows.map(l=>{
+    const isCur=l.type==='current';
+    const code=levelCode(l);const col=levelColor(l);const bg=levelBg(l);
+    const codeTag=`<span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${code}</span>`;
+    const nameStr=l.sourceType==='onchain'?l.label:(l.label||code);
+    const side=isCur?`<span class="pill c">current</span>`:(l.price>cur?`<span class="pill r">resistance</span>`:`<span class="pill s">support</span>`);
+    const d=isCur?0:pct(l.price,cur);
+    const dStr=d===0?'—':((d>0?'+':'')+d.toFixed(2)+'%');
+    const dCls=d===0?'zero':(d>0?'pos':'neg');
+    return`<tr class="${isCur?'cur':''}"><td>${codeTag}</td><td style="color:var(--muted);font-size:12px">${nameStr}</td><td style="font-family:var(--mono);font-size:12px">${fmt(l.price)}</td><td>${side}</td><td class="dist ${dCls}">${dStr}</td></tr>`;
+  }).join('');
+  $('maTable').innerHTML=`<table class="tbl"><thead><tr><th>Code</th><th>Level</th><th>Price</th><th>Side</th><th>Distance</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+function renderSummary(cur,levels){
+  const sup=levels.filter(l=>l.price<cur&&l.type!=='current').sort((a,b)=>b.price-a.price)[0];
+  const res=levels.filter(l=>l.price>cur&&l.type!=='current').sort((a,b)=>a.price-b.price)[0];
+  $('supportVal').textContent=sup?`${levelCode(sup)} ${fmt(sup.price)}`:'—';
+  $('resistVal').textContent=res?`${levelCode(res)} ${fmt(res.price)}`:'—';
+}
+function renderDiag(){
+  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag];
+  $('diagBody').innerHTML=`<div style="font-size:11px;color:var(--muted2);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
+  <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+function rerender(){
+  if(!lastCurrent)return;
+  renderChart(lastCurrent,lastMas,lastOnchain);
+  renderTable(lastCurrent,lastMas,lastOnchain);
+  renderSummary(lastCurrent,getLevels(lastCurrent,lastMas,lastOnchain));
+  renderDiag();
+}
+function setStatus(state){$('sdot').className='sdot '+state}
+
+async function refreshAll(){
+  setStatus('loading');
+  $('canvasCol').innerHTML=`<div class="loading-state"><div class="skel"></div><div class="skel" style="opacity:.7"></div><div class="skel" style="opacity:.45"></div><div class="skel" style="opacity:.25"></div></div>`;
+  $('labelsCol').innerHTML='';$('axisPriceCol').innerHTML='';
+  try{
+    const pr=await getPrice();
+    lastCurrent=pr.price;lastPriceRows=pr.rows;
+    $('priceVal').textContent=fmt(lastCurrent);
+    $('priceSub').textContent=`${pr.rows.filter(r=>r.ok).length} verified sources · ${new Date().toLocaleTimeString()}`;
+    try{
+      const tk=await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+      const chg=Number(tk?.priceChangePercent);
+      if(Number.isFinite(chg)){
+        $('priceChg').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
+        $('priceChg').className='price-chg '+(chg>=0?'up':'dn');
+        $('priceChgWrap').style.display='';
+      }
+    }catch(_){}
+    setStatus('loading');
+    const[ma,on]=await Promise.allSettled([getMAs(),getOnchainLevels()]);
+    if(ma.status==='fulfilled'){lastMas=ma.value.mas;lastDiag=ma.value.diag}
+    else{lastDiag=[{name:'MAs',ok:false,msg:ma.reason?.message||String(ma.reason)}];lastMas=[]}
+    if(on.status==='fulfilled'){lastOnchain=on.value.levels;lastOnchainDiag=on.value.diag}
+    else{lastOnchain=[];lastOnchainDiag=[{name:'On-chain',ok:false,msg:on.reason?.message||String(on.reason)}]}
+    setStatus('ok');
+    rerender();
+  }catch(e){
+    setStatus('bad');
+    $('canvasCol').innerHTML=`<div class="empty-chart">${String(e.message||e).replace(/[<>]/g,'')}</div>`;
+  }
+}
+
+/* ── CONTROLS ── */
+document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
+  btn.classList.toggle('on',catFilters[btn.dataset.cat]!==false);
+  btn.onclick=()=>{const c=btn.dataset.cat;catFilters[c]=!btn.classList.contains('on');btn.classList.toggle('on',catFilters[c]!==false);ss('filters',JSON.stringify(catFilters));rerender()};
+});
+document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
+  btn.classList.toggle('on',btn.dataset.prox===proxFilter);
+  btn.onclick=()=>{proxFilter=btn.dataset.prox;ss('proximity',proxFilter);document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.toggle('on',b.dataset.prox===proxFilter));rerender()};
+});
+$('zoneBtn').classList.toggle('on',autoZone);
+$('zoneBtn').onclick=()=>{autoZone=!autoZone;ss('autoZone',String(autoZone));$('zoneBtn').classList.toggle('on',autoZone);rerender()};
+$('autoBtn').onclick=()=>{
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('autoBtn').textContent='Auto: off';$('autoBtn').classList.remove('active')}
+  else{autoTimer=setInterval(refreshAll,5*60*1000);$('autoBtn').textContent='Auto: on';$('autoBtn').classList.add('active')}
+};
+$('refreshBtn').onclick=refreshAll;
+let rt=null;
+if(window.ResizeObserver){new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>rerender(),90)}).observe($('chartInner'))}
+$('footerTxt').textContent=VERSION;
+refreshAll();
 </script>
 </body>
 </html>
