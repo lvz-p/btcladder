@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Bitcoin Price Ladder</title>
+<title>BTC Ladder</title>
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -199,6 +199,20 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .loading-state{padding:24px;display:flex;flex-direction:column;gap:8px}
 .skel{height:36px;border-radius:var(--r);background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shim 1.3s ease infinite}
 @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* TRENDLINE VIEWER */
+.tl-viewer{padding:14px 18px 18px}
+.tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.tl-status{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
+.tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden}
+.tl-chart-wrap svg{width:100%;display:block}
+.tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tl-leg-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
+.tl-leg-btn:hover{background:var(--surface)}
+.tl-leg-btn.off{opacity:.3;text-decoration:line-through}
+.tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.axisLabel,.xLabel{fill:#64748b;font-size:11px;font-family:var(--mono)}
+.tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:11px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
   body{padding:14px 12px 40px}
@@ -215,7 +229,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 <!-- HEADER: fix — title + status dot only, no second line with timestamp -->
 <header class="hdr">
   <div class="hdr-left">
-    <span class="hdr-title">BTC <span>Price Ladder</span></span>
+    <span class="hdr-title">BTC <span>Ladder</span></span>
     <div class="sdot loading" id="sdot"></div>
   </div>
   <div class="hdr-actions">
@@ -241,15 +255,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </div>
 
-<div class="filter-bar">
-  <span class="lbl-sm">Show</span>
-  <div class="tog-grp">
-    <button class="tog on" data-cat="D">Daily</button>
-    <button class="tog on" data-cat="W">Weekly</button>
-    <button class="tog on" data-cat="M">Monthly</button>
-    <button class="tog on" data-cat="onchain">On-chain</button>
-  </div>
-  <div class="filter-sep"></div>
+<!-- Row 1: Range + Zones -->
+<div class="filter-bar" style="margin-bottom:8px">
   <span class="lbl-sm">Range</span>
   <div class="tog-grp">
     <button class="tog" data-prox="5">±5%</button>
@@ -259,12 +266,14 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <div class="filter-sep"></div>
   <button class="zone-tog on" id="zoneBtn">⬡ Zones</button>
 </div>
-
-<div class="legend">
-  <div class="leg"><div class="leg-pip D"></div>Daily MA</div>
-  <div class="leg"><div class="leg-pip W"></div>Weekly MA</div>
-  <div class="leg"><div class="leg-pip M"></div>Monthly MA</div>
-  <div class="leg"><div class="leg-pip OC"></div>On-chain</div>
+<!-- Row 2: Legend as category toggles -->
+<div class="legend" style="margin-bottom:16px">
+  <button class="leg tog on" data-cat="D"  style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip D"></div>Daily MA</button>
+  <button class="leg tog on" data-cat="W"  style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip W"></div>Weekly MA</button>
+  <button class="leg tog on" data-cat="M"  style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip M"></div>Monthly MA</button>
+  <button class="leg tog on" data-cat="onchain" style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip OC"></div>On-chain</button>
+  <button class="leg tog on" data-cat="TL" style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
+  <span style="width:1px;height:16px;background:var(--border2);margin:0 4px;flex-shrink:0"></span>
   <div class="leg"><div class="leg-zone"></div>Confluence zone</div>
   <div class="leg"><div class="leg-dot-btc"></div>Current BTC</div>
 </div>
@@ -289,6 +298,24 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <div class="tt-divider" id="ttDiv" style="display:none"></div>
   <div class="tt-members" id="ttMembers"></div>
 </div>
+
+
+<details class="section" id="tlSection">
+  <summary>Trendline chart viewer</summary>
+  <div class="tl-viewer">
+    <div class="tl-controls">
+      <button class="btn active" id="tlDailyBtn">Daily</button>
+      <button class="btn" id="tlWeeklyBtn">Weekly</button>
+      <button class="btn" id="tlMonthlyBtn">Monthly</button>
+    </div>
+    <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
+    <div class="tl-chart-wrap">
+      <svg id="tlSvg" viewBox="0 0 1100 480" preserveAspectRatio="none" style="height:360px"></svg>
+    </div>
+    <div id="tlTip" class="tlTip"></div>
+    <div class="tl-legend" id="tlLegend"></div>
+  </div>
+</details>
 
 <details class="section">
   <summary>All levels table</summary>
@@ -351,8 +378,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v85';
-const NS='btcLadder_v85';
+const VERSION='BtcLadder v86.3';
+const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
 const $=id=>document.getElementById(id);
@@ -361,7 +388,7 @@ const pct=(a,b)=>((a-b)/b*100);
 const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
 
 let autoTimer=null,lastCurrent=null,lastMas=[],lastOnchain=[],lastDiag=[],lastPriceRows=[],lastOnchainDiag=[];
-let catFilters={D:true,W:true,M:true,onchain:true};
+let catFilters={D:true,W:true,M:true,onchain:true,TL:true};
 try{catFilters={...catFilters,...JSON.parse(gs('filters','{}')||'{}')}}catch(_){}
 let proxFilter=gs('proximity','10')||'10';
 let autoZone=gs('autoZone','true')!=='false';
@@ -373,7 +400,7 @@ let userZoomed=false; /* true when user has manually zoomed/panned */
 
 function computePresetRange(cur,ma,oc){
   /* compute lo/hi for current proxFilter, same logic as renderChart */
-  const rawLevels=getLevels(cur,ma,oc);
+  const rawLevels=getLevels(cur,ma,oc,tl);
   const allLevels=meanShiftZones(rawLevels,cur);
   const nonCur=allLevels.filter(l=>l.type!=='current');
   if(!nonCur.length)return null;
@@ -469,11 +496,11 @@ async function bitviewLatest(metric,candidates,diag){const top=candidates.filter
 async function getOnchainLevels(){const diag=[],levels=[];for(const m of ONCHAIN_METRICS){try{const c=await bitviewSearch(m,diag);levels.push(await bitviewLatest(m,c,diag))}catch(e){diag.push({name:m.label,ok:false,msg:e.message||String(e)})}}return{levels,diag}}
 
 /* ── LEVEL HELPERS ── */
-function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
-function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
+function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='trendline')return l.label;if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
+function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='trendline')return catFilters.TL!==false;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
 function withinProx(l,cur){if(l.type==='current'||proxFilter==='all')return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
-function getLevels(cur,ma,oc){
-  return[...ma,...oc,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
+function getLevels(cur,ma,oc,tl=[]){
+  return[...ma,...oc,...tl,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
     .filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,cur))
     .sort((a,b)=>a.price-b.price);
 }
@@ -524,10 +551,10 @@ function meanShiftZones(levels,cur){
 }
 
 /* ── COLORS ── */
-const COL={D:'#60a5fa',W:'#a78bfa',M:'#34d399',onchain:'#fbbf24',zone:'rgba(255,255,255,0.6)',BTC:'#f7931a'};
-const COL_BG={D:'rgba(96,165,250,0.10)',W:'rgba(167,139,250,0.10)',M:'rgba(52,211,153,0.10)',onchain:'rgba(251,191,36,0.10)',zone:'rgba(255,255,255,0.08)',BTC:'rgba(247,147,26,0.12)'};
-function levelColor(l){if(l.type==='current')return COL.BTC;if(l.type==='zone')return COL.zone;if(l.sourceType==='onchain')return COL.onchain;return COL[l.group]||COL.D}
-function levelBg(l){if(l.type==='zone')return COL_BG.zone;if(l.sourceType==='onchain')return COL_BG.onchain;return COL_BG[l.group]||COL_BG.D}
+const COL={D:'#60a5fa',W:'#a78bfa',M:'#34d399',onchain:'#fbbf24',zone:'rgba(255,255,255,0.6)',BTC:'#f7931a','TL-support':'#4ade80','TL-resistance':'#f87171'};
+const COL_BG={D:'rgba(96,165,250,0.10)',W:'rgba(167,139,250,0.10)',M:'rgba(52,211,153,0.10)',onchain:'rgba(251,191,36,0.10)',zone:'rgba(255,255,255,0.08)',BTC:'rgba(247,147,26,0.12)','TL-support':'rgba(74,222,128,0.10)','TL-resistance':'rgba(248,113,113,0.10)'};
+function levelColor(l){if(l.type==='current')return COL.BTC;if(l.type==='zone')return COL.zone;if(l.sourceType==='trendline')return l.tlType==='support'?COL['TL-support']:COL['TL-resistance'];if(l.sourceType==='onchain')return COL.onchain;return COL[l.group]||COL.D}
+function levelBg(l){if(l.type==='zone')return COL_BG.zone;if(l.sourceType==='trendline')return l.tlType==='support'?COL_BG['TL-support']:COL_BG['TL-resistance'];if(l.sourceType==='onchain')return COL_BG.onchain;return COL_BG[l.group]||COL_BG.D}
 function pctCls(d){return Math.abs(d)<0.8?'near':(d>0?'pos':'neg')}
 function pctStr(d){return(d>=0?'+':'')+d.toFixed(1)+'%'}
 
@@ -622,7 +649,7 @@ function showTooltip(tip,cur){
 function hideTip(){$('tooltip').classList.remove('show')}
 
 /* ── MAIN RENDER ── */
-function renderChart(cur,ma,oc){
+function renderChart(cur,ma,oc,tl=[]){
   const rawLevels=getLevels(cur,ma,oc);
   const allLevels=meanShiftZones(rawLevels,cur);
   const nonCur=allLevels.filter(l=>l.type!=='current');
@@ -922,8 +949,8 @@ window.handleClick=function(codeKey){
 };
 
 /* ── TABLE ── */
-function renderTable(cur,ma,oc){
-  const rows=getLevels(cur,ma,oc).sort((a,b)=>b.price-a.price);
+function renderTable(cur,ma,oc,tl=[]){
+  const rows=getLevels(cur,ma,oc,tl).sort((a,b)=>b.price-a.price);
   if(!rows.length){$('maTable').innerHTML='<div style="padding:12px;color:var(--muted);font-size:13px">No levels match filters.</div>';return}
   const body=rows.map(l=>{
     const isCur=l.type==='current';
@@ -943,7 +970,7 @@ function renderSummary(cur,levels){
   $('resistVal').textContent=res?`${levelCode(res)} ${fmt(res.price)}`:'—';
 }
 function renderDiag(){
-  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag];
+  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[])];
   $('diagBody').innerHTML=`<div style="font-size:11px;color:var(--muted2);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
@@ -951,9 +978,9 @@ function renderDiag(){
 }
 function rerender(){
   if(!lastCurrent)return;
-  renderChart(lastCurrent,lastMas,lastOnchain);
-  renderTable(lastCurrent,lastMas,lastOnchain);
-  renderSummary(lastCurrent,getLevels(lastCurrent,lastMas,lastOnchain));
+  renderChart(lastCurrent,lastMas,lastOnchain,lastTrendlines);
+  renderTable(lastCurrent,lastMas,lastOnchain,lastTrendlines);
+  renderSummary(lastCurrent,getLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
 }
 function setStatus(state){$('sdot').className='sdot '+state}
@@ -977,11 +1004,15 @@ async function refreshAll(){
       }
     }catch(_){}
     setStatus('loading');
-    const[ma,on]=await Promise.allSettled([getMAs(),getOnchainLevels()]);
+    const[ma,on,tl]=await Promise.allSettled([getMAs(),getOnchainLevels(),getTrendlines()]);
     if(ma.status==='fulfilled'){lastMas=ma.value.mas;lastDiag=ma.value.diag}
     else{lastDiag=[{name:'MAs',ok:false,msg:ma.reason?.message||String(ma.reason)}];lastMas=[]}
     if(on.status==='fulfilled'){lastOnchain=on.value.levels;lastOnchainDiag=on.value.diag}
     else{lastOnchain=[];lastOnchainDiag=[{name:'On-chain',ok:false,msg:on.reason?.message||String(on.reason)}]}
+    if(tl.status==='fulfilled'){lastTrendlines=tl.value.levels;lastTlDiag=tl.value.diag}
+    else{lastTrendlines=[];lastTlDiag=[{name:'TL',ok:false,msg:tl.reason?.message||String(tl.reason)}]}
+    /* refresh viewer if already open */
+    if(document.getElementById('tlSection')?.open){tlViewerReady=true;tl_draw(tlViewerMode);}
     setStatus('ok');
     rerender();
   }catch(e){
@@ -989,6 +1020,418 @@ async function refreshAll(){
     $('canvasCol').innerHTML=`<div class="empty-chart">${String(e.message||e).replace(/[<>]/g,'')}</div>`;
   }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TRENDLINE ENGINE — copied VERBATIM from btc_trendline_viewer_v1_28.html
+   Engine functions are identical to the original; only the async wrapper
+   getTrendlines() and the SVG draw function are new.
+   ════════════════════════════════════════════════════════════════════════════ */
+/* Engine globals (scoped — do not conflict with ladder globals) */
+let tl_candles={},tl_cands={},tl_visible={};
+/* verbatim helpers */
+const tl_Y=(p,log)=>log?Math.log(p):p;
+const tl_invY=(y,log)=>log?Math.exp(y):y;
+const tl_clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const tl_fmtPrice=v=>v>=1000?'$'+Math.round(v).toLocaleString():'$'+v.toFixed(2);
+
+/* fetchAll — verbatim, async-safe */
+async function tl_fetchAll(tf,mode,custom){
+  const step=tf==='1w'?7*864e5:864e5;
+  let start=mode==='max'?Date.UTC(2017,7,17):Date.now()-custom*step;
+  const out=[];
+  for(let s=0;s<25;s++){
+    const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf}&startTime=${Math.floor(start)}&limit=1000`;
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok)throw new Error('Binance '+r.status);
+    const raw=await r.json();
+    if(!raw.length)break;
+    raw.forEach(k=>out.push({t:k[0],open:+k[1],high:+k[2],low:+k[3],close:+k[4]}));
+    start=raw[raw.length-1][0]+step;
+    if(raw.length<1000||(mode==='custom'&&out.length>=custom))break;
+    await new Promise(res=>setTimeout(res,70));
+  }
+  const u=[],seen=new Set();
+  for(const c of out){if(!seen.has(c.t)){seen.add(c.t);u.push(c)}}
+  return mode==='custom'?u.slice(-custom):u;
+}
+/* detectPivots — verbatim */
+function tl_detectPivots(cs,w,basis){
+  const highs=[],lows=[];
+  const hv=c=>basis==='wick'?c.high:c.close;
+  const lv=c=>basis==='wick'?c.low:c.close;
+  for(let i=w;i<cs.length-w;i++){
+    let isH=true,isL=true;
+    const h=hv(cs[i]),l=lv(cs[i]);
+    for(let j=i-w;j<=i+w;j++){if(j===i)continue;if(hv(cs[j])>=h)isH=false;if(lv(cs[j])<=l)isL=false;}
+    if(isH)highs.push({i,t:cs[i].t,p:h,kind:'high'});
+    if(isL)lows.push({i,t:cs[i].t,p:l,kind:'low'});
+  }
+  highs.forEach((p,n)=>p.pid='H'+(n+1));lows.forEach((p,n)=>p.pid='L'+(n+1));
+  return{highs,lows};
+}
+/* makeLine — verbatim */
+function tl_makeLine(a,b,log){
+  const y1=tl_Y(a.p,log),y2=tl_Y(b.p,log),m=(y2-y1)/(b.i-a.i),q=y1-m*a.i;
+  return{m,q,project(i){return tl_invY(m*i+q,log)},projectY(i){return m*i+q}};
+}
+/* selectedPrice — verbatim */
+function tl_selectedPrice(c,type,basis){if(basis==='wick')return type==='support'?c.low:c.high;return c.close;}
+/* validateLine — verbatim */
+function tl_validateLine(cs,line,type,a,b,tolPct,basis,log){
+  let minClear=Infinity,touches=0;
+  const tolLog=Math.log(1+tolPct/100);
+  for(let i=a.i;i<cs.length;i++){
+    const lpY=line.projectY(i);
+    const pp=tl_selectedPrice(cs[i],type,basis);
+    const py=tl_Y(pp,log);
+    const diff=type==='support'?py-lpY:lpY-py;
+    const diffPct=(Math.exp(diff)-1)*100;
+    if(diffPct<minClear)minClear=diffPct;
+    if(Math.abs(diffPct)<=1.5)touches++;
+    if(diff<-tolLog)return{ok:false,idx:i,date:cs[i].t,breachPct:diffPct,
+      reason:i<b.i?'between anchors':(i===b.i?'anchor 2 mismatch':'after anchor 2'),touches,minClear};
+  }
+  return{ok:true,touches,minClear};
+}
+/* relevance — verbatim */
+function tl_relevance(type,a,b,now,btc,tf,lastIdx){
+  if(tf==='1w'&&a.i>=lastIdx-26&&b.i>=lastIdx-26)return false;
+  if(tf==='1M'&&a.i>=lastIdx-12&&b.i>=lastIdx-12)return false;
+  if(type==='support'){if(now>btc*1.02)return false;if(now<btc*0.15)return false;if(now<Math.min(a.p,b.p)*0.45)return false;}
+  else{if(now<btc*0.98)return false;if(now>btc*3.2)return false;if(now>Math.max(a.p,b.p)*2.4)return false;}
+  return true;
+}
+/* duplicate — verbatim */
+function tl_duplicate(a,b){
+  if(a.type!==b.type)return false;
+  const nd=Math.abs(Math.log(a.now/b.now));
+  const sd=Math.abs(a.line.m-b.line.m)/Math.max(Math.abs(a.line.m),Math.abs(b.line.m),1e-9);
+  return nd<0.04&&(sd<0.18||Math.abs(a.a.i-b.a.i)<20||Math.abs(a.b.i-b.b.i)<20);
+}
+/* score — verbatim */
+function tl_score(c,cs,tf){
+  const last=cs.length-1,btc=cs[last].close;
+  const anchor=(c.b.i-c.a.i)/last,active=(last-c.b.i)/last,total=(last-c.a.i)/last;
+  const dist=Math.abs(pct(c.now,btc));
+  const clearance=tl_clamp(c.val.minClear/4,0,1);
+  let structural=32*tl_clamp(anchor/0.28,0,1)+13*tl_clamp(active/0.12,0,1)+13*tl_clamp(total/0.55,0,1)+18*tl_clamp((c.val.touches-2)/5,0,1)+4*clearance;
+  let tacticalWeight=tf==='1d'?42:(tf==='1w'?24:12);
+  let tactical=tacticalWeight/(1+dist/(tf==='1d'?12:(tf==='1w'?22:38)));
+  let basisAdj=c.anchorBasis==='wick'?-5:0;
+  let farPenalty=0;
+  if(tf==='1d'&&dist>25)farPenalty=(dist-25)*0.35;
+  if(tf==='1w'&&dist>80)farPenalty=(dist-80)*0.18;
+  return tl_clamp(structural+tactical+basisAdj-farPenalty,0,100);
+}
+/* generate — verbatim */
+function tl_generate(points,type,cs,log,minSpace,maxN,tol,basis,tf,anchorBasis){
+  const out=[],rej=[];
+  const last=cs.length-1,btc=cs[last].close;
+  for(let x=0;x<points.length;x++){
+    for(let y=x+1;y<points.length;y++){
+      const a=points[x],b=points[y];
+      if(b.i-a.i<minSpace)continue;
+      const line=tl_makeLine(a,b,log);
+      const now=line.project(last);
+      if(!Number.isFinite(now)||now<=0)continue;
+      if(!tl_relevance(type,a,b,now,btc,tf,last)){rej.push({type,a,b,now,reason:'relevance',date:null,breachPct:null});continue;}
+      const val=tl_validateLine(cs,line,type,a,b,tol,basis,log);
+      if(!val.ok){rej.push({type,a,b,now,reason:val.reason,date:val.date,breachPct:val.breachPct});continue;}
+      const obj={type,a,b,line,now,dist:pct(now,btc),val,anchorBasis:anchorBasis||basis,tag:type==='support'?'ATS':'ATR'};
+      obj.score=tl_score(obj,cs,tf);
+      out.push(obj);
+    }
+  }
+  out.sort((a,b)=>b.score-a.score);
+  const kept=[];
+  for(const o of out){if(kept.some(k=>tl_duplicate(o,k)))continue;kept.push(o);if(kept.length>=maxN)break;}
+  kept.forEach((o,i)=>{
+    const suf=(tf==='1d'&&anchorBasis==='wick')?'W':((tf==='1d'&&anchorBasis==='close')?'C':'');
+    o.tag=o.tag+suf+(i+1);
+  });
+  return{kept,rej};
+}
+/* suppressWickSameAnchor — verbatim */
+function tl_suppressWick(closeLines,wickLines){
+  const closeKeys=new Set(closeLines.map(c=>c.type+'|'+c.a.i+'|'+c.b.i));
+  return wickLines.filter(w=>!closeKeys.has(w.type+'|'+w.a.i+'|'+w.b.i));
+}
+
+/* projectLineAtTime — verbatim from viewer, projects any tf line to a timestamp */
+function tl_projectLineAtTime(c,t){
+  const arr=c.engineCandles||[];if(!arr.length)return c.now;
+  if(arr.length===1)return c.line.project(0);
+  if(t<=arr[0].t){const step=arr[1].t-arr[0].t||864e5;return c.line.project((t-arr[0].t)/step);}
+  const n=arr.length-1;
+  if(t>=arr[n].t){const step=arr[n].t-arr[n-1].t||864e5;return c.line.project(n+(t-arr[n].t)/step);}
+  let lo=0,hi=n;
+  while(hi-lo>1){const mid=(lo+hi)>>1;if(arr[mid].t<=t)lo=mid;else hi=mid;}
+  const span=arr[hi].t-arr[lo].t||1;
+  return c.line.project(lo+(t-arr[lo].t)/span);
+}
+
+/* ── Timeframe defaults — mirrors applyTimeframeDefaults() exactly ── */
+const TL_DEFAULTS={
+  '1d':{mode:'custom',look:180,log:false,basis:'mix', w:5,minSpace:28,maxN:8,tol:0},
+  '1w':{mode:'custom',look:200,log:true, basis:'close',w:5,minSpace:28,maxN:8,tol:0},
+  '1M':{mode:'max',   look:1200,log:true,basis:'close',w:5,minSpace:28,maxN:8,tol:0}
+};
+/* Tag prefixes — mirrors viewer tfMeta */
+const TL_META={
+  '1d':{order:1,prefix:{support:'DTS',resistance:'DTR'}},
+  '1w':{order:2,prefix:{support:'WTS',resistance:'WTR'}},
+  '1M':{order:3,prefix:{support:'MTS',resistance:'MTR'}}
+};
+
+/* ── runForTf: mirrors run() for a given timeframe ── */
+async function tl_runForTf(tf){
+  const d=TL_DEFAULTS[tf];
+  /* fetch + cache */
+  if(!tl_candles[tf]||!tl_candles[tf].length)
+    tl_candles[tf]=await tl_fetchAll(tf,d.mode,d.look);
+  const cs=tl_candles[tf];
+  let cands=[];
+  if(tf==='1d'&&d.basis==='mix'){
+    /* verbatim daily mix branch from run() */
+    const closePivs=tl_detectPivots(cs,d.w,'close');
+    const wickPivs=tl_detectPivots(cs,d.w,'wick');
+    const supC=tl_generate(closePivs.lows,'support',cs,d.log,d.minSpace,d.maxN,d.tol,'close',tf,'close');
+    const resC=tl_generate(closePivs.highs,'resistance',cs,d.log,d.minSpace,d.maxN,d.tol,'close',tf,'close');
+    const supW=tl_generate(wickPivs.lows,'support',cs,d.log,d.minSpace,d.maxN,d.tol,'wick',tf,'wick');
+    const resW=tl_generate(wickPivs.highs,'resistance',cs,d.log,d.minSpace,d.maxN,d.tol,'wick',tf,'wick');
+    const keptSupW=tl_suppressWick(supC.kept,supW.kept);
+    const keptResW=tl_suppressWick(resC.kept,resW.kept);
+    cands=[...resC.kept,...keptResW,...supC.kept,...keptSupW].sort((a,b)=>b.score-a.score).slice(0,d.maxN);
+  } else {
+    /* verbatim non-mix branch */
+    const pivs=tl_detectPivots(cs,d.w,d.basis);
+    const sup=tl_generate(pivs.lows,'support',cs,d.log,d.minSpace,d.maxN,d.tol,d.basis,tf,d.basis);
+    const res=tl_generate(pivs.highs,'resistance',cs,d.log,d.minSpace,d.maxN,d.tol,d.basis,tf,d.basis);
+    cands=[...res.kept,...sup.kept].sort((a,b)=>b.score-a.score);
+  }
+  return{cands,cs};
+}
+
+/* ── assignViewerTags: mirrors viewer assignViewerTags() exactly ── */
+function tl_assignTags(allLines){
+  const counters={};
+  /* sort by tf order then score — same as viewer */
+  allLines.sort((a,b)=>TL_META[a.tf].order-TL_META[b.tf].order||b.score-a.score);
+  allLines.forEach(c=>{
+    const base=TL_META[c.tf].prefix[c.type];
+    counters[base]=(counters[base]||0)+1;
+    c.viewerTag=base+counters[base];
+  });
+  return allLines;
+}
+
+/* ── getTrendlines: called during refreshAll ── */
+let lastTlDiag=[];
+async function getTrendlines(){
+  const diag=[];
+  const allLines=[];
+  for(const tf of ['1d','1w','1M']){
+    try{
+      const{cands,cs}=await tl_runForTf(tf);
+      /* attach tf and candles for viewer + ladder */
+      cands.forEach(c=>allLines.push(Object.assign({},c,{tf,engineCandles:cs})));
+      diag.push({name:`TL ${tf}`,ok:true,msg:`${cands.length} lines`});
+    }catch(e){
+      diag.push({name:`TL ${tf}`,ok:false,msg:e.message||String(e)});
+    }
+  }
+  /* assign DTR/DTS/WTR/WTS/MTR/MTS tags */
+  tl_assignTags(allLines);
+  /* store per-tf for viewer */
+  tl_cands['1d']=allLines.filter(c=>c.tf==='1d');
+  tl_cands['1w']=allLines.filter(c=>c.tf==='1w');
+  tl_cands['1M']=allLines.filter(c=>c.tf==='1M');
+  /* init visibility */
+  allLines.forEach(c=>{if(tl_visible[c.viewerTag]===undefined)tl_visible[c.viewerTag]=true;});
+  /* convert to ladder levels */
+  const levels=allLines.map(c=>({
+    id:'TL_'+c.viewerTag,
+    sourceType:'trendline',group:'TL',
+    tlType:c.type,  /* 'support' | 'resistance' */
+    label:c.viewerTag,short:c.viewerTag,
+    price:c.now,score:c.score,
+    _tlLine:c       /* full line object for viewer */
+  }));
+  lastTlDiag=diag;
+  return{levels,diag};
+}
+
+/* ── drawTlViewer: draws the SVG chart for a given mode ──
+   Mirrors the original draw() function with our element IDs.
+   Uses the same coordinate mapping, same trendline rendering.
+── */
+let tlViewerMode='1d';
+function tl_draw(mode){
+  tlViewerMode=mode;
+  const svg=document.getElementById('tlSvg');
+  if(!svg){return;}
+  const tip=document.getElementById('tlTip');
+  svg.innerHTML='';
+
+  const lines=tl_cands[mode];
+  if(!lines||!lines.length){
+    document.getElementById('tlStatus').textContent='No trendlines. Refresh to load.';
+    return;
+  }
+
+  if(false){
+    /* ── TACTICAL: time-based x-axis, 180 daily candles, y from price only ── */
+    const pcs=(tl_candles['1d']||[]).slice(-180);
+    if(!pcs.length){document.getElementById('tlStatus').textContent='No daily candle data.';return;}
+    const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
+    const W=1100,H=480,pad={l:70,r:130,t:20,b:50};
+    const add=e=>{svg.appendChild(e);return e};
+    const rawTMin=pcs[0].t, lastPriceT=pcs[pcs.length-1].t;
+    const dayMs=864e5;
+    const tMin=rawTMin, tMax=lastPriceT+8*dayMs;
+    const gridW=W-pad.l-pad.r, gridH=H-pad.t-pad.b;
+    const gridLeft=pad.l,gridRight=W-pad.r,gridTop=pad.t,gridBottom=H-pad.b;
+    /* y-axis from price candles only — no trendline expansion */
+    const minP=Math.min(...pcs.map(d=>d.low))*0.94;
+    const maxP=Math.max(...pcs.map(d=>d.high))*1.06;
+    const ymin=Math.log(minP),ymax=Math.log(maxP);
+    const xTime=t=>pad.l+(t-tMin)/(tMax-tMin)*gridW;
+    const yp=p=>pad.t+(1-(Math.log(Math.max(p,1e-9))-ymin)/(ymax-ymin))*gridH;
+    /* clip group */
+    const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const clip=document.createElementNS('http://www.w3.org/2000/svg','clipPath');
+    clip.setAttribute('id','tlClip');
+    const cr=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    cr.setAttribute('x',gridLeft);cr.setAttribute('y',gridTop);cr.setAttribute('width',gridW);cr.setAttribute('height',gridH);
+    clip.appendChild(cr);defs.appendChild(clip);add(defs);
+    const cg=document.createElementNS('http://www.w3.org/2000/svg','g');
+    cg.setAttribute('clip-path','url(#tlClip)');add(cg);
+    const addC=e=>{cg.appendChild(e);return e};
+    /* grid */
+    for(let k=0;k<6;k++){const yy=pad.t+k*gridH/5,val=Math.exp(ymax-(k/5)*(ymax-ymin));const gl=document.createElementNS('http://www.w3.org/2000/svg','line');gl.setAttribute('x1',gridLeft);gl.setAttribute('x2',gridRight);gl.setAttribute('y1',yy);gl.setAttribute('y2',yy);gl.setAttribute('stroke','rgba(148,163,184,.12)');add(gl);const gt=document.createElementNS('http://www.w3.org/2000/svg','text');gt.setAttribute('x',8);gt.setAttribute('y',yy+4);gt.setAttribute('class','axisLabel');gt.textContent=tl_fmtPrice(val);add(gt);}
+    /* date labels */
+    let lastLbl=null,lbls=[];
+    pcs.forEach(c=>{const d=new Date(c.t);const l=`${d.getUTCMonth()+1}/${String(d.getUTCDate()).padStart(2,'0')}`;if(l!==lastLbl){lbls.push({t:c.t,l});lastLbl=l;}});
+    const lstep=lbls.length>10?Math.ceil(lbls.length/8):1;
+    lbls.filter((_,i)=>i%lstep===0).forEach(d=>{const xx=xTime(d.t);const lt=document.createElementNS('http://www.w3.org/2000/svg','text');lt.setAttribute('x',xx);lt.setAttribute('y',H-10);lt.setAttribute('text-anchor','middle');lt.setAttribute('class','xLabel');lt.textContent=d.l;add(lt);});
+    /* border */
+    const bdr=document.createElementNS('http://www.w3.org/2000/svg','rect');bdr.setAttribute('x',gridLeft);bdr.setAttribute('y',gridTop);bdr.setAttribute('width',gridW);bdr.setAttribute('height',gridH);bdr.setAttribute('fill','none');bdr.setAttribute('stroke','rgba(148,163,184,.18)');bdr.setAttribute('stroke-width','1');add(bdr);
+    /* price line */
+    let pd='';pcs.forEach(c=>pd+=(pd?'L':'M')+xTime(c.t)+' '+yp(c.close)+' ');
+    const pp=document.createElementNS('http://www.w3.org/2000/svg','path');pp.setAttribute('d',pd);pp.setAttribute('stroke','#60a5fa');pp.setAttribute('stroke-width','1.5');pp.setAttribute('fill','none');pp.setAttribute('opacity','.82');addC(pp);
+    /* trendlines — project onto daily time axis using projectLineAtTime
+       This correctly draws any timeframe's line on the daily window */
+    const sw={'1d':2,'1w':3,'1M':4};
+    const labelCands=[];
+    vis.forEach(c=>{
+      const col=c.type==='support'?'#22c55e':'#ef4444';
+      /* project line at window start and end using time interpolation */
+      const p1=tl_projectLineAtTime(c,tMin);
+      const p2=tl_projectLineAtTime(c,lastPriceT);
+      const x1=xTime(tMin),y1=yp(p1),x2=xTime(lastPriceT),y2=yp(p2);
+      const tll=document.createElementNS('http://www.w3.org/2000/svg','line');
+      tll.setAttribute('x1',x1);tll.setAttribute('y1',y1);tll.setAttribute('x2',x2);tll.setAttribute('y2',y2);
+      tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',sw[c.tf]||2);
+      tll.setAttribute('stroke-linecap','round');tll.setAttribute('opacity','.88');
+      tll.style.cursor='pointer';
+      tll.addEventListener('mousemove',ev=>{if(tip){tip.textContent=c.viewerTag+' '+tl_fmtPrice(c.now);tip.style.display='block';tip.style.left=(ev.clientX+12)+'px';tip.style.top=(ev.clientY+12)+'px';}});
+      tll.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';});
+      addC(tll);
+      [c.a,c.b].forEach(pt=>{const xx=xTime(pt.t),yy=yp(pt.p);if(xx<gridLeft-8||xx>gridRight+8||yy<gridTop-8||yy>gridBottom+8)return;const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('cx',xx);dot.setAttribute('cy',yy);dot.setAttribute('r',4);dot.setAttribute('fill','none');dot.setAttribute('stroke',col);dot.setAttribute('stroke-width','1.5');addC(dot);});
+      if(x2>=gridLeft&&x2<=gridRight&&y2>=gridTop&&y2<=gridBottom)labelCands.push({c,y:y2,projNow:p2});
+    });
+    /* label placement */
+    labelCands.sort((a,b)=>a.y-b.y);
+    const minGap=17,ltop=gridTop+10,lbot=gridBottom-6;
+    const placed=[];
+    labelCands.forEach(item=>{let yy=tl_clamp(item.y,ltop,lbot);if(placed.length&&yy<placed[placed.length-1].y+minGap)yy=placed[placed.length-1].y+minGap;placed.push({...item,y:yy});});
+    for(let i=placed.length-2;i>=0;i--){if(placed[i+1].y>lbot)placed[i+1].y=lbot;if(placed[i].y>placed[i+1].y-minGap)placed[i].y=placed[i+1].y-minGap;}
+    placed.forEach(item=>{const c=item.c;const col=c.type==='support'?'#22c55e':'#ef4444';const txt=document.createElementNS('http://www.w3.org/2000/svg','text');txt.setAttribute('x',gridRight+8);txt.setAttribute('y',tl_clamp(item.y,ltop,lbot));txt.setAttribute('fill',col);txt.setAttribute('font-size','11');txt.setAttribute('font-weight','800');txt.setAttribute('font-family','JetBrains Mono,monospace');txt.textContent=c.viewerTag+' '+tl_fmtPrice(item.projNow||c.now);add(txt);});
+    document.getElementById('tlStatus').textContent=`${vis.length} trendlines · ${pcs.length} daily candles · tactical`;
+    tl_renderLegend(lines);
+
+  } else {
+    /* ── D/W/M: candle-index x-axis, mirrors original draw() exactly ── */
+    const cs=tl_candles[mode]||[];
+    if(!cs.length){document.getElementById('tlStatus').textContent='No candle data. Refresh to load.';return;}
+    const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
+    const log=TL_DEFAULTS[mode].log;
+    const W=1100,H=480,pad={l:70,r:35,t:20,b:50};
+    const add=e=>{svg.appendChild(e);return e};
+    const minP=Math.min(...cs.map(d=>d.low))*0.94,maxP=Math.max(...cs.map(d=>d.high))*1.06;
+    const ymin=tl_Y(minP,log),ymax=tl_Y(maxP,log);
+    const x=i=>pad.l+i/(cs.length-1)*(W-pad.l-pad.r);
+    const y=p=>pad.t+(1-(tl_Y(Math.max(p,1e-9),log)-ymin)/(ymax-ymin))*(H-pad.t-pad.b);
+    /* grid */
+    for(let k=0;k<6;k++){const yy=pad.t+k*(H-pad.t-pad.b)/5,val=tl_invY(ymax-(k/5)*(ymax-ymin),log);const gl=document.createElementNS('http://www.w3.org/2000/svg','line');gl.setAttribute('x1',pad.l);gl.setAttribute('x2',W-pad.r);gl.setAttribute('y1',yy);gl.setAttribute('y2',yy);gl.setAttribute('stroke','rgba(148,163,184,.14)');add(gl);const gt=document.createElementNS('http://www.w3.org/2000/svg','text');gt.setAttribute('x',8);gt.setAttribute('y',yy+4);gt.setAttribute('class','axisLabel');gt.textContent=tl_fmtPrice(val);add(gt);}
+    /* year labels */
+    let lastYear=null,yrs=[];cs.forEach((c,i)=>{const yr=new Date(c.t).getUTCFullYear();if(yr!==lastYear){yrs.push({i,yr});lastYear=yr;}});const ystep=yrs.length>9?2:1;yrs.filter((_,i)=>i%ystep===0).forEach(d=>{const xx=x(d.i);const lt=document.createElementNS('http://www.w3.org/2000/svg','text');lt.setAttribute('x',xx);lt.setAttribute('y',H-10);lt.setAttribute('text-anchor','middle');lt.setAttribute('class','xLabel');lt.textContent=d.yr;add(lt);});
+    /* price line */
+    let pd='';cs.forEach((c,i)=>pd+=(i?'L':'M')+x(i)+' '+y(c.close)+' ');
+    const pp=document.createElementNS('http://www.w3.org/2000/svg','path');pp.setAttribute('d',pd);pp.setAttribute('stroke','#60a5fa');pp.setAttribute('stroke-width','1.5');pp.setAttribute('fill','none');pp.setAttribute('opacity','.82');add(pp);
+    /* trendlines — candle-index based, mirrors original draw() */
+    vis.forEach((c,idx)=>{
+      const col=c.type==='support'?'#22c55e':'#ef4444';
+      const tll=document.createElementNS('http://www.w3.org/2000/svg','line');
+      tll.setAttribute('x1',x(c.a.i));tll.setAttribute('y1',y(c.a.p));
+      tll.setAttribute('x2',x(cs.length-1));tll.setAttribute('y2',y(c.now));
+      tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',idx<3?4:2.5);
+      tll.setAttribute('opacity',idx<3?'.9':'.6');
+      tll.style.cursor='pointer';
+      tll.addEventListener('mousemove',ev=>{if(tip){tip.textContent=c.viewerTag+' '+tl_fmtPrice(c.now);tip.style.display='block';tip.style.left=(ev.clientX+12)+'px';tip.style.top=(ev.clientY+12)+'px';}});
+      tll.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';});
+      add(tll);
+      [c.a,c.b].forEach(pt=>{const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('cx',x(pt.i));dot.setAttribute('cy',y(pt.p));dot.setAttribute('r',4);dot.setAttribute('fill','none');dot.setAttribute('stroke',col);dot.setAttribute('stroke-width','1.5');add(dot);});
+      const lx=Math.min(W-pad.r-4,x(cs.length-1)+6);
+      const ly=tl_clamp(y(c.now),pad.t+10,H-pad.b-6);
+      const txt=document.createElementNS('http://www.w3.org/2000/svg','text');txt.setAttribute('x',lx);txt.setAttribute('y',ly);txt.setAttribute('fill',col);txt.setAttribute('font-size','11');txt.setAttribute('font-weight','800');txt.setAttribute('font-family','JetBrains Mono,monospace');txt.textContent=c.viewerTag+' '+tl_fmtPrice(c.now);add(txt);
+    });
+    document.getElementById('tlStatus').textContent=`${vis.length} trendlines · ${cs.length} candles · ${mode}`;
+    tl_renderLegend(lines);
+  }
+}
+
+function tl_renderLegend(lines){
+  const box=document.getElementById('tlLegend');
+  if(!box)return;
+  box.innerHTML='';
+  lines.forEach(c=>{
+    const col=c.type==='support'?'#22c55e':'#ef4444';
+    const off=tl_visible[c.viewerTag]===false;
+    const b=document.createElement('button');
+    b.className='tl-leg-btn'+(off?' off':'');
+    b.innerHTML=`<span class="tl-leg-dot" style="background:${col}"></span>${c.viewerTag} ${tl_fmtPrice(c.now)}`;
+    b.onclick=()=>{
+      tl_visible[c.viewerTag]=off; /* toggle: was false→true, was true→false */
+      tl_draw(tlViewerMode);
+    };
+    box.appendChild(b);
+  });
+}
+
+/* viewer mode buttons */
+let tlViewerReady=false;
+document.getElementById('tlSection').addEventListener('toggle',()=>{
+  if(document.getElementById('tlSection').open&&!tlViewerReady&&Object.keys(tl_cands).length){
+    tlViewerReady=true;tl_draw('1d');
+  }
+});
+['Daily','Weekly','Monthly'].forEach(label=>{
+  const id='tl'+label+'Btn';
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.onclick=()=>{
+    ['tlDailyBtn','tlWeeklyBtn','tlMonthlyBtn'].forEach(b=>{const bb=document.getElementById(b);if(bb)bb.classList.remove('active')});
+    el.classList.add('active');
+    tl_draw(label==='Daily'?'1d':label==='Weekly'?'1w':'1M');
+  };
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LADDER INTEGRATION
+   ════════════════════════════════════════════════════════════════════════════ */
+let lastTrendlines=[];
 
 /* ── CONTROLS ── */
 document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
@@ -999,6 +1442,7 @@ document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
   btn.classList.toggle('on',btn.dataset.prox===proxFilter);
   btn.onclick=()=>{proxFilter=btn.dataset.prox;ss('proximity',proxFilter);zoomLo=null;zoomHi=null;userZoomed=false;document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.toggle('on',b.dataset.prox===proxFilter));rerender()};
 });
+/* TL category toggle wired via leg-btn data-cat="TL" — handled by shared .tog[data-cat] listener */
 $('zoneBtn').classList.toggle('on',autoZone);
 $('zoneBtn').onclick=()=>{autoZone=!autoZone;ss('autoZone',String(autoZone));$('zoneBtn').classList.toggle('on',autoZone);rerender()};
 $('autoBtn').onclick=()=>{
