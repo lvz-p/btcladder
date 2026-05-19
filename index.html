@@ -89,7 +89,7 @@ button.leg.tog{transition:all .15s;border:1px solid transparent;border-radius:99
 button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
 button.leg.tog.on[data-cat="D"]{background:var(--col-D-dim);color:var(--col-D);border-color:rgba(96,165,250,.3)}
 button.leg.tog.on[data-cat="W"]{background:var(--col-W-dim);color:var(--col-W);border-color:rgba(167,139,250,.3)}
-button.leg.tog.on[data-cat="M"]{background:var(--col-M-dim);color:var(--col-M);border-color:rgba(52,211,153,.3)}
+button.leg.tog.on[data-cat="M"]{background:var(--col-M-dim);color:var(--col-M);border-color:rgba(244,114,182,.3)}
 button.leg.tog.on[data-cat="onchain"]{background:var(--col-OC-dim);color:var(--col-OC);border-color:rgba(251,191,36,.3)}
 button.leg.tog.on[data-cat="TL"]{background:rgba(74,222,128,.08);color:#94a3b8;border-color:rgba(148,163,184,.3)}
 
@@ -392,11 +392,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.8</div>
+<div class="footer" id="footerTxt">BtcLadder v86.9</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.8';
+const VERSION='BtcLadder v86.9';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -497,10 +497,18 @@ async function getMAs(){
   return{mas:out,diag};
 }
 const ONCHAIN_METRICS=[
-  {key:'realized_price',label:'Realized Price',short:'RP',queries:['realized_price','realized price','realized'],prefer:[/\brealized[_ -]?price\b/i,/realized.*price/i],avoid:[/short|sth|long|lth|cap|mvrv|ratio|change|momentum|band|supply|distribution|utxo/i]},
-  {key:'sth_cost_basis',label:'STH Cost Basis',short:'STHCB',queries:['short term holder realized price','sth realized price','short-term holder cost basis','sth cost basis','sth'],prefer:[/(sth|short).*realized.*price/i,/realized.*price.*(sth|short)/i,/(sth|short).*cost.*basis/i],avoid:[/lth|long|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
-  {key:'lth_cost_basis',label:'LTH Cost Basis',short:'LTHCB',queries:['long term holder realized price','lth realized price','long-term holder cost basis','lth cost basis','lth'],prefer:[/(lth|long).*realized.*price/i,/realized.*price.*(lth|long)/i,/(lth|long).*cost.*basis/i],avoid:[/sth|short|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
-  {key:'true_market_mean',label:'True Market Mean',short:'TMM',queries:['true market mean','true_market_mean','active investor price','cointime true mean'],prefer:[/true.*market.*mean/i,/active.*investor.*price/i,/true_market_mean/i],avoid:[/ratio|aviv|mvrv|supply|distribution/i]}
+  {key:'realized_price',label:'Realized Price',short:'RP',
+   primarySeries:'realized_price',primaryIndex:'day1',
+   queries:['realized_price','realized price','realized'],prefer:[/\brealized[_ -]?price\b/i,/realized.*price/i],avoid:[/short|sth|long|lth|cap|mvrv|ratio|change|momentum|band|supply|distribution|utxo/i]},
+  {key:'sth_cost_basis',label:'STH Cost Basis',short:'STHCB',
+   primarySeries:'sth_realized_price',primaryIndex:'day1',
+   queries:['short term holder realized price','sth realized price','short-term holder cost basis','sth cost basis','sth'],prefer:[/(sth|short).*realized.*price/i,/realized.*price.*(sth|short)/i,/(sth|short).*cost.*basis/i],avoid:[/lth|long|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
+  {key:'lth_cost_basis',label:'LTH Cost Basis',short:'LTHCB',
+   primarySeries:'lth_realized_price',primaryIndex:'day1',
+   queries:['long term holder realized price','lth realized price','long-term holder cost basis','lth cost basis','lth'],prefer:[/(lth|long).*realized.*price/i,/realized.*price.*(lth|long)/i,/(lth|long).*cost.*basis/i],avoid:[/sth|short|sopr|mvrv|supply|ratio|change|profit|distribution/i]},
+  {key:'true_market_mean',label:'True Market Mean',short:'TMM',
+   primarySeries:'true_market_mean',primaryIndex:'day1',
+   queries:['true market mean','true_market_mean','active investor price','cointime true mean'],prefer:[/true.*market.*mean/i,/active.*investor.*price/i,/true_market_mean/i],avoid:[/ratio|aviv|mvrv|supply|distribution/i]}
 ];
 const BITVIEW_BASE='https://bitview.space';
 async function fetchTextTimed(url,ms=7500){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});const txt=await r.text();if(!r.ok)throw new Error(`HTTP ${r.status}`);return txt}finally{clearTimeout(t)}}
@@ -511,7 +519,40 @@ function normSR(x){if(typeof x==='string')return x;if(x&&typeof x==='object')ret
 function scoreName(name,m){const h=String(name||'');let s=0;for(const r of m.prefer)if(r.test(h))s+=10;for(const r of m.avoid)if(r.test(h))s-=8;if(/price/i.test(h))s+=2;if(/realized|realised/i.test(h))s+=2;return s}
 async function bitviewSearch(metric,diag){const seen=new Set();const all=[];for(const q of metric.queries){const urls=[`${BITVIEW_BASE}/api/series/search?q=${encodeURIComponent(q)}&limit=160`,`${BITVIEW_BASE}/api/series/search?query=${encodeURIComponent(q)}&limit=160`];for(const url of urls){try{const arr=await fetchJsonTimed(url,3500);if(!Array.isArray(arr))throw new Error('not array');diag.push({name:`${metric.label} search`,ok:true,msg:`${arr.length} candidates`});for(const item of arr){const n=normSR(item);if(n&&!seen.has(n)){seen.add(n);all.push(n)}}break}catch(e){diag.push({name:`${metric.label} search`,ok:false,msg:e.message})}}}return all.map(name=>({name,score:scoreName(name,metric)})).sort((a,b)=>b.score-a.score)}
 async function bitviewLatest(metric,candidates,diag){const top=candidates.filter(x=>x.score>0).slice(0,12);for(const c of top){for(const idx of['day1','dateindex','day','height']){const url=`${BITVIEW_BASE}/api/series/${encodeURIComponent(c.name)}/${idx}/latest`;try{const data=await fetchJsonTimed(url,3500);const n=extractNum(data);if(plausible(n)){diag.push({name:metric.label,ok:true,msg:`${c.name}/${idx} = ${fmt(n)}`});return{sourceType:'onchain',group:'onchain',title:'On-chain',period:null,label:metric.label,short:metric.short,price:n}}diag.push({name:metric.label,ok:false,msg:`No value from ${c.name}/${idx}`})}catch(e){diag.push({name:metric.label,ok:false,msg:`${c.name}/${idx}: ${e.message}`})}}}throw new Error('No candidate returned a plausible USD price')}
-async function getOnchainLevels(){const diag=[],levels=[];for(const m of ONCHAIN_METRICS){try{const c=await bitviewSearch(m,diag);levels.push(await bitviewLatest(m,c,diag))}catch(e){diag.push({name:m.label,ok:false,msg:e.message||String(e)})}}return{levels,diag}}
+async function bitviewPrimary(m,diag){
+  const url=`${BITVIEW_BASE}/api/series/${encodeURIComponent(m.primarySeries)}/${m.primaryIndex}/latest`;
+  try{
+    const data=await fetchJsonTimed(url,4000);
+    const n=extractNum(data);
+    if(plausible(n)){
+      diag.push({name:m.label,ok:true,msg:`primary: ${m.primarySeries}/${m.primaryIndex} = ${fmt(n)}`});
+      return{sourceType:'onchain',group:'onchain',title:'On-chain',period:null,label:m.label,short:m.short,price:n};
+    }
+    throw new Error(`No plausible value from primary path`);
+  }catch(e){
+    diag.push({name:`${m.label} primary`,ok:false,msg:e.message});
+    throw e;
+  }
+}
+async function getOnchainLevels(){
+  const diag=[],levels=[];
+  for(const m of ONCHAIN_METRICS){
+    try{
+      /* try known primary path first — fast and direct */
+      levels.push(await bitviewPrimary(m,diag));
+    }catch(primaryErr){
+      /* fall back to dynamic search/score/discovery */
+      try{
+        diag.push({name:m.label,ok:false,msg:'Primary failed, trying search fallback'});
+        const c=await bitviewSearch(m,diag);
+        levels.push(await bitviewLatest(m,c,diag));
+      }catch(e){
+        diag.push({name:m.label,ok:false,msg:e.message||String(e)});
+      }
+    }
+  }
+  return{levels,diag};
+}
 
 /* ── LEVEL HELPERS ── */
 function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='trendline')return l.label;if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
@@ -569,7 +610,7 @@ function meanShiftZones(levels,cur){
 }
 
 /* ── COLORS ── */
-const COL={D:'#60a5fa',W:'#a78bfa',M:'#34d399',onchain:'#fbbf24',zone:'rgba(255,255,255,0.6)',BTC:'#f7931a','TL-support':'#4ade80','TL-resistance':'#f87171'};
+const COL={D:'#60a5fa',W:'#a78bfa',M:'#f472b6',onchain:'#fbbf24',zone:'rgba(255,255,255,0.6)',BTC:'#f7931a','TL-support':'#4ade80','TL-resistance':'#f87171'};
 const COL_BG={D:'rgba(96,165,250,0.10)',W:'rgba(167,139,250,0.10)',M:'rgba(244,114,182,0.10)',onchain:'rgba(251,191,36,0.10)',zone:'rgba(255,255,255,0.08)',BTC:'rgba(247,147,26,0.12)','TL-support':'rgba(74,222,128,0.10)','TL-resistance':'rgba(248,113,113,0.10)'};
 function levelColor(l){if(l.type==='current')return COL.BTC;if(l.type==='zone')return COL.zone;if(l.sourceType==='trendline')return l.tlType==='support'?COL['TL-support']:COL['TL-resistance'];if(l.sourceType==='onchain')return COL.onchain;return COL[l.group]||COL.D}
 function levelBg(l){if(l.type==='zone')return COL_BG.zone;if(l.sourceType==='trendline')return l.tlType==='support'?COL_BG['TL-support']:COL_BG['TL-resistance'];if(l.sourceType==='onchain')return COL_BG.onchain;return COL_BG[l.group]||COL_BG.D}
