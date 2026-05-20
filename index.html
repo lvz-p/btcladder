@@ -419,11 +419,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.22</div>
+<div class="footer" id="footerTxt">BtcLadder v86.25</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.22';
+const VERSION='BtcLadder v86.25';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1055,10 +1055,11 @@ window.handleClick=function(codeKey){
 function levelFullName(l){
   if(l.type==='current')return'Current BTC Price';
   if(l.sourceType==='trendline'){
-    const tf=l.tlTf||'';
-    const tfName=tf==='1d'?'Daily':tf==='1w'?'Weekly':tf==='1M'?'Monthly':'';
-    const typeName=l.tlType==='resistance'?'Resistance':'Support';
+    /* derive timeframe from tag prefix: DTS→Daily, WTS→Weekly, MTS→Monthly */
     const tag=l.label||'';
+    const prefix=tag.slice(0,1).toUpperCase();
+    const tfName=prefix==='D'?'Daily':prefix==='W'?'Weekly':prefix==='M'?'Monthly':(l.tlTf==='1d'?'Daily':l.tlTf==='1w'?'Weekly':'Monthly');
+    const typeName=l.tlType==='resistance'?'Resistance':'Support';
     const rankNum=tag.replace(/[A-Za-z]/g,'');
     return`${tfName} Trendline · ${typeName} · Rank ${rankNum}`;
   }
@@ -1068,7 +1069,8 @@ function levelFullName(l){
   }
   const tfNames={D:'Daily',W:'Weekly',M:'Monthly'};
   const tf=tfNames[l.group]||l.group;
-  return`${tf} ${l.period}-period Moving Average`;
+  const tfUnit=l.group==='D'?'Day':l.group==='W'?'Week':'Month';
+  return`${l.period}-${tfUnit} Moving Average`;
 }
 function renderTable(cur,ma,oc,tl=[]){
   const rows=getLevels(cur,ma,oc,tl).sort((a,b)=>b.price-a.price);
