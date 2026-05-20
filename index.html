@@ -275,6 +275,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
   <div class="filter-sep"></div>
   <button class="zone-tog on" id="zoneBtn">⬡ Zones</button>
+  <button class="zone-tog on" id="urpdBtn">▦ URPD</button>
 </div>
 <!-- Row 2: Legend as category toggles -->
 <div class="legend" style="margin-bottom:16px">
@@ -285,6 +286,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <button class="leg tog on" data-cat="TL" style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
   <span style="width:1px;height:16px;background:var(--border2);margin:0 4px;flex-shrink:0"></span>
   <div class="leg"><div class="leg-zone"></div>Confluence zone</div>
+  <div class="leg"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD density</div>
   <div class="leg"><div class="leg-dot-btc"></div>Current BTC</div>
 </div>
 
@@ -311,7 +313,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 
 <details class="section" id="tlSection">
-  <summary>Trendline chart viewer</summary>
+  <summary>Trendlines</summary>
   <div class="tl-viewer">
     <div class="tl-controls">
       <button class="btn active" id="tlDailyBtn">Daily</button>
@@ -328,8 +330,9 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </details>
 
 <details class="section">
-  <summary>All levels table</summary>
+  <summary>Levels List</summary>
   <div class="section-body" style="margin-top:4px">
+    <div id="tableFilterInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
     <div id="maTable"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
   </div>
 </details>
@@ -340,11 +343,10 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="guide-body">
       <details class="gsec"><summary>How to read the chart</summary>
         <div class="gtxt">
-          <p>The vertical axis is a true price axis — position corresponds directly to price. The orange BTC line is your anchor. Levels above are resistances; below are supports.</p>
-          <p><strong style="color:var(--text)">Confluence zones</strong> are shaded bands where multiple independent signals converge. Hover to see each level's individual price.</p>
-          <p>When several levels (including possibly BTC) are too close on screen to display individually, they appear as a <strong style="color:var(--text)">×N badge</strong>. Hover to see all individual prices.</p>
-          <p>Green % = level above current price. Red % = below. Amber = within 0.8%.</p>
-          <p><strong style="color:var(--text)">Trendline levels</strong> (DTR/DTS daily, WTR/WTS weekly, MTR/MTS monthly) show the projected current price of each valid trendline. Green = support, red = resistance. Open the <strong style="color:var(--text)">Trendline chart viewer</strong> section to see the full chart in Daily, Weekly, or Monthly view.</p>
+          <p>The vertical axis is a true price axis — vertical position corresponds directly to price. The orange BTC line is your current price anchor. Levels above are resistances; below are supports.</p>
+          <p><strong style="color:var(--text)">Confluence zones</strong> (shaded bands) appear when multiple independent signals converge within a tight price range. Hover to see each member level's individual price.</p>
+          <p>When several levels are too close on screen to display individually, they appear as a <strong style="color:var(--text)">×N badge</strong>. Hover to see all individual prices.</p>
+          <p>Green % = level is above current price. Red % = below. Amber = within 0.8%.</p>
         </div>
       </details>
       <details class="gsec"><summary>Tag structure</summary>
@@ -354,31 +356,56 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
             X = D (Daily) · W (Weekly) · M (Monthly)<br>
             ## = 7 · 25 · 99 · 200 · 365<br><br>
             <span class="oc">RP</span>    = Realized Price<br>
-            <span class="oc">STHCB</span> = STH Cost Basis<br>
-            <span class="oc">LTHCB</span> = LTH Cost Basis<br>
+            <span class="oc">STHCB</span> = Short-term Holder Cost Basis<br>
+            <span class="oc">LTHCB</span> = Long-term Holder Cost Basis<br>
             <span class="oc">TMM</span>   = True Market Mean<br><br>
-            DTR# = Daily Trendline Resistance<br>
-            DTS# = Daily Trendline Support<br>
-            WTR# = Weekly Trendline Resistance<br>
-            WTS# = Weekly Trendline Support<br>
-            MTR# = Monthly Trendline Resistance<br>
-            MTS# = Monthly Trendline Support<br>
-            (# = rank by score · C = close basis · W = wick basis)
+            DTR# = Daily Trendline · Resistance · Rank #<br>
+            DTS# = Daily Trendline · Support · Rank #<br>
+            WTR# = Weekly Trendline · Resistance · Rank #<br>
+            WTS# = Weekly Trendline · Support · Rank #<br>
+            MTR# = Monthly Trendline · Resistance · Rank #<br>
+            MTS# = Monthly Trendline · Support · Rank #
           </div>
+        </div>
+      </details>
+      <details class="gsec"><summary>Trendlines — how they work</summary>
+        <div class="gtxt">
+          <p>Trendlines are detected algorithmically across three timeframes: Daily (180 candles), Weekly (200 candles), and Monthly (full history).</p>
+          <p>1. <strong style="color:var(--text)">Pivot detection</strong> — finds price points that are locally extreme within a window of surrounding candles (pivot highs for resistance, lows for support).</p>
+          <p>2. <strong style="color:var(--text)">Line generation</strong> — draws candidate lines between every valid pair of pivots of the same type.</p>
+          <p>3. <strong style="color:var(--text)">Validation</strong> — rejects any line breached by price between or after the anchor points.</p>
+          <p>4. <strong style="color:var(--text)">Scoring</strong> — ranks valid lines using a weighted heuristic combining: anchor span, recency of second anchor, total history covered, number of touches, and proximity of projected value to current BTC price. This is a heuristic — not a fundamental measure. Adjacent ranks (DTR1 vs DTR2) may be close in quality; the gap between top and bottom is more meaningful.</p>
+          <p>5. <strong style="color:var(--text)">Deduplication</strong> — removes near-identical lines, keeps the top 8 per timeframe.</p>
+          <p>The <strong style="color:var(--text)"># rank</strong> in each tag reflects score ordering within that timeframe and type. Open the <strong style="color:var(--text)">Trendlines</strong> section to see the full chart with anchor points and line extensions.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>URPD overlay — what it shows</summary>
+        <div class="gtxt">
+          <p><strong style="color:var(--text)">URPD-R</strong> (Unrealized Realized Price Distribution, Realized cap weighted) shows how much Bitcoin cost basis is concentrated at each price level.</p>
+          <p>Each horizontal bar represents a $500 price bin (or $1,000 at All range). Bar width is proportional to the total realized cap of all Bitcoin last moved within that price range — a wider bar means more BTC was acquired near that price, making it a significant support or resistance zone.</p>
+          <p>The <strong style="color:var(--text)">vertical reference line</strong> marks where the 100% (strongest) bin would reach. All bars are drawn relative to this fixed scale, so the reference line is always visible even when the strongest bin is outside the current window. Normalization is global across the full Bitcoin distribution.</p>
+          <p>Toggle <strong style="color:var(--text)">▦ URPD</strong> to show or hide the overlay.</p>
         </div>
       </details>
       <details class="gsec"><summary>On-chain levels</summary>
         <div class="gtxt">
-          <p><strong style="color:var(--text)">Realized Price (RP)</strong> — Average acquisition price of all BTC. Key long-term support in bear markets.</p>
-          <p><strong style="color:var(--text)">STH Cost Basis (STHCB)</strong> — Cost basis of short-term holders (~155 days).</p>
-          <p><strong style="color:var(--text)">LTH Cost Basis (LTHCB)</strong> — Cost basis of long-term holders (155+ days).</p>
-          <p><strong style="color:var(--text)">True Market Mean (TMM)</strong> — Economically weighted cost basis from Cointime Economics.</p>
+          <p><strong style="color:var(--text)">Realized Price (RP)</strong> — Average acquisition price of all BTC, weighted by last on-chain movement. Key long-term support in bear markets.</p>
+          <p><strong style="color:var(--text)">STH Cost Basis (STHCB)</strong> — Cost basis of short-term holders (coins moved within ~155 days). Reflects recent speculative positioning.</p>
+          <p><strong style="color:var(--text)">LTH Cost Basis (LTHCB)</strong> — Cost basis of long-term holders (coins unmoved 155+ days). Associated with macro accumulation zones.</p>
+          <p><strong style="color:var(--text)">True Market Mean (TMM)</strong> — Economically weighted cost basis from Cointime Economics. Identifies macro equilibrium zones.</p>
         </div>
       </details>
-      <details class="gsec"><summary>Zone detection</summary>
+      <details class="gsec"><summary>Confluence zones &amp; display groups</summary>
         <div class="gtxt">
-          <p>Confluence zones use a mean-shift algorithm on the 1D price axis. Each level shifts toward its local density centroid, then levels with converged centers are grouped. Maximum zone width is 2%.</p>
-          <p>Display groups (×N badges) are separate — purely a readability feature when lines are within ~18px on screen. They carry no analytical meaning.</p>
+          <p>Confluence zones use a mean-shift algorithm on the 1D price axis. Each level shifts toward its local density centroid, then levels with converged centers are grouped. Maximum zone width is 2% of price.</p>
+          <p>Display groups (×N badges) are separate — a readability feature when lines are within ~18px on screen. They carry no analytical meaning. Hover to see individual prices.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>Zoom &amp; pan</summary>
+        <div class="gtxt">
+          <p><strong style="color:var(--text)">Ctrl+scroll</strong> (or Cmd+scroll on Mac) zooms in/out centered on your cursor's price position.</p>
+          <p><strong style="color:var(--text)">Click-drag</strong> pans the price axis up and down. When zoomed or panned, all price levels are shown regardless of the distance filter.</p>
+          <p><strong style="color:var(--text)">Double-click</strong> resets to the active range preset. The ↺ Reset zoom button also appears when zoomed.</p>
         </div>
       </details>
     </div>
@@ -392,11 +419,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.9</div>
+<div class="footer" id="footerTxt">BtcLadder v86.22</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.9';
+const VERSION='BtcLadder v86.22';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -436,14 +463,9 @@ function resetZoom(){
 }
 
 function applyZoom(newLo,newHi,cur){
-  /* clamp: BTC must stay at least 8% from each edge */
-  const span=newHi-newLo;
-  const minSpan=cur*0.003; /* minimum 0.3% range */
+  /* only enforce minimum span to prevent degenerate zoom */
+  const minSpan=cur*0.002;
   if(newHi-newLo<minSpan){const mid=(newLo+newHi)/2;newLo=mid-minSpan/2;newHi=mid+minSpan/2;}
-  /* soft-clamp BTC visibility: don't let BTC within 5% of edge */
-  const margin=(newHi-newLo)*0.05;
-  if(cur<newLo+margin){const shift=newLo+margin-cur;newLo-=shift;newHi-=shift;}
-  if(cur>newHi-margin){const shift=cur-(newHi-margin);newLo+=shift;newHi+=shift;}
   zoomLo=newLo;zoomHi=newHi;userZoomed=true;
   document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.remove('on'));
   const zr=$('zoomReset');if(zr)zr.style.display='';
@@ -557,7 +579,7 @@ async function getOnchainLevels(){
 /* ── LEVEL HELPERS ── */
 function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='trendline')return l.label;if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
 function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='trendline')return catFilters.TL!==false;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
-function withinProx(l,cur){if(l.type==='current'||proxFilter==='all')return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
+function withinProx(l,cur){if(l.type==='current'||proxFilter==='all'||userZoomed)return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
 function getLevels(cur,ma,oc,tl=[]){
   return[...ma,...oc,...tl,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
     .filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,cur))
@@ -725,7 +747,7 @@ function renderChart(cur,ma,oc,tl=[]){
   const lo=zoomLo!==null?zoomLo:rawLo-pad;
   const hi=zoomHi!==null?zoomHi:rawHi+pad;
   const range=hi-lo;
-  const H=Math.max(480,(nonCur.length+1)*36+80);
+  const H=600; /* fixed canvas height — price axis rescales to fit any zoom/pan/distance mode */
   const toY=p=>((hi-p)/range*H);
   const btcY=toY(cur);
   const btcYpct=(btcY/H*100).toFixed(2);
@@ -749,7 +771,42 @@ function renderChart(cur,ma,oc,tl=[]){
   ticks.forEach(v=>{canvas+=`<div class="h-grid" style="top:${(toY(v)/H*100).toFixed(2)}%"></div>`});
 
   /* fix: zone — Option A: neutral white 13% fill + brighter dashed borders, no semantic color */
-  nonCur.filter(l=>l.type==='zone').forEach(l=>{
+  /* ── URPD OVERLAY: horizontal bars from left edge, priced on vertical axis ──
+     maxBarPct is a fixed % of canvas width = the 100% reference line position.
+     All bars are drawn proportionally to this fixed scale.
+     The 100% reference line is always visible regardless of distance filter. ── */
+  if(showUrpd&&lastUrpd.length){
+    const maxBarPct=18; /* % of canvas width — fixed scale reference */
+    /* 100% reference line — always drawn, full canvas height.
+       Color matches grid/border tone (muted slate), not any data category. */
+    canvas+=`<div style="position:absolute;left:0;top:0;width:${maxBarPct}%;height:100%;border-right:1.5px solid rgba(148,163,184,0.35);pointer-events:none;z-index:0"></div>`;
+    /* bars — filter to visible price range only */
+    /* adaptive binning: merge to $1000 bins when showing All range (cleaner visual) */
+    let renderBins=lastUrpd;
+    if(proxFilter==='all'){
+      const merged=new Map();
+      for(const b of lastUrpd){
+        const lo1k=Math.floor(b.lo/1000)*1000;
+        if(!merged.has(lo1k))merged.set(lo1k,{lo:lo1k,hi:lo1k+1000,cap:0,norm:0});
+        merged.get(lo1k).cap+=b.cap;
+      }
+      const mergedArr=[...merged.values()];
+      const mergedMax=Math.max(...mergedArr.map(x=>x.cap),1e-9);
+      mergedArr.forEach(b=>b.norm=b.cap/mergedMax);
+      renderBins=mergedArr;
+    }
+    /* re-normalize against max norm in full dataset to guarantee 1.0 touches the line */
+    const urpdTrueMax=Math.max(...renderBins.map(b=>b.norm),1e-9);
+    const visUrpd=renderBins.filter(b=>b.hi>=lo&&b.lo<=hi);
+    visUrpd.forEach(b=>{
+      const yTop=toY(b.hi),yBot=toY(b.lo);
+      const barH=Math.max(1.5,yBot-yTop);
+      const relNorm=b.norm/urpdTrueMax; /* guaranteed 0..1 */
+      const barW=(relNorm*maxBarPct).toFixed(2);
+      canvas+=`<div style="position:absolute;left:0;top:${(yTop/H*100).toFixed(2)}%;height:${(barH/H*100).toFixed(2)}%;width:${barW}%;background:rgba(96,165,250,${(0.12+relNorm*0.20).toFixed(2)});pointer-events:none;z-index:0"></div>`;
+    });
+  }
+    nonCur.filter(l=>l.type==='zone').forEach(l=>{
     const yTop=toY(l.max),yBot=toY(l.min);
     const topPct=(yTop/H*100).toFixed(2);
     const hPct=Math.max(3,((yBot-yTop)/H*100)).toFixed(2);
@@ -795,6 +852,8 @@ function renderChart(cur,ma,oc,tl=[]){
   tipMap.set('BTC',{code:'BTC',label:'Current BTC',price:cur,d:0,col:COL.BTC,bg:COL_BG.BTC,isBtc:true});
   canvas+=`<div class="hover-zone" data-code="BTC" style="top:${btcYpct}%"></div>`;
 
+  /* store current price range on canvas element for zoom/pan handlers */
+  $('canvasCol')._lo=lo;$('canvasCol')._hi=hi;
   const colH=H+'px';
   $('axisPriceCol').style.height=colH;
   $('canvasCol').style.position='relative';$('canvasCol').style.height=colH;$('canvasCol').style.overflow='hidden';
@@ -924,70 +983,53 @@ function renderChart(cur,ma,oc,tl=[]){
     },{passive:true});
   }
 
-  /* ── ZOOM / PAN EVENT LISTENERS ──
-     Attached fresh each render so toY closure is current.
-     Guard with _zoomBound flag to avoid stacking listeners.
-  */
-  const canvasEl=$('canvasCol');
-  if(canvasEl._zoomBound)canvasEl._zoomBound();/* remove previous listeners */
+}
+/* ── ZOOM/PAN — attached ONCE at startup, never re-attached inside renderChart ──
+   Critical: document/window mousemove+mouseup added only once.
+   renderChart stores current lo/hi on canvas._lo/_hi for use in handlers.
+   Mirrors working example pattern: canvas=wheel/mousedown/mousemove, window=mouseup ── */
+(function initZoomPan(){
+  const canvas=$('canvasCol');
 
-  /* price at a given Y pixel within the canvas */
-  function priceAtY(clientY){
-    const rect=canvasEl.getBoundingClientRect();
-    const yFrac=(clientY-rect.top)/rect.height;
-    return hi-yFrac*range;
-  }
-
-  /* Ctrl+scroll → zoom centered on cursor price */
-  function onWheel(e){
+  canvas.addEventListener('wheel',e=>{
     if(!e.ctrlKey&&!e.metaKey)return;
     e.preventDefault();
-    const cur=window._cur||lastCurrent;
-    if(!cur)return;
-    const factor=e.deltaY>0?1.15:1/1.15;
-    const pivot=priceAtY(e.clientY);
-    const newLo=pivot-(pivot-lo)*factor;
-    const newHi=pivot+(hi-pivot)*factor;
-    applyZoom(newLo,newHi,cur);
-  }
+    const cur=window._cur||lastCurrent;if(!cur)return;
+    const clo=canvas._lo,chi=canvas._hi;
+    if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+    const rect=canvas.getBoundingClientRect();
+    const crange=chi-clo;
+    const pivot=chi-(e.clientY-rect.top)/rect.height*crange;
+    const factor=e.deltaY>0?1.06:1/1.06;
+    applyZoom(pivot-(pivot-clo)*factor,pivot+(chi-pivot)*factor,cur);
+  },{passive:false});
 
-  /* click-drag → pan */
-  function onMouseDown(e){
+  canvas.addEventListener('mousedown',e=>{
     if(e.button!==0||e.ctrlKey||e.metaKey)return;
-    isPanning=true;panStartY=e.clientY;panStartLo=lo;panStartHi=hi;
-    canvasEl.style.cursor='grabbing';
+    const clo=canvas._lo,chi=canvas._hi;
+    if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+    isPanning=true;
+    panStartY=e.clientY;panStartLo=clo;panStartHi=chi;
+    canvas.style.cursor='grabbing';
     e.preventDefault();
-  }
-  function onMouseMove(e){
+  });
+
+  canvas.addEventListener('mousemove',e=>{
     if(!isPanning)return;
-    const cur=window._cur||lastCurrent;
-    if(!cur)return;
-    const rect=canvasEl.getBoundingClientRect();
-    const pxPerPrice=rect.height/range;
-    const delta=(e.clientY-panStartY)/pxPerPrice;
+    const cur=window._cur||lastCurrent;if(!cur)return;
+    const rect=canvas.getBoundingClientRect();
+    const crange=panStartHi-panStartLo;
+    const delta=(e.clientY-panStartY)/rect.height*crange;
     applyZoom(panStartLo+delta,panStartHi+delta,cur);
-  }
-  function onMouseUp(){
+  });
+
+  window.addEventListener('mouseup',()=>{
     if(!isPanning)return;
-    isPanning=false;canvasEl.style.cursor='';
-  }
+    isPanning=false;canvas.style.cursor='';
+  });
 
-  /* double-click → reset zoom */
-  function onDblClick(){resetZoom()}
-
-  /* desktop: Ctrl+scroll=zoom, drag=pan, dblclick=reset */
-  canvasEl.addEventListener('wheel',onWheel,{passive:false});
-  canvasEl.addEventListener('mousedown',onMouseDown);
-  document.addEventListener('mousemove',onMouseMove,{passive:true});
-  document.addEventListener('mouseup',onMouseUp,{passive:true});
-  canvasEl.addEventListener('dblclick',onDblClick);
-  /* cleanup — removes listeners before next render attaches fresh ones */
-  canvasEl._zoomBound=()=>{
-    canvasEl.removeEventListener('wheel',onWheel);
-    canvasEl.removeEventListener('mousedown',onMouseDown);
-    canvasEl.removeEventListener('dblclick',onDblClick);
-  };
-}
+  canvas.addEventListener('dblclick',()=>resetZoom());
+})();
 
 /* ── CLICK ── */
 window.handleClick=function(codeKey){
@@ -1009,19 +1051,54 @@ window.handleClick=function(codeKey){
 };
 
 /* ── TABLE ── */
+/* full descriptive name for each level */
+function levelFullName(l){
+  if(l.type==='current')return'Current BTC Price';
+  if(l.sourceType==='trendline'){
+    const tf=l.tlTf||'';
+    const tfName=tf==='1d'?'Daily':tf==='1w'?'Weekly':tf==='1M'?'Monthly':'';
+    const typeName=l.tlType==='resistance'?'Resistance':'Support';
+    const tag=l.label||'';
+    const rankNum=tag.replace(/[A-Za-z]/g,'');
+    return`${tfName} Trendline · ${typeName} · Rank ${rankNum}`;
+  }
+  if(l.sourceType==='onchain'){
+    const names={RP:'Realized Price',STHCB:'Short-term Holder Cost Basis',LTHCB:'Long-term Holder Cost Basis',TMM:'True Market Mean'};
+    return names[l.short]||l.label||l.short;
+  }
+  const tfNames={D:'Daily',W:'Weekly',M:'Monthly'};
+  const tf=tfNames[l.group]||l.group;
+  return`${tf} ${l.period}-period Moving Average`;
+}
 function renderTable(cur,ma,oc,tl=[]){
   const rows=getLevels(cur,ma,oc,tl).sort((a,b)=>b.price-a.price);
   if(!rows.length){$('maTable').innerHTML='<div style="padding:12px;color:var(--muted);font-size:13px">No levels match filters.</div>';return}
+  /* find which levels are in analytical zones for table highlighting */
+  const zoneMembers=new Set();
+  meanShiftZones(rows.filter(l=>l.type!=='current'),cur).filter(z=>z.type==='zone')
+    .forEach(z=>(z.items||[]).forEach(item=>zoneMembers.add(item.price)));
   const body=rows.map(l=>{
     const isCur=l.type==='current';
     const code=levelCode(l);const col=levelColor(l);const bg=levelBg(l);
-    const nameStr=l.sourceType==='onchain'?l.label:(l.label||code);
+    const fullName=levelFullName(l);
     const d=isCur?0:pct(l.price,cur);
     const dStr=d===0?'—':((d>0?'+':'')+d.toFixed(2)+'%');
     const dCls=d===0?'zero':(d>0?'pos':'neg');
-    return`<tr class="${isCur?'cur':''}"><td style="color:var(--text);font-size:12px">${nameStr}</td><td style="font-family:var(--mono);font-size:12px">${fmt(l.price)}</td><td class="dist ${dCls}">${dStr}</td></tr>`;
+    const badge=`<span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${code}</span>`;
+    const inZone=!isCur&&zoneMembers.has(l.price);
+    const rowStyle=inZone?'background:rgba(255,255,255,0.045);':'';
+    return`<tr class="${isCur?'cur':''}" style="${rowStyle}">
+      <td>${badge}</td>
+      <td style="color:var(--text);font-size:13px">${fullName}</td>
+      <td style="font-family:var(--mono);font-size:13px">${fmt(l.price)}</td>
+      <td class="dist ${dCls}">${dStr}</td>
+    </tr>`;
   }).join('');
-  $('maTable').innerHTML=`<table class="tbl"><thead><tr><th>Level</th><th>Price</th><th>Distance</th></tr></thead><tbody>${body}</tbody></table>`;
+  /* filter info bar */
+  const activeFilters=Object.entries(catFilters).filter(([,v])=>v!==false).map(([k])=>k==='onchain'?'On-chain':k==='TL'?'Trendlines':k==='D'?'Daily':k==='W'?'Weekly':k==='M'?'Monthly':k);
+  const fi=$('tableFilterInfo');
+  if(fi)fi.innerHTML=`<span style="color:var(--muted);font-size:12px;font-family:var(--mono)">Showing: ${activeFilters.join(' · ')} · ${proxFilter==='all'?'All distances':`±${proxFilter}%`} · Zones: ${autoZone?'on':'off'}</span><button onclick="document.querySelector('.filter-bar').scrollIntoView({behavior:'smooth',block:'center'})" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono);margin-left:8px">↑ Filters</button>`;
+  $('maTable').innerHTML=`<table class="tbl"><thead><tr><th>Tag</th><th>Level</th><th>Price</th><th>Distance</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 function renderSummary(cur,levels){
   const sup=levels.filter(l=>l.price<cur&&l.type!=='current').sort((a,b)=>b.price-a.price)[0];
@@ -1030,7 +1107,18 @@ function renderSummary(cur,levels){
   $('resistVal').textContent=res?`${levelCode(res)} ${fmt(res.price)}`:'—';
 }
 function renderDiag(){
-  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[])];
+  /* TL per-timeframe summary */
+  const tlSummary=['1d','1w','1M'].map(tf=>{
+    const lines=tl_cands[tf]||[];
+    const candles=tl_candles[tf]||[];
+    return{name:`Trendlines ${tf}`,ok:lines.length>0,msg:`${lines.length} lines · ${candles.length} candles`};
+  });
+  /* URPD summary */
+  const bestBin=lastUrpd.length?lastUrpd.reduce((a,b)=>b.norm>a.norm?b:a,lastUrpd[0]):null;
+  const urpdRow=bestBin
+    ?{name:'URPD',ok:true,msg:`${lastUrpd.length} bins · strongest bin: ${fmt(bestBin.lo)}–${fmt(bestBin.hi)}`}
+    :{name:'URPD',ok:false,msg:'No data loaded'};
+  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
   $('diagBody').innerHTML=`<div style="font-size:11px;color:var(--muted2);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
@@ -1064,13 +1152,15 @@ async function refreshAll(){
       }
     }catch(_){}
     setStatus('loading');
-    const[ma,on,tl]=await Promise.allSettled([getMAs(),getOnchainLevels(),getTrendlines()]);
+    const[ma,on,tl,ur]=await Promise.allSettled([getMAs(),getOnchainLevels(),getTrendlines(),getUrpd()]);
     if(ma.status==='fulfilled'){lastMas=ma.value.mas;lastDiag=ma.value.diag}
     else{lastDiag=[{name:'MAs',ok:false,msg:ma.reason?.message||String(ma.reason)}];lastMas=[]}
     if(on.status==='fulfilled'){lastOnchain=on.value.levels;lastOnchainDiag=on.value.diag}
     else{lastOnchain=[];lastOnchainDiag=[{name:'On-chain',ok:false,msg:on.reason?.message||String(on.reason)}]}
     if(tl.status==='fulfilled'){lastTrendlines=tl.value.levels;lastTlDiag=tl.value.diag}
     else{lastTrendlines=[];lastTlDiag=[{name:'TL',ok:false,msg:tl.reason?.message||String(tl.reason)}]}
+    if(ur?.status==='fulfilled')lastUrpd=ur.value;
+    else lastUrpd=[];
     /* refresh viewer if already open */
     if(document.getElementById('tlSection')?.open){tlViewerReady=true;tl_draw(tlViewerMode);}
     setStatus('ok');
@@ -1431,8 +1521,6 @@ function tl_draw(mode){
     let pd='';cs.forEach((c,i)=>pd+=(i?'L':'M')+x(i)+' '+y(c.close)+' ');
     const pp=document.createElementNS('http://www.w3.org/2000/svg','path');pp.setAttribute('d',pd);pp.setAttribute('stroke','#60a5fa');pp.setAttribute('stroke-width','1.5');pp.setAttribute('fill','none');pp.setAttribute('opacity','.82');add(pp);
     /* trendlines — candle-index based, mirrors original draw() */
-    /* collect label positions first for collision avoidance */
-    const tlLabelData=[];
     vis.forEach((c,idx)=>{
       const col=c.type==='support'?'#22c55e':'#ef4444';
       const tll=document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -1440,43 +1528,60 @@ function tl_draw(mode){
       tll.setAttribute('x2',x(cs.length-1));tll.setAttribute('y2',y(c.now));
       tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',idx<3?4:2.5);
       tll.setAttribute('opacity',idx<3?'.9':'.6');
+      tll.setAttribute('data-tltag',c.viewerTag);
+      tll.setAttribute('data-tlidx',idx);
+      tll.setAttribute('data-tltype',c.type);
+      tll.setAttribute('stroke-linecap','round');
       tll.style.cursor='pointer';
-      tll.addEventListener('mousemove',ev=>{if(tip){tip.textContent=c.viewerTag+' '+tl_fmtPrice(c.now);tip.style.display='block';tip.style.left=(ev.clientX+12)+'px';tip.style.top=(ev.clientY+12)+'px';}});
-      tll.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';});
+      tll.addEventListener('mousemove',ev=>{
+        if(tip){tip.textContent=c.viewerTag+' '+tl_fmtPrice(c.now);tip.style.display='block';tip.style.left=(ev.clientX+12)+'px';tip.style.top=(ev.clientY+12)+'px';}
+        tl_highlight(c.viewerTag);
+      });
+      tll.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';tl_clearHighlight();});
       add(tll);
       [c.a,c.b].forEach(pt=>{const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('cx',x(pt.i));dot.setAttribute('cy',y(pt.p));dot.setAttribute('r',4);dot.setAttribute('fill','none');dot.setAttribute('stroke',col);dot.setAttribute('stroke-width','1.5');add(dot);});
-      tlLabelData.push({c,col,rawY:y(c.now)});
     });
-    /* bidirectional collision avoidance for right-edge labels */
-    const minLblGap=16;
-    const ltop=pad.t+10,lbot=H-pad.b-8;
-    tlLabelData.sort((a,b)=>a.rawY-b.rawY);
-    /* forward pass: push down */
-    for(let i=1;i<tlLabelData.length;i++){
-      const prev=tlLabelData[i-1],cur=tlLabelData[i];
-      if(cur.rawY<prev.rawY+minLblGap)cur.rawY=prev.rawY+minLblGap;
-    }
-    /* backward pass: push up */
-    for(let i=tlLabelData.length-2;i>=0;i--){
-      const next=tlLabelData[i+1],cur=tlLabelData[i];
-      if(cur.rawY>next.rawY-minLblGap)cur.rawY=next.rawY-minLblGap;
-    }
-    /* clamp all to chart bounds */
-    tlLabelData.forEach(d=>d.rawY=tl_clamp(d.rawY,ltop,lbot));
-    /* render labels */
-    tlLabelData.forEach(d=>{
-      const lx=W-pad.r+6; /* right of chart, within SVG viewBox */
-      const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
-      txt.setAttribute('x',lx);txt.setAttribute('y',d.rawY);
-      txt.setAttribute('fill',d.col);txt.setAttribute('font-size','13');
-      txt.setAttribute('font-weight','800');txt.setAttribute('font-family','JetBrains Mono,monospace');
-      txt.textContent=d.c.viewerTag+' '+tl_fmtPrice(d.c.now);add(txt);
-    });
+    /* labels removed — use legend + tooltip for identification */
     document.getElementById('tlStatus').textContent=`${vis.length} trendlines · ${cs.length} candles · ${mode}`;
     tl_renderLegend(lines);
   }
 }
 
+function tl_highlight(tag){
+  const svg=document.getElementById('tlSvg');
+  if(svg){
+    svg.querySelectorAll('[data-tltag]').forEach(el=>{
+      if(el.dataset.tltag===tag){
+        el.setAttribute('stroke-width',6);el.setAttribute('opacity','1');
+      } else {
+        el.setAttribute('stroke-width','1.5');el.setAttribute('opacity','0.15');
+      }
+    });
+  }
+  const box=document.getElementById('tlLegend');
+  if(box){
+    box.querySelectorAll('.tl-leg-btn').forEach(b=>{
+      b.style.opacity=b.dataset.tltag===tag?'1':'0.25';
+      b.style.boxShadow=b.dataset.tltag===tag?`0 0 0 1.5px ${b.dataset.tlcol}`:'none';
+    });
+  }
+}
+function tl_clearHighlight(){
+  const svg=document.getElementById('tlSvg');
+  if(svg){
+    svg.querySelectorAll('[data-tltag]').forEach(el=>{
+      const idx=Number(el.dataset.tlidx||0);
+      el.setAttribute('stroke-width',idx<3?4:2.5);
+      el.setAttribute('opacity',idx<3?'.9':'.6');
+    });
+  }
+  const box=document.getElementById('tlLegend');
+  if(box){
+    box.querySelectorAll('.tl-leg-btn').forEach(b=>{
+      b.style.opacity='';b.style.boxShadow='';
+    });
+  }
+}
 function tl_renderLegend(lines){
   const box=document.getElementById('tlLegend');
   if(!box)return;
@@ -1486,11 +1591,15 @@ function tl_renderLegend(lines){
     const off=tl_visible[c.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
+    b.dataset.tltag=c.viewerTag;
+    b.dataset.tlcol=col;
     b.innerHTML=`<span class="tl-leg-dot" style="background:${col}"></span>${c.viewerTag} ${tl_fmtPrice(c.now)}`;
     b.onclick=()=>{
-      tl_visible[c.viewerTag]=off; /* toggle: was false→true, was true→false */
+      tl_visible[c.viewerTag]=off;
       tl_draw(tlViewerMode);
     };
+    b.addEventListener('mouseenter',()=>tl_highlight(c.viewerTag));
+    b.addEventListener('mouseleave',()=>tl_clearHighlight());
     box.appendChild(b);
   });
 }
@@ -1518,6 +1627,38 @@ document.getElementById('tlSection').addEventListener('toggle',()=>{
    ════════════════════════════════════════════════════════════════════════════ */
 let lastTrendlines=[];
 
+/* ── URPD DATA ── */
+let lastUrpd=[];let showUrpd=gs('showUrpd','true')!=='false';
+const URPD_BIN=500;/* $500 bins */
+
+async function getUrpd(){
+  const url='https://bitview.space/api/urpd/all';
+  try{
+    const r=await fetchJsonTimed(url,9000);
+    const rows=Array.isArray(r)?r:(r.buckets||r.data||r.rows||r.urpd||[]);
+    if(!rows.length)throw new Error('No URPD rows');
+    /* extract price and realized cap from each row */
+    const getP=row=>Number(row.price_floor??row.price??row.floor??row.bucket??row.priceFloor??NaN);
+    const getC=row=>Number(row.realized_cap??row.realizedCap??row.cap??row.usd??row.value??row.realized_value??NaN);
+    /* build bins */
+    const map=new Map();
+    for(const row of rows){
+      const p=getP(row),c=getC(row);
+      if(!Number.isFinite(p)||!Number.isFinite(c))continue;
+      const lo=Math.floor(p/URPD_BIN)*URPD_BIN;
+      if(!map.has(lo))map.set(lo,{lo,hi:lo+URPD_BIN,cap:0});
+      map.get(lo).cap+=c;
+    }
+    const bins=[...map.values()].sort((a,b)=>a.lo-b.lo);
+    const globalMax=Math.max(...bins.map(b=>b.cap),1);
+    bins.forEach(b=>b.norm=b.cap/globalMax);
+    return bins;
+  }catch(e){
+    console.warn('URPD fetch failed:',e.message);
+    return[];
+  }
+}
+
 /* ── CONTROLS ── */
 document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
   btn.classList.toggle('on',catFilters[btn.dataset.cat]!==false);
@@ -1530,6 +1671,8 @@ document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
 /* TL category toggle wired via leg-btn data-cat="TL" — handled by shared .tog[data-cat] listener */
 $('zoneBtn').classList.toggle('on',autoZone);
 $('zoneBtn').onclick=()=>{autoZone=!autoZone;ss('autoZone',String(autoZone));$('zoneBtn').classList.toggle('on',autoZone);rerender()};
+$('urpdBtn').classList.toggle('on',showUrpd);
+$('urpdBtn').onclick=()=>{showUrpd=!showUrpd;ss('showUrpd',String(showUrpd));$('urpdBtn').classList.toggle('on',showUrpd);rerender()};
 $('autoBtn').onclick=()=>{
   if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('autoBtn').textContent='Auto: off';$('autoBtn').classList.remove('active')}
   else{autoTimer=setInterval(refreshAll,5*60*1000);$('autoBtn').textContent='Auto: on';$('autoBtn').classList.add('active')}
