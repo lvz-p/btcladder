@@ -177,7 +177,9 @@ button.leg.tog.on[data-cat="TL"]{background:rgba(74,222,128,.08);color:#94a3b8;b
 .zoom-hint.show{opacity:1}
 .zoom-reset{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:12px;font-family:var(--mono);font-weight:700;color:var(--btc);background:var(--btc-dim);border:0.5px solid rgba(247,147,26,.4);border-radius:5px;padding:3px 9px;cursor:pointer;opacity:0;transition:opacity .3s;z-index:20;white-space:nowrap}
 .zoom-reset.show{opacity:1}
-.canvas-col{position:relative;overflow:hidden;cursor:default}
+.canvas-col{position:relative;overflow:hidden;cursor:default;touch-action:none} /* touch handled by JS */
+.axis-price-col{touch-action:pan-y} /* let browser scroll */
+.labels-col-touch{touch-action:pan-y} /* let browser scroll */
 .empty-chart{display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:13px;border:1px dashed var(--border2);border-radius:var(--r);margin:12px}
 .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:12px}
 .section summary{display:flex;align-items:center;gap:10px;padding:13px 18px;cursor:pointer;list-style:none;font-size:14px;font-weight:700;color:var(--text);transition:background .12s}
@@ -237,10 +239,19 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
   body{padding:14px 12px 40px}
-  .chart-inner{grid-template-columns:36px 1fr 175px}
-  .hero{flex-direction:column;gap:12px}
-  .hero-stats{justify-content:flex-start}
+  /* header: title + buttons on same row */
+  .hdr{flex-wrap:nowrap;align-items:center}
+  .hdr-actions{flex-shrink:0}
+  /* hero: stack vertically, price always first/left */
+  .hero{flex-direction:column;gap:10px;align-items:flex-start}
+  .hero>div:first-child{width:100%;order:-1}
+  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+  .stat-card{min-width:0}
+  /* chart */
+  .chart-inner{grid-template-columns:36px 1fr 160px}
   .filter-bar{gap:5px}
+  /* ladder canvas 540px on mobile */
+  #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:540px!important;max-height:540px!important}
 }
 </style>
 </head>
@@ -1043,6 +1054,88 @@ function renderChart(cur,ma,oc,tl=[]){
   });
 
   canvas.addEventListener('dblclick',()=>resetZoom());
+})();
+
+/* ── TOUCH PAN/ZOOM — mobile only, canvas middle column ──
+   axis-price-col and labels-col have touch-action:pan-y so
+   they pass through to browser page scroll naturally.
+   Canvas middle captures single-finger drag (pan) and
+   pinch (zoom). Double-tap resets.                        ── */
+(function initTouchPan(){
+  const canvas=$('canvasCol');
+  let activeTouches={};
+  let lastTapTime=0;
+  let panStartLo=0,panStartHi=0,panMidY=0;
+  let pinchStartDist=0,pinchStartLo=0,pinchStartHi=0,pinchMidY=0;
+
+  function getTouchMidY(t1,t2){return(t1.clientY+t2.clientY)/2}
+  function getTouchDist(t1,t2){return Math.abs(t1.clientY-t2.clientY)||1}
+
+  canvas.addEventListener('touchstart',e=>{
+    const cur=window._cur||lastCurrent;
+    const clo=canvas._lo,chi=canvas._hi;
+
+    /* double-tap detection */
+    const now=Date.now();
+    if(e.touches.length===1&&now-lastTapTime<300){resetZoom();lastTapTime=0;e.preventDefault();return;}
+    if(e.touches.length===1)lastTapTime=now;
+
+    if(e.touches.length===1){
+      /* single finger — pan */
+      e.preventDefault();
+      if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      panStartLo=clo;panStartHi=chi;
+      panMidY=e.touches[0].clientY;
+      isPanning=true;
+      panStartY=e.touches[0].clientY;
+    } else if(e.touches.length===2){
+      /* two fingers — pinch zoom */
+      e.preventDefault();
+      if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      pinchStartDist=getTouchDist(e.touches[0],e.touches[1]);
+      pinchStartLo=clo;pinchStartHi=chi;
+      pinchMidY=getTouchMidY(e.touches[0],e.touches[1]);
+      isPanning=false;
+    }
+  },{passive:false});
+
+  canvas.addEventListener('touchmove',e=>{
+    const cur=window._cur||lastCurrent;if(!cur)return;
+    if(e.touches.length===1&&isPanning){
+      /* pan */
+      e.preventDefault();
+      const rect=canvas.getBoundingClientRect();
+      const crange=panStartHi-panStartLo;
+      const delta=(e.touches[0].clientY-panStartY)/rect.height*crange;
+      applyZoom(panStartLo+delta,panStartHi+delta,cur);
+    } else if(e.touches.length===2){
+      /* pinch zoom */
+      e.preventDefault();
+      const clo=canvas._lo,chi=canvas._hi;
+      if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      const curDist=getTouchDist(e.touches[0],e.touches[1]);
+      const factor=pinchStartDist/curDist;
+      const rect=canvas.getBoundingClientRect();
+      const crange=pinchStartHi-pinchStartLo;
+      const pivot=pinchStartHi-(pinchMidY-rect.top)/rect.height*crange;
+      const newLo=pivot-(pivot-pinchStartLo)*factor;
+      const newHi=pivot+(pinchStartHi-pivot)*factor;
+      applyZoom(newLo,newHi,cur);
+    }
+  },{passive:false});
+
+  canvas.addEventListener('touchend',e=>{
+    if(e.touches.length===0)isPanning=false;
+    if(e.touches.length===1&&!isPanning){
+      /* went from 2 fingers to 1 — restart pan from current position */
+      const clo=canvas._lo,chi=canvas._hi;
+      if(Number.isFinite(clo)&&Number.isFinite(chi)){
+        panStartLo=clo;panStartHi=chi;
+        panStartY=e.touches[0].clientY;
+        isPanning=true;
+      }
+    }
+  },{passive:true});
 })();
 
 /* ── CLICK ── */
