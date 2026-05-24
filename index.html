@@ -1001,25 +1001,83 @@ function renderChart(cur,ma,oc,tl=[]){
     $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity='1'});
   }
   /* fix: canvas hover (including zone band) and label hover use same unified tooltip builder */
+  function addTooltipTouch(el,getCode){
+    el.addEventListener('touchstart',e=>{
+      if(window._ttJustDismissed&&window._ttJustDismissed())return;
+      const code=getCode?getCode():el.dataset.code;
+      const tip=window._tipMap.get(code);if(!tip)return;
+      showTooltip(tip,window._cur);hlCode(code);
+      const tt=$('tooltip');
+      const t=e.touches[0];
+      const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+      let x=t.clientX-w/2,y=t.clientY-h-16;
+      x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+      y=Math.max(8,y);
+      tt.style.left=x+'px';tt.style.top=y+'px';
+      e.stopPropagation();
+    },{passive:true});
+  }
   $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
     el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
+    addTooltipTouch(el);
   });
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
     el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
+    addTooltipTouch(el);
   });
   if(!window._mmSet){
     window._mmSet=true;
+    /* desktop: tooltip follows mouse with full edge clamping */
     document.addEventListener('mousemove',e=>{
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
-      const w=tt.offsetWidth||220;
+      const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
       let x=e.clientX+16,y=e.clientY-10;
       if(x+w>window.innerWidth-8)x=e.clientX-w-12;
-      if(y+tt.offsetHeight>window.innerHeight-8)y=e.clientY-tt.offsetHeight-8;
+      if(x<8)x=8;
+      if(y+h>window.innerHeight-8)y=e.clientY-h-8;
+      if(y<8)y=8;
       tt.style.left=x+'px';tt.style.top=y+'px';
     },{passive:true});
+
+    /* mobile: draggable tooltip */
+    let ttDragActive=false,ttDragOX=0,ttDragOY=0;
+    const tt=$('tooltip');
+    tt.addEventListener('touchstart',e=>{
+      if(!tt.classList.contains('show'))return;
+      ttDragActive=true;
+      const t=e.touches[0];
+      ttDragOX=t.clientX-tt.getBoundingClientRect().left;
+      ttDragOY=t.clientY-tt.getBoundingClientRect().top;
+      e.stopPropagation();
+    },{passive:true});
+    document.addEventListener('touchmove',e=>{
+      if(!ttDragActive)return;
+      const t=e.touches[0];
+      const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+      let x=t.clientX-ttDragOX,y=t.clientY-ttDragOY;
+      x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+      y=Math.max(8,Math.min(window.innerHeight-h-8,y));
+      tt.style.left=x+'px';tt.style.top=y+'px';
+    },{passive:true});
+    document.addEventListener('touchend',()=>{ttDragActive=false;},{passive:true});
+
+    /* two-tap pattern: first tap outside tooltip dismisses, second tap opens new */
+    let tooltipJustDismissed=false;
+    document.addEventListener('touchstart',e=>{
+      const tt=$('tooltip');
+      if(!tt.classList.contains('show'))return;
+      /* if touch is outside tooltip, dismiss and set flag */
+      if(!tt.contains(e.target)){
+        hideTip();clearHl();
+        tooltipJustDismissed=true;
+        setTimeout(()=>{tooltipJustDismissed=false;},350);
+      }
+    },{passive:true});
+    /* expose flag so hover zones can check it */
+    window._ttJustDismissed=()=>tooltipJustDismissed;
   }
 
 }
