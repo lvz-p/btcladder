@@ -354,7 +354,9 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
           <div class="mono-blk">
             X##MA — Moving Average<br>
             X = D (Daily) · W (Weekly) · M (Monthly)<br>
-            ## = 7 · 25 · 99 · 200 · 365<br><br>
+            Daily: 50 · 99 · 200 · 365<br>
+            Weekly: 20 · 100 · 200<br>
+            Monthly: 7 · 20<br><br>
             <span class="oc">RP</span>    = Realized Price<br>
             <span class="oc">STHCB</span> = Short-term Holder Cost Basis<br>
             <span class="oc">LTHCB</span> = Long-term Holder Cost Basis<br>
@@ -419,11 +421,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.25</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.25';
+const VERSION='BtcLadder v86.28';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -500,9 +502,9 @@ async function getKlines(interval,limit){
 }
 async function getMAs(){
   const specs=[
-    {group:'D',title:'Daily',interval:'1d',periods:[7,25,99,200,365],limit:400},
-    {group:'W',title:'Weekly',interval:'1w',periods:[7,25,99,200,365],limit:400},
-    {group:'M',title:'Monthly',interval:'1M',periods:[7,25,99],limit:120}
+    {group:'D',title:'Daily',interval:'1d',periods:[50,99,200,365],limit:400},
+    {group:'W',title:'Weekly',interval:'1w',periods:[20,100,200],limit:400},
+    {group:'M',title:'Monthly',interval:'1M',periods:[7,20],limit:120}
   ];
   const out=[],diag=[];
   for(const spec of specs){
