@@ -243,21 +243,33 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
-  body{padding:14px 12px 40px}
-  /* header: title + buttons on same row */
-  .hdr{flex-wrap:nowrap;align-items:center}
+  body{padding:8px 12px 40px}
+  /* header: compact, no wrap, less bottom margin */
+  .hdr{flex-wrap:nowrap;align-items:center;margin-bottom:8px}
   .hdr-title{white-space:nowrap;font-size:17px}
   .hdr-actions{flex-shrink:0;gap:5px}
   .hdr-actions .btn{font-size:10px;padding:4px 8px}
-  /* hero: stack vertically, price always first/left */
-  .hero{flex-direction:column;gap:10px;align-items:flex-start}
+  /* hero: tighter padding so price sits close to top border */
+  .hero{flex-direction:column;gap:8px;align-items:flex-start;padding:10px 14px 10px;margin-bottom:10px}
   .hero>div:first-child{width:100%;order:-1}
-  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
-  .stat-card{min-width:0}
+  .price-big{font-size:clamp(32px,9vw,48px)}
+  .price-sub{font-size:11px;margin-top:4px}
+  /* support/resistance side by side, compact */
+  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+  .stat-card{min-width:0;padding:6px 10px}
+  .stat-card .lbl{font-size:10px}
+  .stat-card .val{font-size:12px}
+  /* legend: smaller buttons to fit in 1-2 rows */
+  button.leg.tog{font-size:11px;padding:3px 7px}
+  .leg-pip{width:16px}
+  .leg-zone{width:16px;height:9px}
+  /* range filter compact */
+  .filter-bar{gap:4px;margin-bottom:6px}
+  .tog{font-size:11px;padding:3px 9px}
+  .lbl-sm{font-size:10px}
   /* chart */
   .chart-inner{grid-template-columns:36px 1fr 185px}
-  .filter-bar{gap:5px}
-  /* ladder canvas 540px on mobile */
+  /* ladder canvas 500px on mobile */
   #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:500px!important;max-height:500px!important}
 }
 </style>
