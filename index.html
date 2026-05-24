@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>BTC Ladder</title>
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BTC Ladder">
+<meta name="theme-color" content="#08090c">
+<link rel="apple-touch-icon" href="icon-180x180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152x152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icon-167x167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180x180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16x16.png">
 <meta http-equiv="Pragma" content="no-cache">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -425,7 +437,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28';
+const VERSION='BtcLadder v86.28 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1686,6 +1698,15 @@ let rt=null;
 if(window.ResizeObserver){new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>rerender(),90)}).observe($('chartInner'))}
 $('footerTxt').textContent=VERSION;
 refreshAll();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
