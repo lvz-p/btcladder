@@ -97,13 +97,18 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .leg-zone{width:22px;height:11px;border-radius:3px;background:rgba(255,255,255,.13);border:.5px dashed rgba(255,255,255,.4);flex-shrink:0}
 .leg-dot-btc{width:10px;height:10px;border-radius:50%;background:var(--btc);flex-shrink:0}
 /* legend toggle button on/off states */
-button.leg.tog{transition:all .15s;border:1px solid transparent;border-radius:999px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:13px}
+button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:13px;background:var(--surface)}
+button.leg.tog:hover{background:var(--surface2)}
+button.leg.tog:not(.on){opacity:.32;text-decoration:line-through;background:transparent!important;color:var(--muted)!important}
 button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
 button.leg.tog.on[data-cat="D"]{background:var(--col-D-dim);color:var(--col-D);border-color:rgba(96,165,250,.3)}
 button.leg.tog.on[data-cat="W"]{background:var(--col-W-dim);color:var(--col-W);border-color:rgba(167,139,250,.3)}
 button.leg.tog.on[data-cat="M"]{background:var(--col-M-dim);color:var(--col-M);border-color:rgba(244,114,182,.3)}
 button.leg.tog.on[data-cat="onchain"]{background:var(--col-OC-dim);color:var(--col-OC);border-color:rgba(251,191,36,.3)}
 button.leg.tog.on[data-cat="TL"]{background:rgba(74,222,128,.08);color:#94a3b8;border-color:rgba(148,163,184,.3)}
+/* Zones and URPD as leg-btn toggles */
+button.leg.tog#zoneBtn.on{background:var(--btc-dim)!important;border-color:rgba(247,147,26,.35)!important;color:var(--btc)!important}
+button.leg.tog#urpdBtn.on{background:rgba(96,165,250,.10)!important;border-color:rgba(96,165,250,.3)!important;color:#60a5fa!important}
 
 /* CHART */
 .chart-shell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;position:relative}
@@ -241,17 +246,19 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   body{padding:14px 12px 40px}
   /* header: title + buttons on same row */
   .hdr{flex-wrap:nowrap;align-items:center}
-  .hdr-actions{flex-shrink:0}
+  .hdr-title{white-space:nowrap;font-size:17px}
+  .hdr-actions{flex-shrink:0;gap:5px}
+  .hdr-actions .btn{font-size:10px;padding:4px 8px}
   /* hero: stack vertically, price always first/left */
   .hero{flex-direction:column;gap:10px;align-items:flex-start}
   .hero>div:first-child{width:100%;order:-1}
   .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
   .stat-card{min-width:0}
   /* chart */
-  .chart-inner{grid-template-columns:36px 1fr 160px}
+  .chart-inner{grid-template-columns:36px 1fr 185px}
   .filter-bar{gap:5px}
   /* ladder canvas 540px on mobile */
-  #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:540px!important;max-height:540px!important}
+  #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:500px!important;max-height:500px!important}
 }
 </style>
 </head>
@@ -282,12 +289,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="price-sub" id="priceSub">Loading from exchanges…</div>
   </div>
   <div class="hero-stats">
-    <div class="stat-card"><div class="lbl">Nearest support</div><div class="val s" id="supportVal">—</div></div>
-    <div class="stat-card"><div class="lbl">Nearest resistance</div><div class="val r" id="resistVal">—</div></div>
+    <div class="stat-card"><div class="lbl">Next support</div><div class="val s" id="supportVal">—</div></div>
+    <div class="stat-card"><div class="lbl">Next resistance</div><div class="val r" id="resistVal">—</div></div>
   </div>
 </div>
 
-<!-- Row 1: Range + Zones -->
+<!-- Row 1: Range -->
 <div class="filter-bar" style="margin-bottom:8px">
   <span class="lbl-sm">Range</span>
   <div class="tog-grp">
@@ -296,21 +303,16 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <button class="tog" data-prox="25">±25%</button>
     <button class="tog" data-prox="all">All</button>
   </div>
-  <div class="filter-sep"></div>
-  <button class="zone-tog on" id="zoneBtn">⬡ Zones</button>
-  <button class="zone-tog on" id="urpdBtn">▦ URPD</button>
 </div>
-<!-- Row 2: Legend as category toggles -->
-<div class="legend" style="margin-bottom:16px">
-  <button class="leg tog on" data-cat="D"  style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip D"></div>Daily MA</button>
-  <button class="leg tog on" data-cat="W"  style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip W"></div>Weekly MA</button>
-  <button class="leg tog on" data-cat="M"  style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip M"></div>Monthly MA</button>
-  <button class="leg tog on" data-cat="onchain" style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip OC"></div>On-chain</button>
-  <button class="leg tog on" data-cat="TL" style="cursor:pointer;padding:3px 8px;border-radius:999px;border:1px solid transparent;background:none;font-family:var(--font);font-size:11px;color:var(--muted)"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
-  <span style="width:1px;height:16px;background:var(--border2);margin:0 4px;flex-shrink:0"></span>
-  <div class="leg"><div class="leg-zone"></div>Confluence zone</div>
-  <div class="leg"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD density</div>
-  <div class="leg"><div class="leg-dot-btc"></div>Current BTC</div>
+<!-- Row 2: All toggles unified as buttons -->
+<div class="legend" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
+  <button class="leg tog on" data-cat="D"><div class="leg-pip D"></div>Daily MA</button>
+  <button class="leg tog on" data-cat="W"><div class="leg-pip W"></div>Weekly MA</button>
+  <button class="leg tog on" data-cat="M"><div class="leg-pip M"></div>Monthly MA</button>
+  <button class="leg tog on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
+  <button class="leg tog on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
+  <button class="leg tog on" id="zoneBtn"><div class="leg-zone"></div>Zones</button>
+  <button class="leg tog on" id="urpdBtn"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD</button>
 </div>
 
 <div class="chart-shell" id="chartShell">
@@ -1778,10 +1780,8 @@ document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
   btn.onclick=()=>{proxFilter=btn.dataset.prox;ss('proximity',proxFilter);zoomLo=null;zoomHi=null;userZoomed=false;document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.toggle('on',b.dataset.prox===proxFilter));rerender()};
 });
 /* TL category toggle wired via leg-btn data-cat="TL" — handled by shared .tog[data-cat] listener */
-$('zoneBtn').classList.toggle('on',autoZone);
-$('zoneBtn').onclick=()=>{autoZone=!autoZone;ss('autoZone',String(autoZone));$('zoneBtn').classList.toggle('on',autoZone);rerender()};
-$('urpdBtn').classList.toggle('on',showUrpd);
-$('urpdBtn').onclick=()=>{showUrpd=!showUrpd;ss('showUrpd',String(showUrpd));$('urpdBtn').classList.toggle('on',showUrpd);rerender()};
+$('zoneBtn').classList.toggle('on',autoZone);$('zoneBtn').onclick=()=>{autoZone=!autoZone;ss('autoZone',String(autoZone));$('zoneBtn').classList.toggle('on',autoZone);rerender()};
+$('urpdBtn').classList.toggle('on',showUrpd);$('urpdBtn').onclick=()=>{showUrpd=!showUrpd;ss('showUrpd',String(showUrpd));$('urpdBtn').classList.toggle('on',showUrpd);rerender()};
 $('autoBtn').onclick=()=>{
   if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('autoBtn').textContent='Auto: off';$('autoBtn').classList.remove('active')}
   else{autoTimer=setInterval(refreshAll,5*60*1000);$('autoBtn').textContent='Auto: on';$('autoBtn').classList.add('active')}
