@@ -161,7 +161,7 @@ button.leg.tog#urpdBtn.on{background:rgba(96,165,250,.10)!important;border-color
 .zone-pct.pos{color:var(--green)}.zone-pct.neg{color:var(--red)}.zone-pct.near{color:var(--amber)}
 
 /* TOOLTIP */
-.tooltip{position:fixed;z-index:9999;pointer-events:none;background:var(--surface);border:.5px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.5);opacity:0;transition:opacity .08s;min-width:180px;max-width:290px}
+.tooltip{position:fixed;z-index:9999;pointer-events:none;background:var(--surface);border:.5px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.5);opacity:0;transition:opacity .08s;min-width:180px;max-width:290px;left:-9999px;top:0}
 .tooltip.show{opacity:1}
 .tt-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .tt-headbadge{font-size:12px;font-weight:800;padding:2px 7px;border-radius:4px;font-family:var(--mono);line-height:1.4;flex-shrink:0}
@@ -766,7 +766,7 @@ function showTooltip(tip,cur){
   $('ttMembers').innerHTML=h.membersHTML;
   $('tooltip').classList.add('show');
 }
-function hideTip(){$('tooltip').classList.remove('show')}
+function hideTip(){const tt=$('tooltip');tt.classList.remove('show');tt.style.left='-9999px';tt.style.top='0';}
 
 /* ── MAIN RENDER ── */
 function renderChart(cur,ma,oc,tl=[]){
@@ -1000,42 +1000,34 @@ function renderChart(cur,ma,oc,tl=[]){
     $('canvasCol').querySelectorAll('.lvl-line').forEach(x=>{x.style.opacity='0.65';x.style.height='1px'});
     $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity='1'});
   }
-  /* fix: canvas hover (including zone band) and label hover use same unified tooltip builder */
+  /* suppress mouseenter/mousemove if touch just fired */
+  window._recentTouch=false;
   $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
+    el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
     el.addEventListener('touchstart',e=>{
+      window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
+      const t=e.touches[0];
+      const tt=$('tooltip');
+      tt.style.left=(t.clientX-110)+'px';
+      tt.style.top=(t.clientY-140)+'px';
       showTooltip(window._tipMap.get(el.dataset.code),window._cur);
       hlCode(el.dataset.code);
-      /* position tooltip above touch point */
-      const t=e.touches[0];
-      requestAnimationFrame(()=>{
-        const tt=$('tooltip');
-        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
-        let x=t.clientX-w/2,y=t.clientY-h-16;
-        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
-        y=Math.max(8,y);
-        tt.style.left=x+'px';tt.style.top=y+'px';
-      });
-      e.stopPropagation(); /* prevent document touchstart from dismissing */
+      e.stopPropagation();
     },{passive:true});
   });
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
+    el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
     el.addEventListener('touchstart',e=>{
+      window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
+      const t=e.touches[0];
+      const tt=$('tooltip');
+      tt.style.left=(t.clientX-110)+'px';
+      tt.style.top=(t.clientY-140)+'px';
       showTooltip(window._tipMap.get(el.dataset.code),window._cur);
       hlCode(el.dataset.code);
-      const t=e.touches[0];
-      requestAnimationFrame(()=>{
-        const tt=$('tooltip');
-        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
-        let x=t.clientX-w/2,y=t.clientY-h-16;
-        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
-        y=Math.max(8,y);
-        tt.style.left=x+'px';tt.style.top=y+'px';
-      });
-      e.stopPropagation(); /* prevent document touchstart from dismissing */
+      e.stopPropagation();
     },{passive:true});
   });
   /* document touchstart: dismiss tooltip — only fires when stopPropagation not called */
@@ -1048,6 +1040,7 @@ function renderChart(cur,ma,oc,tl=[]){
   if(!window._mmSet){
     window._mmSet=true;
     document.addEventListener('mousemove',e=>{
+      if(window._recentTouch)return; /* suppress synthetic mousemove after touch */
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
       const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
