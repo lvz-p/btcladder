@@ -1004,22 +1004,85 @@ function renderChart(cur,ma,oc,tl=[]){
   $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
     el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
+    el.addEventListener('touchstart',e=>{
+      showTooltip(window._tipMap.get(el.dataset.code),window._cur);
+      hlCode(el.dataset.code);
+      /* position tooltip above touch point */
+      const t=e.touches[0];
+      requestAnimationFrame(()=>{
+        const tt=$('tooltip');
+        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+        let x=t.clientX-w/2,y=t.clientY-h-16;
+        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+        y=Math.max(8,y);
+        tt.style.left=x+'px';tt.style.top=y+'px';
+      });
+      e.stopPropagation(); /* prevent document touchstart from dismissing */
+    },{passive:true});
   });
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
     el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
+    el.addEventListener('touchstart',e=>{
+      showTooltip(window._tipMap.get(el.dataset.code),window._cur);
+      hlCode(el.dataset.code);
+      const t=e.touches[0];
+      requestAnimationFrame(()=>{
+        const tt=$('tooltip');
+        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+        let x=t.clientX-w/2,y=t.clientY-h-16;
+        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+        y=Math.max(8,y);
+        tt.style.left=x+'px';tt.style.top=y+'px';
+      });
+      e.stopPropagation(); /* prevent document touchstart from dismissing */
+    },{passive:true});
   });
+  /* document touchstart: dismiss tooltip — only fires when stopPropagation not called */
+  if(!window._tdismissSet){
+    window._tdismissSet=true;
+    document.addEventListener('touchstart',()=>{
+      hideTip();clearHl();
+    },{passive:true});
+  }
   if(!window._mmSet){
     window._mmSet=true;
     document.addEventListener('mousemove',e=>{
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
-      const w=tt.offsetWidth||220;
+      const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
       let x=e.clientX+16,y=e.clientY-10;
       if(x+w>window.innerWidth-8)x=e.clientX-w-12;
-      if(y+tt.offsetHeight>window.innerHeight-8)y=e.clientY-tt.offsetHeight-8;
+      if(x<8)x=8;
+      if(y+h>window.innerHeight-8)y=e.clientY-h-8;
+      if(y<8)y=8;
       tt.style.left=x+'px';tt.style.top=y+'px';
     },{passive:true});
+    /* draggable tooltip on touch */
+    (function(){
+      const tt=$('tooltip');
+      if(!tt)return;
+      tt.style.pointerEvents='auto';
+      let dragActive=false,dragOX=0,dragOY=0;
+      tt.addEventListener('touchstart',e=>{
+        if(!tt.classList.contains('show'))return;
+        dragActive=true;
+        const t=e.touches[0],r=tt.getBoundingClientRect();
+        dragOX=t.clientX-r.left;dragOY=t.clientY-r.top;
+        e.stopPropagation();
+      },{passive:false});
+      document.addEventListener('touchmove',e=>{
+        if(!dragActive)return;
+        e.preventDefault();
+        const t=e.touches[0];
+        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+        let x=t.clientX-dragOX,y=t.clientY-dragOY;
+        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+        y=Math.max(8,Math.min(window.innerHeight-h-8,y));
+        tt.style.left=x+'px';tt.style.top=y+'px';
+      },{passive:false});
+      document.addEventListener('touchend',()=>{dragActive=false;},{passive:true});
+    })();
   }
 
 }
