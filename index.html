@@ -137,6 +137,8 @@ button.leg.tog#urpdBtn.on{background:rgba(96,165,250,.10)!important;border-color
 .btc-dot-glow{position:absolute;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--btc-glow);transform:translateY(-50%);z-index:4;pointer-events:none}
 /* fix: zone hover zone same z-index as line hover zones */
 .hover-zone{position:absolute;left:0;right:0;height:28px;transform:translateY(-50%);cursor:crosshair;z-index:8}
+@media(pointer:coarse){.hover-zone,.hover-zone.hz-zone,.canvas-col *{pointer-events:none}
+.canvas-col{pointer-events:auto!important}}
 .hover-zone.hz-zone{transform:none;z-index:8}
 
 /* LABELS */
@@ -488,6 +490,7 @@ let autoZone=gs('autoZone','true')!=='false';
 /* ── ZOOM / PAN STATE ── */
 let zoomLo=null,zoomHi=null; /* null = use preset */
 let isPanning=false,panStartY=0,panStartLo=0,panStartHi=0;
+let isTouchPanning=false;
 let momentumRaf=null,velHistory=[];
 let userZoomed=false; /* true when user has manually zoomed/panned */
 
@@ -1106,6 +1109,7 @@ function renderChart(cur,ma,oc,tl=[]){
 
   canvas.addEventListener('mousedown',e=>{
     if(e.button!==0||e.ctrlKey||e.metaKey)return;
+    if(window._recentTouch)return; /* ignore synthetic mousedown from touch */
     const clo=canvas._lo,chi=canvas._hi;
     if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
     isPanning=true;
@@ -1125,6 +1129,7 @@ function renderChart(cur,ma,oc,tl=[]){
 
   window.addEventListener('mouseup',()=>{
     if(!isPanning)return;
+    if(window._recentTouch)return; /* ignore synthetic mouseup from touch */
     isPanning=false;canvas.style.cursor='';
   });
 
@@ -1158,30 +1163,33 @@ function renderChart(cur,ma,oc,tl=[]){
     if(e.touches.length===1){
       /* single finger — pan */
       e.preventDefault();
-      if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      /* fallback if canvas._lo/_hi not yet set */
+      const safeLo=Number.isFinite(clo)?clo:(zoomLo!==null?zoomLo:(cur*0.9));
+      const safeHi=Number.isFinite(chi)?chi:(zoomHi!==null?zoomHi:(cur*1.1));
       /* cancel any ongoing momentum */
       if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
-      panStartLo=clo;panStartHi=chi;
+      panStartLo=safeLo;panStartHi=safeHi;
       panMidY=e.touches[0].clientY;
-      isPanning=true;
+      isTouchPanning=true;
       panStartY=e.touches[0].clientY;
       /* reset velocity tracking */
       velHistory=[];
     } else if(e.touches.length===2){
       /* two fingers — pinch zoom */
       e.preventDefault();
-      if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      const safeLo2=Number.isFinite(clo)?clo:(zoomLo!==null?zoomLo:(cur*0.9));
+      const safeHi2=Number.isFinite(chi)?chi:(zoomHi!==null?zoomHi:(cur*1.1));
       if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
       pinchStartDist=getTouchDist(e.touches[0],e.touches[1]);
-      pinchStartLo=clo;pinchStartHi=chi;
+      pinchStartLo=safeLo2;pinchStartHi=safeHi2;
       pinchMidY=getTouchMidY(e.touches[0],e.touches[1]);
-      isPanning=false;
+      isTouchPanning=false;
     }
   },{passive:false});
 
-  canvas.addEventListener('touchmove',e=>{
+  document.addEventListener('touchmove',e=>{
     const cur=window._cur||lastCurrent;if(!cur)return;
-    if(e.touches.length===1&&isPanning){
+    if(e.touches.length===1&&isTouchPanning){
       /* pan */
       e.preventDefault();
       const rect=canvas.getBoundingClientRect();
@@ -1208,10 +1216,10 @@ function renderChart(cur,ma,oc,tl=[]){
     }
   },{passive:false});
 
-  canvas.addEventListener('touchend',e=>{
+  document.addEventListener('touchend',e=>{
     if(e.touches.length===0){
       /* finger lifted — start momentum if velocity is significant */
-      if(isPanning&&velHistory.length>=2){
+      if(isTouchPanning&&velHistory.length>=2){
         const cur=window._cur||lastCurrent;
         const rect=canvas.getBoundingClientRect();
         const first=velHistory[0],last=velHistory[velHistory.length-1];
@@ -1242,15 +1250,15 @@ function renderChart(cur,ma,oc,tl=[]){
           momentumRaf=requestAnimationFrame(momentum);
         }
       }
-      isPanning=false;velHistory=[];
+      isTouchPanning=false;velHistory=[];
     }
-    if(e.touches.length===1&&!isPanning){
+    if(e.touches.length===1&&!isTouchPanning){
       /* went from 2 fingers to 1 — restart pan from current position */
       const clo=canvas._lo,chi=canvas._hi;
       if(Number.isFinite(clo)&&Number.isFinite(chi)){
         panStartLo=clo;panStartHi=chi;
         panStartY=e.touches[0].clientY;
-        isPanning=true;
+        isTouchPanning=true;
         velHistory=[];
       }
     }
