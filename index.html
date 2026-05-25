@@ -276,7 +276,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   .tog{font-size:11px;padding:3px 9px}
   .lbl-sm{font-size:10px}
   /* chart */
-  .chart-inner{grid-template-columns:36px 1fr 185px}
+  .chart-inner{grid-template-columns:36px 1fr 222px}
   /* ladder canvas 500px on mobile */
   #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:490px!important;max-height:490px!important}
 }
@@ -1011,32 +1011,28 @@ function renderChart(cur,ma,oc,tl=[]){
   /* suppress mouseenter/mousemove if touch just fired */
   window._recentTouch=false;
   $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
+    /* desktop only — no touch on canvas */
     el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
-    el.addEventListener('touchstart',e=>{
-      window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
-      const t=e.touches[0];
-      const tt=$('tooltip');
-      tt.style.left=(t.clientX-110)+'px';
-      tt.style.top=(t.clientY-140)+'px';
-      showTooltip(window._tipMap.get(el.dataset.code),window._cur);
-      hlCode(el.dataset.code);
-      e.stopPropagation();
-    },{passive:true});
   });
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
+    /* desktop hover on full row */
     el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
-    el.addEventListener('touchstart',e=>{
-      window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
-      const t=e.touches[0];
-      const tt=$('tooltip');
-      tt.style.left=(t.clientX-110)+'px';
-      tt.style.top=(t.clientY-140)+'px';
-      showTooltip(window._tipMap.get(el.dataset.code),window._cur);
-      hlCode(el.dataset.code);
-      e.stopPropagation();
-    },{passive:true});
+    /* mobile: only badge opens tooltip */
+    const badge=el.querySelector('.lbl-badge');
+    if(badge){
+      badge.addEventListener('touchstart',e=>{
+        window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
+        const t=e.touches[0];
+        const tt=$('tooltip');
+        tt.style.left=(t.clientX-110)+'px';
+        tt.style.top=(t.clientY-140)+'px';
+        showTooltip(window._tipMap.get(el.dataset.code),window._cur);
+        hlCode(el.dataset.code);
+        e.stopPropagation();
+      },{passive:true});
+    }
   });
   /* document touchstart: dismiss tooltip — only fires when stopPropagation not called */
   if(!window._tdismissSet){
