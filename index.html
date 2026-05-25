@@ -1001,57 +1001,19 @@ function renderChart(cur,ma,oc,tl=[]){
     $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity='1'});
   }
   /* fix: canvas hover (including zone band) and label hover use same unified tooltip builder */
-  /* tap detection threshold — if finger moves more than this, it's a scroll */
-  const TAP_THRESHOLD=8;
-  function addTooltipTouch(el,getCode){
-    let tStartX=0,tStartY=0;
-    el.addEventListener('touchstart',e=>{
-      /* record touch start position for tap-vs-scroll detection */
-      tStartX=e.touches[0].clientX;
-      tStartY=e.touches[0].clientY;
-    },{passive:true});
-    el.addEventListener('touchend',e=>{
-      /* strict dismiss: if tooltip is showing, any tap outside dismisses only */
-      if(window._ttJustDismissed&&window._ttJustDismissed())return;
-      /* check if this was a tap (finger didn't move much) */
-      const t=e.changedTouches[0];
-      const dx=Math.abs(t.clientX-tStartX),dy=Math.abs(t.clientY-tStartY);
-      if(dx>TAP_THRESHOLD||dy>TAP_THRESHOLD)return; /* was a scroll, not a tap */
-      const code=getCode?getCode():el.dataset.code;
-      const tip=window._tipMap.get(code);if(!tip)return;
-      showTooltip(tip,window._cur);hlCode(code);
-      const touchX=t.clientX,touchY=t.clientY;
-      /* position after render so dimensions are correct */
-      requestAnimationFrame(()=>{
-        const tt=$('tooltip');
-        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
-        let x=touchX-w/2,y=touchY-h-16;
-        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
-        y=Math.max(8,y);
-        tt.style.left=x+'px';tt.style.top=y+'px';
-        if(window._ttSetByTouch)window._ttSetByTouch();
-      });
-      e.stopPropagation();
-    },{passive:true});
-  }
   $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
     el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
-    addTooltipTouch(el);
   });
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
     el.addEventListener('mouseenter',()=>{showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{hideTip();clearHl()});
-    addTooltipTouch(el);
   });
   if(!window._mmSet){
     window._mmSet=true;
-    /* desktop: tooltip follows mouse — skip if touch just positioned it */
-    let ttPositionedByTouch=false;
     document.addEventListener('mousemove',e=>{
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
-      if(ttPositionedByTouch){ttPositionedByTouch=false;return;} /* skip one mousemove after touch */
       const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
       let x=e.clientX+16,y=e.clientY-10;
       if(x+w>window.innerWidth-8)x=e.clientX-w-12;
@@ -1060,50 +1022,31 @@ function renderChart(cur,ma,oc,tl=[]){
       if(y<8)y=8;
       tt.style.left=x+'px';tt.style.top=y+'px';
     },{passive:true});
-    window._ttSetByTouch=()=>{ttPositionedByTouch=true;};
-
-    /* mobile: draggable tooltip */
-    let ttDragActive=false,ttDragOX=0,ttDragOY=0;
-    const tt=$('tooltip');
-    tt.style.pointerEvents='auto'; /* ensure tooltip receives touch events */
-    tt.addEventListener('touchstart',e=>{
-      if(!tt.classList.contains('show'))return;
-      ttDragActive=true;
-      const t=e.touches[0];
-      const r=tt.getBoundingClientRect();
-      ttDragOX=t.clientX-r.left;
-      ttDragOY=t.clientY-r.top;
-      e.stopPropagation(); /* prevent dismiss listener from firing */
-    },{passive:false});
-    document.addEventListener('touchmove',e=>{
-      if(!ttDragActive)return;
-      e.preventDefault(); /* stop page scroll while dragging tooltip */
-      const t=e.touches[0];
-      const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
-      let x=t.clientX-ttDragOX,y=t.clientY-ttDragOY;
-      x=Math.max(8,Math.min(window.innerWidth-w-8,x));
-      y=Math.max(8,Math.min(window.innerHeight-h-8,y));
-      tt.style.left=x+'px';tt.style.top=y+'px';
-    },{passive:false});
-    document.addEventListener('touchend',()=>{ttDragActive=false;},{passive:true});
-
-    /* two-tap pattern: first tap outside tooltip dismisses, second tap opens new */
-    let tooltipJustDismissed=false;
-    document.addEventListener('touchstart',e=>{
+    /* draggable tooltip on touch */
+    (function(){
       const tt=$('tooltip');
-      if(!tt.classList.contains('show'))return;
-      const path=e.composedPath?e.composedPath():[];
-      const onTooltip=path.includes(tt)||tt.contains(e.target);
-      if(!onTooltip){
-        /* strict dismiss: set flag first, hide tooltip.
-           Flag lasts 500ms — long enough to cover the touchend
-           that follows this touchstart on any tag/line.          */
-        tooltipJustDismissed=true;
-        hideTip();clearHl();
-        setTimeout(()=>{tooltipJustDismissed=false;},500);
-      }
-    },{passive:true});
-    window._ttJustDismissed=()=>tooltipJustDismissed;
+      if(!tt)return;
+      tt.style.pointerEvents='auto';
+      let dragActive=false,dragOX=0,dragOY=0;
+      tt.addEventListener('touchstart',e=>{
+        if(!tt.classList.contains('show'))return;
+        dragActive=true;
+        const t=e.touches[0],r=tt.getBoundingClientRect();
+        dragOX=t.clientX-r.left;dragOY=t.clientY-r.top;
+        e.stopPropagation();
+      },{passive:false});
+      document.addEventListener('touchmove',e=>{
+        if(!dragActive)return;
+        e.preventDefault();
+        const t=e.touches[0];
+        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+        let x=t.clientX-dragOX,y=t.clientY-dragOY;
+        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+        y=Math.max(8,Math.min(window.innerHeight-h-8,y));
+        tt.style.left=x+'px';tt.style.top=y+'px';
+      },{passive:false});
+      document.addEventListener('touchend',()=>{dragActive=false;},{passive:true});
+    })();
   }
 
 }
