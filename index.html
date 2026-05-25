@@ -56,11 +56,19 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .btn.primary{background:var(--btc);color:#1a0900;border-color:var(--btc);font-weight:700}
 .btn.primary:hover{background:#ffaa33}
 .btn.active{background:var(--btc-dim);border-color:rgba(247,147,26,.35);color:var(--btc)}
+/* auto button fill layers */
+#autoBtn{position:relative;overflow:hidden;z-index:0}
+#autoBtn .fill-6h{position:absolute;left:0;top:0;height:100%;width:0%;background:rgba(96,165,250,0.18);z-index:0;transition:none;pointer-events:none}
+#autoBtn .fill-1m{position:absolute;left:0;top:0;height:100%;width:0%;background:rgba(247,147,26,0.30);z-index:1;transition:none;pointer-events:none}
+#autoBtn span.btn-label{position:relative;z-index:2}
 
 /* HERO */
 .hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 22px 18px;margin-bottom:14px;display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;justify-content:space-between;overflow:visible}
 .hero-price{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;overflow:visible}
-.price-big{font-family:var(--font);font-size:clamp(36px,7vw,64px);font-weight:800;letter-spacing:-0.055em;color:#fff;line-height:1.2;overflow:visible;display:block}
+.price-big{font-size:clamp(36px,7vw,64px);font-weight:800;letter-spacing:-0.04em;color:#fff;line-height:1.2;overflow:visible;display:flex;align-items:baseline}
+.price-big .ps{font-family:var(--font);font-weight:800}
+.price-big .pk{display:inline-block;perspective:300px;vertical-align:bottom}
+.price-big .pk-inner{font-family:var(--font);font-weight:800;display:block;transform-style:preserve-3d;backface-visibility:hidden}
 .price-chg-wrap{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;flex-shrink:0}
 .price-chg-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);line-height:1}
 .price-chg{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
@@ -252,7 +260,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   /* hero: tighter padding so price sits close to top border */
   .hero{flex-direction:column;gap:8px;align-items:flex-start;padding:10px 14px 10px;margin-bottom:10px}
   .hero>div:first-child{width:100%;order:-1}
-  .price-big{font-size:clamp(32px,9vw,48px)}
+  .price-big{font-size:clamp(32px,9vw,48px);letter-spacing:-0.03em}
   .price-sub{font-size:11px;margin-top:4px}
   /* support/resistance side by side, compact */
   .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
@@ -285,7 +293,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
   <div class="hdr-actions">
     <button class="btn primary" id="refreshBtn">↻ Refresh</button>
-    <button class="btn" id="autoBtn">Auto: off</button>
+    <button class="btn" id="autoBtn"><div class="fill-6h"></div><div class="fill-1m"></div><span class="btn-label">Auto: off</span></button>
   </div>
 </header>
 
@@ -1319,7 +1327,8 @@ async function refreshAll(){
   try{
     const pr=await getPrice();
     lastCurrent=pr.price;lastPriceRows=pr.rows;
-    $('priceVal').textContent=fmt(lastCurrent);
+    renderAnimatedPrice(lastCurrent, window._prevPrice);
+    window._prevPrice=lastCurrent;
     $('priceSub').textContent=`${pr.rows.filter(r=>r.ok).length} verified sources · ${new Date().toLocaleTimeString()}`;
     try{
       const tk=await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
@@ -1838,6 +1847,275 @@ async function getUrpd(){
   }
 }
 
+
+/* ── ANIMATED PRICE COUNTER ────────────────────────────────────────────────
+   Each digit spins on its own wheel, shortest path direction.
+   Static chars ($, commas) are plain spans.
+── */
+let _priceDigitState = []; /* tracks current wheel position per column */
+
+function renderAnimatedPrice(newPrice, oldPrice){
+  const el = $('priceVal');
+  if(!el) return;
+
+  /* format as string without $ — we add it separately */
+  const fmtNum = n => Math.round(n).toLocaleString('en-US');
+  const newStr = fmtNum(newPrice);
+  const oldStr = oldPrice ? fmtNum(oldPrice) : null;
+
+  /* if digit count changed or first render, rebuild structure */
+  const needsRebuild = !oldStr || newStr.length !== oldStr.length || el.children.length === 0;
+
+  if(needsRebuild){
+    el.innerHTML = '';
+    _priceDigitState = [];
+    /* $ sign */
+    const dollar = document.createElement('span');
+    dollar.className = 'price-static'; dollar.textContent = '$';
+    el.appendChild(dollar);
+    /* each char */
+    for(let i = 0; i < newStr.length; i++){
+      const ch = newStr[i];
+      if(ch === ','){
+        const comma = document.createElement('span');
+        comma.className = 'price-static'; comma.textContent = ',';
+        el.appendChild(comma);
+        _priceDigitState.push(null); /* null = static */
+      } else {
+        const d = parseInt(ch);
+        const wrap = document.createElement('div');
+        wrap.className = 'price-digit-wrap';
+        const inner = document.createElement('div');
+        inner.className = 'price-digit-inner';
+        /* build 0-9 digit stack */
+        for(let n = 0; n <= 9; n++){
+          const s = document.createElement('span');
+          s.textContent = n;
+          inner.appendChild(s);
+        }
+        /* position to current digit — no animation on first render */
+        inner.style.transition = 'none';
+        inner.style.transform = `translateY(-${d * 1.2}em)`;
+        wrap.appendChild(inner);
+        el.appendChild(wrap);
+        _priceDigitState.push({digit: d, offset: d}); /* offset in digit units */
+      }
+    }
+    return;
+  }
+
+  /* animate changed digits */
+  let digitIdx = 0;
+  const wraps = el.querySelectorAll('.price-digit-wrap');
+  for(let i = 0; i < newStr.length; i++){
+    const ch = newStr[i];
+    if(ch === ',') continue;
+    const newD = parseInt(ch);
+    const state = _priceDigitState[i];
+    if(!state) continue;
+    const oldD = state.digit;
+    if(newD === oldD){ digitIdx++; continue; }
+    /* shortest path */
+    const fwd = (newD - oldD + 10) % 10;
+    const bwd = (oldD - newD + 10) % 10;
+    let newOffset;
+    if(fwd <= bwd){
+      newOffset = state.offset + fwd; /* scroll down — digit comes from above */
+    } else {
+      newOffset = state.offset - bwd; /* scroll up — digit comes from below */
+    }
+    state.digit = newD;
+    state.offset = newOffset;
+    const inner = wraps[digitIdx] && wraps[digitIdx].querySelector('.price-digit-inner');
+    if(inner){
+      /* normalize offset to avoid unbounded growth every ~100 changes */
+      const normOffset = ((newOffset % 10) + 10) % 10;
+      /* rebuild inner with offset normalized, keeping current position */
+      /* just animate to new offset position */
+      inner.style.transition = 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)';
+      inner.style.transform = `translateY(-${newOffset * 1.2}em)`;
+      /* normalize after animation completes */
+      setTimeout(()=>{
+        inner.style.transition = 'none';
+        inner.style.transform = `translateY(-${normOffset * 1.2}em)`;
+        state.offset = normOffset;
+      }, 500);
+    }
+    digitIdx++;
+  }
+}
+
+
+/* ── INCREMENTAL REFRESH SYSTEM ────────────────────────────────────────────
+   Price: every 1 minute
+   Everything else: every 6 hours
+   Trendline breach detection on each price update
+── */
+const REFRESH_INTERVAL_PRICE = 60 * 1000;        /* 1 minute */
+const REFRESH_INTERVAL_FULL  = 6 * 60 * 60 * 1000; /* 6 hours */
+let _lastFullRefresh = 0;
+let _autoTimer1m = null;
+let _auto1mStart = 0;
+let _autoFullStart = 0;
+
+function _autoBtnFill(pct1m, pct6h){
+  const f1 = document.querySelector('#autoBtn .fill-1m');
+  const f6 = document.querySelector('#autoBtn .fill-6h');
+  if(f1) f1.style.width = pct1m + '%';
+  if(f6) f6.style.width = pct6h + '%';
+}
+
+async function refreshPriceOnly(){
+  try{
+    const pr = await getPrice();
+    const prev = lastCurrent;
+    lastCurrent = pr.price;
+    renderAnimatedPrice(lastCurrent, window._prevPrice);
+    window._prevPrice=lastCurrent;
+    $('priceSub').textContent = `${pr.rows.filter(r=>r.ok).length} verified sources · ${new Date().toLocaleTimeString()}`;
+    try{
+      const tk = await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+      const chg = Number(tk?.priceChangePercent);
+      if(Number.isFinite(chg)){
+        $('priceChg').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
+        $('priceChg').className='price-chg '+(chg>=0?'up':'dn');
+        $('priceChgWrap').style.display='';
+      }
+    }catch(_){}
+    /* update nearest support/resistance */
+    if(lastMas.length||lastOnchain.length||lastTrendlines.length)
+      renderSummary(lastCurrent, getLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
+    /* rerender ladder with new price */
+    rerender();
+    /* trendline breach detection */
+    checkTrendlineBreaches(prev, lastCurrent);
+  }catch(e){console.warn('price refresh failed:',e);}
+}
+
+function checkTrendlineBreaches(oldPrice, newPrice){
+  if(!lastTrendlines.length||!oldPrice||!newPrice) return;
+  let wickBreach = false;
+  lastTrendlines.forEach(l=>{
+    if(!l._tlLine) return;
+    const isWick = l._tlLine.anchorBasis==='wick';
+    const proj = l.price; /* current projected value */
+    if(l.tlType==='support'){
+      if(newPrice < proj){
+        if(isWick){
+          wickBreach = true;
+        } else {
+          /* close-based: show warning */
+          _markTrendlineWarning(l.id, true);
+        }
+      } else {
+        _markTrendlineWarning(l.id, false);
+      }
+    } else {
+      if(newPrice > proj){
+        if(isWick){
+          wickBreach = true;
+        } else {
+          _markTrendlineWarning(l.id, true);
+        }
+      } else {
+        _markTrendlineWarning(l.id, false);
+      }
+    }
+  });
+  if(wickBreach){
+    console.log('Wick trendline breach detected — triggering full refresh');
+    refreshAll();
+  }
+}
+
+function _markTrendlineWarning(id, warn){
+  /* find level line and label in canvas and add/remove warning style */
+  document.querySelectorAll(`[data-code="${id}"]`).forEach(el=>{
+    if(warn) el.style.filter='hue-rotate(45deg)';
+    else el.style.filter='';
+  });
+  /* mark in levels list */
+  const rows = document.querySelectorAll(`#maTable tr`);
+  rows.forEach(row=>{
+    if(row.textContent.includes(id.replace('TL_',''))){
+      row.style.background = warn ? 'rgba(251,191,36,0.08)' : '';
+    }
+  });
+}
+
+
+/* ── ANIMATED PRICE DISPLAY — 3D flip + color pulse (Option K) ─────────────
+   Each digit flips on horizontal axis when value changes.
+   On landing, a brief color pulse: green if price went up, red if down.
+   Static chars ($, commas) are plain spans.
+── */
+let _priceState = null;
+
+function _buildPriceWheel(el, price){
+  el.innerHTML = '';
+  const str = Math.round(price).toLocaleString('en-US');
+  const state = [];
+  const dollar = document.createElement('span');
+  dollar.className = 'ps'; dollar.textContent = '$'; el.appendChild(dollar);
+  for(const ch of str){
+    if(ch === ','){
+      const c = document.createElement('span');
+      c.className = 'ps'; c.textContent = ','; el.appendChild(c);
+      state.push(null);
+    } else {
+      const wrap = document.createElement('div'); wrap.className = 'pk';
+      const inner = document.createElement('span'); inner.className = 'pk-inner';
+      inner.textContent = ch; wrap.appendChild(inner); el.appendChild(wrap);
+      state.push({digit: parseInt(ch), el: inner});
+    }
+  }
+  return state;
+}
+
+function renderAnimatedPrice(newPrice, oldPrice){
+  const el = $('priceVal'); if(!el) return;
+  const newStr = Math.round(newPrice).toLocaleString('en-US');
+  const oldStr = oldPrice ? Math.round(oldPrice).toLocaleString('en-US') : null;
+  const dir = (!oldPrice || newPrice >= oldPrice) ? 'up' : 'dn';
+  const upCol = '#4ade80', dnCol = '#f87171';
+  const col = dir === 'up' ? upCol : dnCol;
+
+  /* rebuild if first render or digit count changed */
+  if(!_priceState || !oldStr || newStr.length !== oldStr.length){
+    _priceState = _buildPriceWheel(el, newPrice);
+    return;
+  }
+
+  /* animate changed digits */
+  [...newStr].forEach((ch, i) => {
+    const s = _priceState[i]; if(!s) return;
+    const nd = parseInt(ch);
+    if(nd === s.digit) return;
+    const inner = s.el;
+    /* flip out */
+    inner.style.transition = 'transform 0.16s ease-in';
+    inner.style.transform = 'rotateX(90deg)';
+    setTimeout(() => {
+      inner.textContent = ch;
+      inner.style.transition = 'none';
+      inner.style.transform = 'rotateX(-90deg)';
+      requestAnimationFrame(() => {
+        inner.style.transition = 'transform 0.16s ease-out';
+        inner.style.transform = 'rotateX(0deg)';
+        /* color pulse on landing */
+        setTimeout(() => {
+          inner.style.transition = 'color 0.25s, transform 0.25s';
+          inner.style.color = col; inner.style.transform = 'scale(1.1)';
+          setTimeout(() => {
+            inner.style.color = '#fff'; inner.style.transform = 'scale(1)';
+          }, 250);
+        }, 160);
+      });
+    }, 160);
+    s.digit = nd;
+  });
+}
+
 /* ── CONTROLS ── */
 document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
   btn.classList.toggle('on',catFilters[btn.dataset.cat]!==false);
@@ -1851,8 +2129,39 @@ document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
 $('zoneBtn').classList.toggle('on',autoZone);$('zoneBtn').onclick=()=>{autoZone=!autoZone;ss('autoZone',String(autoZone));$('zoneBtn').classList.toggle('on',autoZone);rerender()};
 $('urpdBtn').classList.toggle('on',showUrpd);$('urpdBtn').onclick=()=>{showUrpd=!showUrpd;ss('showUrpd',String(showUrpd));$('urpdBtn').classList.toggle('on',showUrpd);rerender()};
 $('autoBtn').onclick=()=>{
-  if(autoTimer){clearInterval(autoTimer);autoTimer=null;$('autoBtn').textContent='Auto: off';$('autoBtn').classList.remove('active')}
-  else{autoTimer=setInterval(refreshAll,5*60*1000);$('autoBtn').textContent='Auto: on';$('autoBtn').classList.add('active')}
+  if(_autoTimer1m){
+    /* stop auto */
+    clearInterval(_autoTimer1m);_autoTimer1m=null;
+    $('autoBtn').querySelector('.btn-label').textContent='Auto: off';
+    $('autoBtn').classList.remove('active');
+    _autoBtnFill(0,0);
+  } else {
+    /* start auto */
+    _auto1mStart=Date.now();
+    _autoFullStart=Date.now();
+    $('autoBtn').querySelector('.btn-label').textContent='Auto: on';
+    $('autoBtn').classList.add('active');
+    _autoTimer1m=setInterval(async()=>{
+      const now=Date.now();
+      const elapsed1m=now-_auto1mStart;
+      const elapsed6h=now-_autoFullStart;
+      /* update fill widths */
+      const pct1m=Math.min(100,(elapsed1m/REFRESH_INTERVAL_PRICE)*100);
+      const pct6h=Math.min(100,(elapsed6h/REFRESH_INTERVAL_FULL)*100);
+      _autoBtnFill(pct1m,pct6h);
+      /* 1-minute price refresh */
+      if(elapsed1m>=REFRESH_INTERVAL_PRICE){
+        _auto1mStart=now;
+        await refreshPriceOnly();
+      }
+      /* 6-hour full refresh */
+      if(elapsed6h>=REFRESH_INTERVAL_FULL){
+        _autoFullStart=now;
+        await refreshAll();
+        _auto1mStart=Date.now(); /* reset 1m after full refresh */
+      }
+    },1000); /* tick every second to update fill smoothly */
+  }
 };
 $('refreshBtn').onclick=refreshAll;
 let rt=null;
