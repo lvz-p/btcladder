@@ -1001,16 +1001,27 @@ function renderChart(cur,ma,oc,tl=[]){
     $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity='1'});
   }
   /* fix: canvas hover (including zone band) and label hover use same unified tooltip builder */
+  /* tap detection threshold — if finger moves more than this, it's a scroll */
+  const TAP_THRESHOLD=8;
   function addTooltipTouch(el,getCode){
+    let tStartX=0,tStartY=0;
     el.addEventListener('touchstart',e=>{
-      /* always respect dismiss flag — prevents accidental open after dismiss */
+      /* record touch start position for tap-vs-scroll detection */
+      tStartX=e.touches[0].clientX;
+      tStartY=e.touches[0].clientY;
+    },{passive:true});
+    el.addEventListener('touchend',e=>{
+      /* strict dismiss: if tooltip is showing, any tap outside dismisses only */
       if(window._ttJustDismissed&&window._ttJustDismissed())return;
+      /* check if this was a tap (finger didn't move much) */
+      const t=e.changedTouches[0];
+      const dx=Math.abs(t.clientX-tStartX),dy=Math.abs(t.clientY-tStartY);
+      if(dx>TAP_THRESHOLD||dy>TAP_THRESHOLD)return; /* was a scroll, not a tap */
       const code=getCode?getCode():el.dataset.code;
       const tip=window._tipMap.get(code);if(!tip)return;
       showTooltip(tip,window._cur);hlCode(code);
-      const t=e.touches[0];
       const touchX=t.clientX,touchY=t.clientY;
-      /* wait one frame so tooltip is rendered and dimensions are real */
+      /* position after render so dimensions are correct */
       requestAnimationFrame(()=>{
         const tt=$('tooltip');
         const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
@@ -1084,10 +1095,12 @@ function renderChart(cur,ma,oc,tl=[]){
       const path=e.composedPath?e.composedPath():[];
       const onTooltip=path.includes(tt)||tt.contains(e.target);
       if(!onTooltip){
-        /* set flag FIRST, then hide — so tag handlers see flag=true */
+        /* strict dismiss: set flag first, hide tooltip.
+           Flag lasts 500ms — long enough to cover the touchend
+           that follows this touchstart on any tag/line.          */
         tooltipJustDismissed=true;
         hideTip();clearHl();
-        setTimeout(()=>{tooltipJustDismissed=false;},400);
+        setTimeout(()=>{tooltipJustDismissed=false;},500);
       }
     },{passive:true});
     window._ttJustDismissed=()=>tooltipJustDismissed;
