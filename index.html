@@ -1003,17 +1003,23 @@ function renderChart(cur,ma,oc,tl=[]){
   /* fix: canvas hover (including zone band) and label hover use same unified tooltip builder */
   function addTooltipTouch(el,getCode){
     el.addEventListener('touchstart',e=>{
+      /* always respect dismiss flag — prevents accidental open after dismiss */
       if(window._ttJustDismissed&&window._ttJustDismissed())return;
       const code=getCode?getCode():el.dataset.code;
       const tip=window._tipMap.get(code);if(!tip)return;
       showTooltip(tip,window._cur);hlCode(code);
-      const tt=$('tooltip');
       const t=e.touches[0];
-      const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
-      let x=t.clientX-w/2,y=t.clientY-h-16;
-      x=Math.max(8,Math.min(window.innerWidth-w-8,x));
-      y=Math.max(8,y);
-      tt.style.left=x+'px';tt.style.top=y+'px';
+      const touchX=t.clientX,touchY=t.clientY;
+      /* wait one frame so tooltip is rendered and dimensions are real */
+      requestAnimationFrame(()=>{
+        const tt=$('tooltip');
+        const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
+        let x=touchX-w/2,y=touchY-h-16;
+        x=Math.max(8,Math.min(window.innerWidth-w-8,x));
+        y=Math.max(8,y);
+        tt.style.left=x+'px';tt.style.top=y+'px';
+        if(window._ttSetByTouch)window._ttSetByTouch();
+      });
       e.stopPropagation();
     },{passive:true});
   }
@@ -1029,10 +1035,12 @@ function renderChart(cur,ma,oc,tl=[]){
   });
   if(!window._mmSet){
     window._mmSet=true;
-    /* desktop: tooltip follows mouse with full edge clamping */
+    /* desktop: tooltip follows mouse — skip if touch just positioned it */
+    let ttPositionedByTouch=false;
     document.addEventListener('mousemove',e=>{
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
+      if(ttPositionedByTouch){ttPositionedByTouch=false;return;} /* skip one mousemove after touch */
       const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
       let x=e.clientX+16,y=e.clientY-10;
       if(x+w>window.innerWidth-8)x=e.clientX-w-12;
@@ -1041,27 +1049,31 @@ function renderChart(cur,ma,oc,tl=[]){
       if(y<8)y=8;
       tt.style.left=x+'px';tt.style.top=y+'px';
     },{passive:true});
+    window._ttSetByTouch=()=>{ttPositionedByTouch=true;};
 
     /* mobile: draggable tooltip */
     let ttDragActive=false,ttDragOX=0,ttDragOY=0;
     const tt=$('tooltip');
+    tt.style.pointerEvents='auto'; /* ensure tooltip receives touch events */
     tt.addEventListener('touchstart',e=>{
       if(!tt.classList.contains('show'))return;
       ttDragActive=true;
       const t=e.touches[0];
-      ttDragOX=t.clientX-tt.getBoundingClientRect().left;
-      ttDragOY=t.clientY-tt.getBoundingClientRect().top;
-      e.stopPropagation();
-    },{passive:true});
+      const r=tt.getBoundingClientRect();
+      ttDragOX=t.clientX-r.left;
+      ttDragOY=t.clientY-r.top;
+      e.stopPropagation(); /* prevent dismiss listener from firing */
+    },{passive:false});
     document.addEventListener('touchmove',e=>{
       if(!ttDragActive)return;
+      e.preventDefault(); /* stop page scroll while dragging tooltip */
       const t=e.touches[0];
       const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
       let x=t.clientX-ttDragOX,y=t.clientY-ttDragOY;
       x=Math.max(8,Math.min(window.innerWidth-w-8,x));
       y=Math.max(8,Math.min(window.innerHeight-h-8,y));
       tt.style.left=x+'px';tt.style.top=y+'px';
-    },{passive:true});
+    },{passive:false});
     document.addEventListener('touchend',()=>{ttDragActive=false;},{passive:true});
 
     /* two-tap pattern: first tap outside tooltip dismisses, second tap opens new */
@@ -1069,14 +1081,15 @@ function renderChart(cur,ma,oc,tl=[]){
     document.addEventListener('touchstart',e=>{
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
-      /* if touch is outside tooltip, dismiss and set flag */
-      if(!tt.contains(e.target)){
-        hideTip();clearHl();
+      const path=e.composedPath?e.composedPath():[];
+      const onTooltip=path.includes(tt)||tt.contains(e.target);
+      if(!onTooltip){
+        /* set flag FIRST, then hide — so tag handlers see flag=true */
         tooltipJustDismissed=true;
-        setTimeout(()=>{tooltipJustDismissed=false;},350);
+        hideTip();clearHl();
+        setTimeout(()=>{tooltipJustDismissed=false;},400);
       }
     },{passive:true});
-    /* expose flag so hover zones can check it */
     window._ttJustDismissed=()=>tooltipJustDismissed;
   }
 
