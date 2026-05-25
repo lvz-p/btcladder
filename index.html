@@ -1028,6 +1028,7 @@ function renderChart(cur,ma,oc,tl=[]){
     if(badge){
       badge.addEventListener('touchstart',e=>{
         window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
+        hideTip();clearHl(); /* always close existing tooltip first */
         const t=e.touches[0];
         const tt=$('tooltip');
         tt.style.left=(t.clientX-110)+'px';
