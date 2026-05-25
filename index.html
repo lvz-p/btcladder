@@ -1028,13 +1028,17 @@ function renderChart(cur,ma,oc,tl=[]){
     if(badge){
       badge.addEventListener('touchstart',e=>{
         window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
-        hideTip();clearHl(); /* always close existing tooltip first */
+        hideTip();clearHl();
         const t=e.touches[0];
         const tt=$('tooltip');
         tt.style.left=(t.clientX-110)+'px';
         tt.style.top=(t.clientY-140)+'px';
         showTooltip(window._tipMap.get(el.dataset.code),window._cur);
         hlCode(el.dataset.code);
+        e.stopPropagation();
+      },{passive:true});
+      /* stop touchend from bubbling to document dismiss listener */
+      badge.addEventListener('touchend',e=>{
         e.stopPropagation();
       },{passive:true});
     }
