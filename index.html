@@ -488,6 +488,7 @@ let autoZone=gs('autoZone','true')!=='false';
 /* ── ZOOM / PAN STATE ── */
 let zoomLo=null,zoomHi=null; /* null = use preset */
 let isPanning=false,panStartY=0,panStartLo=0,panStartHi=0;
+let momentumRaf=null,velHistory=[];
 let userZoomed=false; /* true when user has manually zoomed/panned */
 
 function computePresetRange(cur,ma,oc){
@@ -1158,14 +1159,19 @@ function renderChart(cur,ma,oc,tl=[]){
       /* single finger — pan */
       e.preventDefault();
       if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      /* cancel any ongoing momentum */
+      if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
       panStartLo=clo;panStartHi=chi;
       panMidY=e.touches[0].clientY;
       isPanning=true;
       panStartY=e.touches[0].clientY;
+      /* reset velocity tracking */
+      velHistory=[];
     } else if(e.touches.length===2){
       /* two fingers — pinch zoom */
       e.preventDefault();
       if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
+      if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
       pinchStartDist=getTouchDist(e.touches[0],e.touches[1]);
       pinchStartLo=clo;pinchStartHi=chi;
       pinchMidY=getTouchMidY(e.touches[0],e.touches[1]);
@@ -1182,6 +1188,10 @@ function renderChart(cur,ma,oc,tl=[]){
       const crange=panStartHi-panStartLo;
       const delta=(e.touches[0].clientY-panStartY)/rect.height*crange;
       applyZoom(panStartLo+delta,panStartHi+delta,cur);
+      /* track velocity — store last 4 positions with timestamps */
+      const now=Date.now();
+      velHistory.push({y:e.touches[0].clientY,t:now,clo:canvas._lo,chi:canvas._hi});
+      if(velHistory.length>4)velHistory.shift();
     } else if(e.touches.length===2){
       /* pinch zoom */
       e.preventDefault();
@@ -1199,7 +1209,41 @@ function renderChart(cur,ma,oc,tl=[]){
   },{passive:false});
 
   canvas.addEventListener('touchend',e=>{
-    if(e.touches.length===0)isPanning=false;
+    if(e.touches.length===0){
+      /* finger lifted — start momentum if velocity is significant */
+      if(isPanning&&velHistory.length>=2){
+        const cur=window._cur||lastCurrent;
+        const rect=canvas.getBoundingClientRect();
+        const first=velHistory[0],last=velHistory[velHistory.length-1];
+        const dt=last.t-first.t;
+        if(dt>0&&dt<300){
+          /* velocity in price units per ms */
+          const crange=last.chi-last.clo;
+          const dyPx=last.y-first.y;
+          const dyPrice=(dyPx/rect.height)*crange;
+          let vel=dyPrice/dt; /* price per ms */
+          const DECAY=0.88,THRESHOLD=0.02;
+          let lo=canvas._lo,hi=canvas._hi;
+          let lastTime=Date.now();
+          function momentum(){
+            const now=Date.now();
+            const elapsed=Math.min(now-lastTime,32); /* cap at 32ms */
+            lastTime=now;
+            const delta=vel*elapsed;
+            lo+=delta;hi+=delta;
+            applyZoom(lo,hi,cur);
+            vel*=DECAY;
+            if(Math.abs(vel)>THRESHOLD){
+              momentumRaf=requestAnimationFrame(momentum);
+            } else {
+              momentumRaf=null;
+            }
+          }
+          momentumRaf=requestAnimationFrame(momentum);
+        }
+      }
+      isPanning=false;velHistory=[];
+    }
     if(e.touches.length===1&&!isPanning){
       /* went from 2 fingers to 1 — restart pan from current position */
       const clo=canvas._lo,chi=canvas._hi;
@@ -1207,6 +1251,7 @@ function renderChart(cur,ma,oc,tl=[]){
         panStartLo=clo;panStartHi=chi;
         panStartY=e.touches[0].clientY;
         isPanning=true;
+        velHistory=[];
       }
     }
   },{passive:true});
