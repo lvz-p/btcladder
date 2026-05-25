@@ -1222,7 +1222,7 @@ function renderChart(cur,ma,oc,tl=[]){
           const dyPx=last.y-first.y;
           const dyPrice=(dyPx/rect.height)*crange;
           let vel=dyPrice/dt; /* price per ms */
-          const DECAY=0.88,THRESHOLD=0.02;
+          const DECAY=0.92,THRESHOLD=0.02;
           let lo=canvas._lo,hi=canvas._hi;
           let lastTime=Date.now();
           function momentum(){
