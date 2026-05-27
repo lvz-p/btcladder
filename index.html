@@ -240,6 +240,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 /* TRENDLINE VIEWER */
 .tl-viewer{padding:14px 18px 18px}
+.tl-crosshair{pointer-events:none;display:none}
+.tl-crosshair-price{pointer-events:none;display:none;position:absolute;left:0;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:11px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;transform:translateY(-50%)}
 .tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .tl-ctrl-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .tl-legend-group{margin-bottom:6px}
@@ -382,8 +384,9 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </select>
     </div>
     <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
-    <div class="tl-chart-wrap">
+    <div class="tl-chart-wrap" style="position:relative">
       <svg id="tlSvg" viewBox="0 0 1100 480" preserveAspectRatio="none" style="height:360px;cursor:default"></svg>
+      <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
     </div>
     <div id="tlTip" class="tlTip"></div>
     <div id="tlLegendWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
@@ -1730,18 +1733,9 @@ function tl_renderLegend(lines){
   const el=document.getElementById('tlLegend');
   if(!el)return;
   el.innerHTML='';
-  const cur=lastCurrent||window._cur||0;
-  /* find rank1 support and resistance per mode */
-  const res=lines.filter(l=>l.type==='resistance');
-  const sup=lines.filter(l=>l.type==='support');
-  const rank1res=res.length?res[0].viewerTag:null;
-  const rank1sup=sup.length?sup[0].viewerTag:null;
   lines.forEach(c=>{
-    if(tl_visible[c.viewerTag]===undefined){
-      /* default: only rank1 res + rank1 sup on, plus 25% filter */
-      const isRank1=(c.viewerTag===rank1res||c.viewerTag===rank1sup);
-      tl_visible[c.viewerTag]=isRank1&&tl_getDefaultOn(c.viewerTag,c.now,cur);
-    }
+    /* defaults already set by tl_draw — just render buttons */
+    if(tl_visible[c.viewerTag]===undefined)tl_visible[c.viewerTag]=false;
     const off=tl_visible[c.viewerTag]===false;
     const col=c.type==='support'?'#22c55e':'#ef4444';
     const isWick=c.anchorBasis==='wick';
@@ -1785,6 +1779,19 @@ function tl_draw(mode){
     return;
   }
 
+  /* initialize visibility defaults BEFORE drawing so lines respect defaults */
+  const cur=lastCurrent||window._cur||0;
+  const res=lines.filter(l=>l.type==='resistance');
+  const sup=lines.filter(l=>l.type==='support');
+  const rank1res=res.length?res[0].viewerTag:null;
+  const rank1sup=sup.length?sup[0].viewerTag:null;
+  lines.forEach(c=>{
+    if(tl_visible[c.viewerTag]===undefined){
+      const isRank1=(c.viewerTag===rank1res||c.viewerTag===rank1sup);
+      tl_visible[c.viewerTag]=isRank1&&(!cur||Math.abs(c.now-cur)/cur<=0.25);
+    }
+  });
+
   const cs=tl_candles[mode]||[];
   if(!cs.length){document.getElementById('tlStatus').textContent='No candle data. Refresh to load.';return;}
 
@@ -1801,10 +1808,13 @@ function tl_draw(mode){
   if(!tl_draw._vs)tl_draw._vs={};
   if(tl_draw._vs[mode]===undefined){tl_draw._vs[mode]={start:null,end:null};}
   const zs=tl_draw._vs[mode];
-  const vs=zs.start!==null?Math.max(0,zs.start):0;
-  const ve=zs.end!==null?Math.min(cs.length-1,zs.end):cs.length-1;
+  /* vs/ve can be fractional for smooth pan — floor/ceil for slicing */
+  const vsF=zs.start!==null?zs.start:0;
+  const veF=zs.end!==null?zs.end:cs.length-1;
+  const vs=Math.max(0,Math.floor(vsF));
+  const ve=Math.min(cs.length-1,Math.ceil(veF));
   const visCs=cs.slice(vs,ve+1);
-  const span=ve-vs||1;
+  const span=veF-vsF||1;
 
   /* ── MA config per mode ── */
   const MA_CONFIG={
@@ -1863,7 +1873,9 @@ function tl_draw(mode){
   const rawHi=Math.max(...allPrices)*1.005;
   const ymin=tl_Y(rawLo,log),ymax=tl_Y(rawHi,log);
 
-  const x=i=>pad.l+(i-vs)/span*(W-pad.l-pad.r);
+  const x=i=>pad.l+(i-vsF)/span*(W-pad.l-pad.r);
+  /* store y scale on svg for crosshair */
+  svg._ymin=ymin;svg._ymax=ymax;
   const y=p=>pad.t+(1-(tl_Y(Math.max(p,1e-9),log)-ymin)/(ymax-ymin))*(H-pad.t-pad.b);
 
   /* ── clip group ── */
@@ -1912,6 +1924,19 @@ function tl_draw(mode){
   bdr.setAttribute('x',pad.l);bdr.setAttribute('y',pad.t);
   bdr.setAttribute('width',W-pad.l-pad.r);bdr.setAttribute('height',H-pad.t-pad.b);
   bdr.setAttribute('fill','none');bdr.setAttribute('stroke','rgba(148,163,184,.18)');add(bdr);
+
+  /* crosshair elements — drawn last so they appear on top */
+  const chLine=document.createElementNS('http://www.w3.org/2000/svg','line');
+  chLine.setAttribute('x1',pad.l);chLine.setAttribute('x2',W-pad.r);
+  chLine.setAttribute('y1',0);chLine.setAttribute('y2',0);
+  chLine.setAttribute('stroke','rgba(148,163,184,.5)');chLine.setAttribute('stroke-width','1');
+  chLine.setAttribute('stroke-dasharray','4,3');chLine.setAttribute('class','tl-crosshair');
+  add(chLine);
+  /* price dot on y axis */
+  const chDot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  chDot.setAttribute('cx',pad.l);chDot.setAttribute('cy',0);chDot.setAttribute('r','4');
+  chDot.setAttribute('fill','#60a5fa');chDot.setAttribute('class','tl-crosshair');
+  add(chDot);
 
   /* ── OHLC candles ── */
   const cw=Math.max(1,(W-pad.l-pad.r)/span*0.7);
@@ -2143,17 +2168,7 @@ async function tl_fetchOCData(){
       try{
         const url=`https://bitview.space/api/series/${name}/day1?start=${start}`;
         const data=await fetchJsonTimed(url,12000);
-        /* log raw to diagnostics for debugging */
-        if(key==='RP'){
-          const db=$('diagBody');
-          if(db){
-            const div=document.createElement('div');
-            div.style.cssText='margin-top:4px;font-size:10px;color:#fbbf24;font-family:var(--mono);word-break:break-all';
-            div.textContent='OC raw RP: '+JSON.stringify(data).slice(0,300);
-            db.appendChild(div);
-          }
-        }
-        console.log(`OC raw ${key}:`,JSON.stringify(data).slice(0,200));
+        /* format verified: {version,start,end,data:[...]} with genesis epoch */
         /* BitView format: {version, start, end, data:[v0,v1,...]}
            start/end = days since Bitcoin genesis (2009-01-03)
            data[i] = value for day (start+i) */
@@ -2217,10 +2232,19 @@ async function tl_fetchOCData(){
   function setView(mode,vs,ve){
     const cs=tl_candles[mode]||[];
     if(!cs.length)return;
+    /* enforce minimum span to prevent zoom-on-pan-edge */
     const minSpan=5;
-    if(ve-vs<minSpan){const mid=Math.round((vs+ve)/2);vs=mid-minSpan/2;ve=mid+minSpan/2;}
+    const origSpan=ve-vs;
+    if(origSpan<minSpan){const mid=(vs+ve)/2;vs=mid-minSpan/2;ve=mid+minSpan/2;}
+    /* allow panning one full screen beyond data edges */
+    const span=ve-vs;
+    const maxLeft=-(span*0.9);      /* leftmost candle can reach right edge */
+    const maxRight=(cs.length-1)+(span*0.9); /* rightmost candle can reach left edge */
+    /* clamp while preserving span — no zoom from hitting edge */
+    if(vs<maxLeft){vs=maxLeft;ve=vs+span;}
+    if(ve>maxRight){ve=maxRight;vs=ve-span;}
     if(!tl_draw._vs)tl_draw._vs={};
-    tl_draw._vs[mode]={start:Math.max(0,Math.round(vs)),end:Math.min(cs.length-1,Math.round(ve))};
+    tl_draw._vs[mode]={start:vs,end:ve};
     tl_draw(mode);
   }
 
@@ -2260,6 +2284,58 @@ async function tl_fetchOCData(){
     setView(mode,dragVS+dI,dragVE+dI);
   });
   window.addEventListener('mouseup',()=>{dragging=false;const svg=getSvg();if(svg)svg.style.cursor='default';});
+
+  /* crosshair: show on mousemove over SVG */
+  document.addEventListener('mousemove',e=>{
+    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
+    const mode=tlViewerMode;
+    const zs=getView(mode);if(!zs)return;
+    const vsF=zs.start!==null?zs.start:0;
+    const veF=zs.end!==null?zs.end:(tl_candles[mode]||[]).length-1;
+    const rect=svg.getBoundingClientRect();
+    const log=TL_DEFAULTS[mode]&&TL_DEFAULTS[mode].log;
+    if(!svg._ymin&&svg._ymin!==0)return;
+    /* SVG uses viewBox 0 0 1100 480, rendered at actual rect dimensions
+       Convert mouse position to SVG coordinate space first */
+    const svgH=480,svgPad={t:20,b:50};
+    const chartH=svgH-svgPad.t-svgPad.b; /* 410 SVG units */
+    /* mouse y relative to top of chart area in SVG units */
+    const mouseYsvg=(e.clientY-rect.top)/rect.height*svgH;
+    const syPos=Math.max(svgPad.t,Math.min(svgPad.t+chartH,mouseYsvg));
+    /* convert SVG y to price using stored scale */
+    const yFrac=1-(syPos-svgPad.t)/chartH;
+    const yLogVal=svg._ymin+yFrac*(svg._ymax-svg._ymin);
+    const yVal=tl_invY(yLogVal,log);
+    if(!Number.isFinite(yVal)||yVal<=0)return;
+    svg.querySelectorAll('.tl-crosshair').forEach(el=>{
+      el.style.display='';
+      el.setAttribute('y1',syPos);el.setAttribute('y2',syPos);
+      el.setAttribute('cy',syPos);
+    });
+    /* price label */
+    const lbl=document.getElementById('tlCrosshairPrice');
+    if(lbl){
+      lbl.style.display='block';
+      lbl.style.top=(e.clientY-rect.top)/rect.height*100+'%';
+      lbl.textContent='$'+Math.round(yVal).toLocaleString();
+    }
+  });
+  document.addEventListener('mouseleave',e=>{
+    const svg=getSvg();
+    if(svg){svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');}
+    const lbl=document.getElementById('tlCrosshairPrice');
+    if(lbl)lbl.style.display='none';
+  });
+  /* also hide when mouse leaves SVG */
+  document.addEventListener('mousemove',e=>{
+    const svg=getSvg();if(!svg)return;
+    if(!svg.contains(e.target)){
+      svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
+      const lbl=document.getElementById('tlCrosshairPrice');
+      if(lbl)lbl.style.display='none';
+    }
+  });
+
   document.addEventListener('dblclick',e=>{
     const svg=getSvg();if(!svg||!svg.contains(e.target))return;
     if(!tl_draw._vs)return;
@@ -2269,10 +2345,18 @@ async function tl_fetchOCData(){
 
   /* touch */
   let tPan=false,tX=0,tVS=0,tVE=0,pDist=0,pVS=0,pVE=0,pFrac=0;
+  let tLastTap=0;
   document.addEventListener('touchstart',e=>{
     const svg=getSvg();if(!svg||!svg.contains(e.target))return;
     e.preventDefault();
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
+    /* double-tap reset */
+    const now=Date.now();
+    if(e.touches.length===1&&now-tLastTap<300){
+      if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
+      tl_draw(mode);tLastTap=0;return;
+    }
+    if(e.touches.length===1)tLastTap=now;
     const zs=getView(mode);
     const vs=zs&&zs.start!==null?zs.start:0;
     const ve=zs&&zs.end!==null?zs.end:cs.length-1;
