@@ -1058,7 +1058,7 @@ function renderChart(cur,ma,oc,tl=[]){
     el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{if(window._recentTouch)return;hideTip();clearHl()});
     /* mobile: only badge opens tooltip */
-    const badge=el.querySelector('.lbl-badge');
+    const badge=el.querySelector('.lbl-badge,.zone-badge');
     if(badge){
       badge.addEventListener('touchstart',e=>{
         window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
