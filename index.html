@@ -256,7 +256,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel,.xLabel{fill:#64748b;font-size:13px;font-family:var(--mono)}
+.axisLabel{fill:#94a3b8;font-size:12px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:11px;font-family:var(--mono)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
@@ -385,8 +385,9 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
     <div class="tl-chart-wrap" style="position:relative">
-      <svg id="tlSvg" viewBox="0 0 1100 480" preserveAspectRatio="none" style="height:360px;cursor:default"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default"></svg>
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
+      <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
     </div>
     <div id="tlTip" class="tlTip"></div>
     <div id="tlLegendWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
@@ -1815,7 +1816,7 @@ function tl_draw(mode){
   const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
   const log=TL_DEFAULTS[mode].log;
 
-  const W=1100,H=480,pad={l:70,r:35,t:20,b:50};
+  const W=1100,H=520,pad={l:62,r:20,t:12,b:36};
   const add=e=>{svg.appendChild(e);return e};
 
   /* ── zoom state ── */
@@ -1917,18 +1918,19 @@ function tl_draw(mode){
   }
 
   /* ── x-axis labels ── */
+  const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   let lastLbl=null;const lbls=[];
   visCs.forEach((c,i)=>{
     const d=new Date(c.t);
-    const lbl=mode==='1d'?`${d.getUTCMonth()+1}/${d.getUTCDate()}`
-              :mode==='1w'?`${d.getUTCFullYear()}-Q${Math.ceil((d.getUTCMonth()+1)/3)}`
-              :`${d.getUTCFullYear()}`;
-    if(lbl!==lastLbl){lbls.push({i:vs+i,lbl});lastLbl=lbl;}
+    const mon=MSHORT[d.getUTCMonth()];
+    const lbl=mode==='1M'?`${mon} ${String(d.getUTCFullYear()).slice(2)}`
+              :`${d.getUTCDate()} ${mon}`;
+    if(lbl!==lastLbl){lbls.push({i:vs+i,lbl,t:c.t});lastLbl=lbl;}
   });
-  const lstep=Math.max(1,Math.ceil(lbls.length/8));
+  const lstep=Math.max(1,Math.ceil(lbls.length/7));
   lbls.filter((_,i)=>i%lstep===0).forEach(d=>{
     const lt=document.createElementNS('http://www.w3.org/2000/svg','text');
-    lt.setAttribute('x',x(d.i));lt.setAttribute('y',H-10);
+    lt.setAttribute('x',x(d.i));lt.setAttribute('y',H-8);
     lt.setAttribute('text-anchor','middle');lt.setAttribute('class','xLabel');
     lt.textContent=d.lbl;add(lt);
   });
@@ -1946,6 +1948,14 @@ function tl_draw(mode){
   chLine.setAttribute('stroke','rgba(148,163,184,.5)');chLine.setAttribute('stroke-width','1');
   chLine.setAttribute('stroke-dasharray','4,3');chLine.setAttribute('class','tl-crosshair');
   add(chLine);
+  /* vertical crosshair line */
+  const chVLine=document.createElementNS('http://www.w3.org/2000/svg','line');
+  chVLine.setAttribute('id','tlChVLine');
+  chVLine.setAttribute('x1',0);chVLine.setAttribute('x2',0);
+  chVLine.setAttribute('y1',pad.t);chVLine.setAttribute('y2',H-pad.b);
+  chVLine.setAttribute('stroke','rgba(148,163,184,.5)');chVLine.setAttribute('stroke-width','1');
+  chVLine.setAttribute('stroke-dasharray','4,3');chVLine.setAttribute('class','tl-crosshair');
+  add(chVLine);
   /* price dot on y axis */
   const chDot=document.createElementNS('http://www.w3.org/2000/svg','circle');
   chDot.setAttribute('cx',pad.l);chDot.setAttribute('cy',0);chDot.setAttribute('r','4');
@@ -2061,7 +2071,9 @@ function tl_draw(mode){
     const isWick=c.anchorBasis==='wick';
     const tll=document.createElementNS('http://www.w3.org/2000/svg','line');
     const x1=x(Math.max(vs,c.a.i)),y1=y(c.line.project(Math.max(vs,c.a.i)));
-    const x2=x(Math.min(ve,cs.length-1)),y2=y(c.line.project(Math.min(ve,cs.length-1)));
+    /* extend as ray into empty right panning space */
+    const rayEnd=veF+Math.max(10,(veF-vsF)*0.3);
+    const x2=x(rayEnd),y2=y(c.line.project(rayEnd));
     tll.setAttribute('x1',x1);tll.setAttribute('y1',y1);
     tll.setAttribute('x2',x2);tll.setAttribute('y2',y2);
     tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',idx<3?3:2);
@@ -2311,7 +2323,7 @@ async function tl_fetchOCData(){
     if(!svg._ymin&&svg._ymin!==0)return;
     /* SVG uses viewBox 0 0 1100 480, rendered at actual rect dimensions
        Convert mouse position to SVG coordinate space first */
-    const svgH=480,svgPad={t:20,b:50};
+    const svgH=520,svgPad={t:12,b:36};
     const chartH=svgH-svgPad.t-svgPad.b; /* 410 SVG units */
     /* mouse y relative to top of chart area in SVG units */
     const mouseYsvg=(e.clientY-rect.top)/rect.height*svgH;
@@ -2388,6 +2400,11 @@ async function tl_fetchOCData(){
     e.preventDefault();
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const rect=svg.getBoundingClientRect();const W=rect.width-105;
+    /* if crosshair mode active: move crosshair, no pan */
+    if(_tlLongPressActive&&e.touches.length===1){
+      tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
+      return;
+    }
     if(e.touches.length===1&&tPan){
       const span=tVE-tVS;
       setView(mode,tVS-(e.touches[0].clientX-tX)/W*span,tVE-(e.touches[0].clientX-tX)/W*span);
@@ -2398,7 +2415,113 @@ async function tl_fetchOCData(){
       setView(mode,pivot-pFrac*newSpan,pivot+(1-pFrac)*newSpan);
     }
   },{passive:false});
-  document.addEventListener('touchend',e=>{if(e.touches.length===0)tPan=false;},{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(e.touches.length===0){
+      tPan=false;
+      /* hide crosshair on touch end */
+      const svg=getSvg();
+      if(svg)svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
+      const lbl=document.getElementById('tlCrosshairPrice');
+      if(lbl)lbl.style.display='none';
+      const dateLbl=document.getElementById('tlCrosshairDate');
+      if(dateLbl)dateLbl.style.display='none';
+      const tip=document.getElementById('tlTip');
+      if(tip)tip.style.display='none';
+      if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
+      _tlLongPressActive=false;
+    }
+  },{passive:true});
+
+  /* long-press: show crosshair + OHLC tooltip on touch */
+  let _tlLongPress=null,_tlLongPressActive=false;
+
+  function tl_showCrosshairAt(clientX,clientY){
+    const svg=getSvg();if(!svg)return;
+    const mode=tlViewerMode;
+    const zs=getView(mode);if(!zs)return;
+    const rect=svg.getBoundingClientRect();
+    const svgH=520,svgPad={t:12,b:36};
+    const chartH=svgH-svgPad.t-svgPad.b;
+    const mouseYsvg=(clientY-rect.top)/rect.height*svgH;
+    const syPos=Math.max(svgPad.t,Math.min(svgPad.t+chartH,mouseYsvg));
+    const log=TL_DEFAULTS[mode]&&TL_DEFAULTS[mode].log;
+    if(!svg._ymin&&svg._ymin!==0)return;
+    const yFrac=1-(syPos-svgPad.t)/chartH;
+    const yVal=tl_invY(svg._ymin+yFrac*(svg._ymax-svg._ymin),log);
+    if(!Number.isFinite(yVal)||yVal<=0)return;
+    svg.querySelectorAll('.tl-crosshair').forEach(el=>{
+      el.style.display='';
+      el.setAttribute('y1',syPos);el.setAttribute('y2',syPos);el.setAttribute('cy',syPos);
+    });
+    const priceEl=document.getElementById('tlCrosshairPrice');
+    if(priceEl){
+      priceEl.style.display='block';
+      priceEl.style.top=(clientY-rect.top)/rect.height*100+'%';
+      priceEl.textContent='$'+Math.round(yVal).toLocaleString();
+    }
+    /* update vertical crosshair line */
+    const svgW=1100,padL=62,padR=20;
+    const mouseXsvg=(clientX-rect.left)/rect.width*svgW;
+    const vl=svg.querySelector('#tlChVLine');
+    if(vl){vl.setAttribute('x1',mouseXsvg);vl.setAttribute('x2',mouseXsvg);}
+    /* find nearest candle for OHLC tooltip */
+    const cs=tl_candles[mode]||[];if(!cs.length)return;
+    const vsF=zs.start!==null?zs.start:0;
+    const veF=zs.end!==null?zs.end:cs.length-1;
+    const span=veF-vsF||1;
+    const W=svgW;
+    const candleIdx=Math.round(vsF+(mouseXsvg-padL)/(W-padL-padR)*span);
+    const ci=Math.max(0,Math.min(cs.length-1,candleIdx));
+    const c=cs[ci];
+    if(c){
+      const tip=document.getElementById('tlTip');
+      if(tip){
+        const d=new Date(c.t);
+        const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const dateStr=`${d.getUTCDate()} ${MSHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+        /* show date label near x-axis */
+        const dateLbl=document.getElementById('tlCrosshairDate');
+        if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dateStr;
+          dateLbl.style.left=(clientX-rect.left)/rect.width*100+'%';}
+        tip.innerHTML=`<div style="font-size:11px;color:#94a3b8;margin-bottom:3px">${dateStr}</div>`+
+          `<div style="font-size:12px;font-family:var(--mono);line-height:1.7">`+
+          `<span style="color:#94a3b8">O</span> ${tl_fmtPrice(c.open)}&nbsp;&nbsp;`+
+          `<span style="color:#94a3b8">H</span> ${tl_fmtPrice(c.high)}<br>`+
+          `<span style="color:#94a3b8">L</span> ${tl_fmtPrice(c.low)}&nbsp;&nbsp;`+
+          `<span style="color:#94a3b8">C</span> ${tl_fmtPrice(c.close)}</div>`;
+        tip.style.display='block';
+        tip.style.left=(clientX+12)+'px';
+        tip.style.top=(clientY-60)+'px';
+      }
+    }
+  }
+
+  document.addEventListener('touchstart',e=>{
+    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
+    if(e.touches.length!==1)return;
+    _tlLongPressActive=false;
+    const t=e.touches[0];
+    const startX=t.clientX,startY=t.clientY;
+    _tlLongPress=setTimeout(()=>{
+      _tlLongPress=null;
+      _tlLongPressActive=true;
+      tPan=false; /* disable pan while crosshair active */
+      tl_showCrosshairAt(startX,startY);
+    },500);
+  },{passive:true});
+
+  document.addEventListener('touchmove',e=>{
+    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
+    if(e.touches.length!==1)return;
+    /* cancel long press if moved more than 10px before it fires */
+    if(_tlLongPress&&!_tlLongPressActive){
+      const t=e.touches[0];
+      const moved=Math.sqrt((t.clientX-tX)**2+(t.clientY-tY)**2);
+      if(moved>10){clearTimeout(_tlLongPress);_tlLongPress=null;}
+      return; /* let main touchmove handler run */
+    }
+  },{passive:true});
+
 })();
 
 
