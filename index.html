@@ -2437,7 +2437,8 @@ async function tl_fetchOCData(){
     }
   },{passive:false});
   document.addEventListener('touchmove',e=>{
-    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
+    if(!tPan&&!_tlLongPressActive&&!pDist)return; /* not in any active gesture */
+    const svg=getSvg();if(!svg)return;
     e.preventDefault();
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const rect=svg.getBoundingClientRect();const W=rect.width-105;
@@ -2463,7 +2464,7 @@ async function tl_fetchOCData(){
   },{passive:false});
   document.addEventListener('touchend',e=>{
     if(e.touches.length===0){
-      tPan=false;
+      tPan=false;pDist=0;
       /* hide crosshair on touch end */
       const svg=getSvg();
       if(svg)svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
