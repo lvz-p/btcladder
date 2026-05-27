@@ -79,7 +79,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;min-width:120px}
 .stat-card .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
 .stat-card .val{font-size:14px;font-weight:700;margin-top:3px;font-family:var(--mono);white-space:nowrap}
-.val.s{color:var(--green)}.val.r{color:var(--red)}
+.val.s{color:var(--red)}.val.r{color:var(--green)}
 
 /* FILTERS */
 .filter-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -120,7 +120,7 @@ button.leg.tog#urpdBtn.on{background:rgba(96,165,250,.10)!important;border-color
 
 /* CHART */
 .chart-shell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;position:relative}
-.chart-inner{display:grid;grid-template-columns:44px 1fr 220px;align-items:stretch;position:relative}
+.chart-inner{display:grid;grid-template-columns:44px 1fr 260px;align-items:stretch;position:relative}
 .axis-price-col{padding:0;position:relative;flex-shrink:0;border-right:1px solid var(--border)}
 .tick-lbl{position:absolute;right:8px;font-size:12px;color:var(--muted2);font-family:var(--mono);transform:translateY(-50%);white-space:nowrap;line-height:1}
 .canvas-col{position:relative;overflow:hidden}
@@ -318,8 +318,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="price-sub" id="priceSub">Loading from exchanges…</div>
   </div>
   <div class="hero-stats">
-    <div class="stat-card"><div class="lbl">Next support</div><div class="val s" id="supportVal">—</div></div>
-    <div class="stat-card"><div class="lbl">Next resistance</div><div class="val r" id="resistVal">—</div></div>
+    <div class="stat-card"><div class="lbl" style="color:var(--red)">Next lower</div><div class="val s" id="supportVal"><span id="supportName" style="font-size:13px;font-weight:700"></span> <span id="supportPrice">—</span></div></div>
+    <div class="stat-card"><div class="lbl" style="color:var(--green)">Next higher</div><div class="val r" id="resistVal"><span id="resistName" style="font-size:13px;font-weight:700"></span> <span id="resistPrice">—</span></div></div>
   </div>
 </div>
 
@@ -1393,8 +1393,22 @@ function renderTable(cur,ma,oc,tl=[]){
 function renderSummary(cur,levels){
   const sup=levels.filter(l=>l.price<cur&&l.type!=='current').sort((a,b)=>b.price-a.price)[0];
   const res=levels.filter(l=>l.price>cur&&l.type!=='current').sort((a,b)=>a.price-b.price)[0];
-  $('supportVal').textContent=sup?`${levelCode(sup)} ${fmt(sup.price)}`:'—';
-  $('resistVal').textContent=res?`${levelCode(res)} ${fmt(res.price)}`:'—';
+  if(sup){
+    const sn=$('supportName'),sp=$('supportPrice');
+    if(sn){sn.textContent=levelCode(sup);sn.style.color=levelColor(sup);}
+    if(sp){sp.textContent=fmt(sup.price);sp.style.color='var(--red)';}
+  } else {
+    const sp=$('supportPrice');if(sp){sp.textContent='—';sp.style.color='var(--red)';}
+    const sn=$('supportName');if(sn)sn.textContent='';
+  }
+  if(res){
+    const rn=$('resistName'),rp=$('resistPrice');
+    if(rn){rn.textContent=levelCode(res);rn.style.color=levelColor(res);}
+    if(rp){rp.textContent=fmt(res.price);rp.style.color='var(--green)';}
+  } else {
+    const rp=$('resistPrice');if(rp){rp.textContent='—';rp.style.color='var(--green)';}
+    const rn=$('resistName');if(rn)rn.textContent='';
+  }
 }
 function renderDiag(){
   /* TL per-timeframe summary */
