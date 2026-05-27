@@ -385,7 +385,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
     <div class="tl-chart-wrap" style="position:relative">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all"></svg>
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
       <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
     </div>
@@ -1786,6 +1786,8 @@ function tl_draw(mode){
   const svg=document.getElementById('tlSvg');
   const tip=document.getElementById('tlTip');
   if(!svg)return;
+  /* preserve crosshair visibility across redraws */
+  const _chWasVisible=svg.querySelector('.tl-crosshair')?.style.display==='inline';
   svg.innerHTML='';
 
   const lines=tl_cands[mode];
@@ -1945,7 +1947,7 @@ function tl_draw(mode){
   const chLine=document.createElementNS('http://www.w3.org/2000/svg','line');
   chLine.setAttribute('x1',pad.l);chLine.setAttribute('x2',W-pad.r);
   chLine.setAttribute('y1',0);chLine.setAttribute('y2',0);
-  chLine.setAttribute('stroke','rgba(148,163,184,.5)');chLine.setAttribute('stroke-width','1');
+  chLine.setAttribute('stroke','rgba(226,232,240,.75)');chLine.setAttribute('stroke-width','1');
   chLine.setAttribute('stroke-dasharray','4,3');chLine.setAttribute('class','tl-crosshair');
   add(chLine);
   /* vertical crosshair line */
@@ -1953,14 +1955,18 @@ function tl_draw(mode){
   chVLine.setAttribute('id','tlChVLine');
   chVLine.setAttribute('x1',0);chVLine.setAttribute('x2',0);
   chVLine.setAttribute('y1',pad.t);chVLine.setAttribute('y2',H-pad.b);
-  chVLine.setAttribute('stroke','rgba(148,163,184,.5)');chVLine.setAttribute('stroke-width','1');
+  chVLine.setAttribute('stroke','rgba(226,232,240,.75)');chVLine.setAttribute('stroke-width','1');
   chVLine.setAttribute('stroke-dasharray','4,3');chVLine.setAttribute('class','tl-crosshair');
   add(chVLine);
   /* price dot on y axis */
   const chDot=document.createElementNS('http://www.w3.org/2000/svg','circle');
   chDot.setAttribute('cx',pad.l);chDot.setAttribute('cy',0);chDot.setAttribute('r','4');
-  chDot.setAttribute('fill','#60a5fa');chDot.setAttribute('class','tl-crosshair');
+  chDot.setAttribute('fill','#93c5fd');chDot.setAttribute('r','5');chDot.setAttribute('class','tl-crosshair');
   add(chDot);
+  /* restore crosshair visibility if it was visible before redraw */
+  if(_chWasVisible){
+    [chLine,chVLine,chDot].forEach(el=>el.style.display='inline');
+  }
 
   /* ── OHLC candles ── */
   const cw=Math.max(1,(W-pad.l-pad.r)/span*0.7);
@@ -2292,6 +2298,7 @@ async function tl_fetchOCData(){
 
   let dragging=false,dragX=0,dragVS=0,dragVE=0;
   document.addEventListener('mousedown',e=>{
+    if(window._recentTouch)return;
     const svg=getSvg();if(!svg||!svg.contains(e.target)||e.button!==0)return;
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const zs=getView(mode);
@@ -2301,7 +2308,7 @@ async function tl_fetchOCData(){
     svg.style.cursor='grabbing';e.preventDefault();
   });
   window.addEventListener('mousemove',e=>{
-    if(!dragging)return;
+    if(!dragging||window._recentTouch)return;
     const svg=getSvg();if(!svg)return;
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const rect=svg.getBoundingClientRect();
@@ -2309,18 +2316,30 @@ async function tl_fetchOCData(){
     const dI=-(e.clientX-dragX)/(rect.width-105)*span;
     setView(mode,dragVS+dI,dragVE+dI);
   });
-  window.addEventListener('mouseup',()=>{dragging=false;const svg=getSvg();if(svg)svg.style.cursor='default';});
+  window.addEventListener('mouseup',()=>{if(window._recentTouch)return;dragging=false;const svg=getSvg();if(svg)svg.style.cursor='default';});
 
   /* crosshair: show on mousemove over SVG */
+  let _chDebugLogged=false;
   document.addEventListener('mousemove',e=>{
-    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
-    const mode=tlViewerMode;
-    const zs=getView(mode);if(!zs)return;
-    const vsF=zs.start!==null?zs.start:0;
-    const veF=zs.end!==null?zs.end:(tl_candles[mode]||[]).length-1;
+    const svg=getSvg();if(!svg)return;
     const rect=svg.getBoundingClientRect();
+    if(rect.width===0||rect.height===0)return; /* section closed */
+    /* check if mouse is within SVG bounds */
+    if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom){
+      /* hide crosshair when outside */
+      svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
+      const lbl=document.getElementById('tlCrosshairPrice');if(lbl)lbl.style.display='none';
+      const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
+      return;
+    }
+    if(!_chDebugLogged){_chDebugLogged=true;console.log('crosshair firing, _ymin=',svg._ymin,'rect=',Math.round(rect.width),Math.round(rect.height),Math.round(rect.left),Math.round(rect.top));}
+    const mode=tlViewerMode;
+    /* only process if tl_draw has run and set scale */
+    if(svg._ymin===undefined||svg._ymax===undefined)return;
     const log=TL_DEFAULTS[mode]&&TL_DEFAULTS[mode].log;
-    if(!svg._ymin&&svg._ymin!==0)return;
+    const zs=getView(mode);
+    const vsF=zs&&zs.start!==null?zs.start:0;
+    const veF=zs&&zs.end!==null?zs.end:(tl_candles[mode]||[]).length-1;
     /* SVG uses viewBox 0 0 1100 480, rendered at actual rect dimensions
        Convert mouse position to SVG coordinate space first */
     const svgH=520,svgPad={t:12,b:36};
@@ -2333,11 +2352,36 @@ async function tl_fetchOCData(){
     const yLogVal=svg._ymin+yFrac*(svg._ymax-svg._ymin);
     const yVal=tl_invY(yLogVal,log);
     if(!Number.isFinite(yVal)||yVal<=0)return;
+    /* update horizontal elements */
     svg.querySelectorAll('.tl-crosshair').forEach(el=>{
-      el.style.display='';
-      el.setAttribute('y1',syPos);el.setAttribute('y2',syPos);
-      el.setAttribute('cy',syPos);
+      el.style.display='inline';
+      if(el.getAttribute('y1')!==null&&el.id!=='tlChVLine'){
+        el.setAttribute('y1',syPos);el.setAttribute('y2',syPos);
+      }
+      if(el.getAttribute('cy')!==null)el.setAttribute('cy',syPos);
     });
+    /* update vertical line x position */
+    const mouseXsvg2=(e.clientX-rect.left)/rect.width*1100;
+    const vl=svg.querySelector('#tlChVLine');
+    if(vl){vl.setAttribute('x1',mouseXsvg2);vl.setAttribute('x2',mouseXsvg2);vl.style.display='inline';}
+    /* find nearest candle for date label */
+    const modeD=tlViewerMode;const zsD=getView(modeD);
+    if(zsD){
+      const csD=tl_candles[modeD]||[];
+      const vsFD=zsD.start!==null?zsD.start:0;
+      const veFD=zsD.end!==null?zsD.end:csD.length-1;
+      const spanD=veFD-vsFD||1;
+      const cidxD=Math.round(vsFD+(mouseXsvg2-62)/(1100-62-20)*spanD);
+      const cd=csD[Math.max(0,Math.min(csD.length-1,cidxD))];
+      if(cd){
+        const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const dd=new Date(cd.t);
+        const dStr=`${dd.getUTCDate()} ${MSHORT[dd.getUTCMonth()]} ${dd.getUTCFullYear()}`;
+        const dateLbl=document.getElementById('tlCrosshairDate');
+        if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dStr;
+          dateLbl.style.left=(e.clientX-rect.left)/rect.width*100+'%';}
+      }
+    }
     /* price label */
     const lbl=document.getElementById('tlCrosshairPrice');
     if(lbl){
@@ -2352,15 +2396,7 @@ async function tl_fetchOCData(){
     const lbl=document.getElementById('tlCrosshairPrice');
     if(lbl)lbl.style.display='none';
   });
-  /* also hide when mouse leaves SVG */
-  document.addEventListener('mousemove',e=>{
-    const svg=getSvg();if(!svg)return;
-    if(!svg.contains(e.target)){
-      svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
-      const lbl=document.getElementById('tlCrosshairPrice');
-      if(lbl)lbl.style.display='none';
-    }
-  });
+  /* hide crosshair when mouse leaves SVG bounds — handled in mouseleave */
 
   document.addEventListener('dblclick',e=>{
     const svg=getSvg();if(!svg||!svg.contains(e.target))return;
@@ -2370,11 +2406,12 @@ async function tl_fetchOCData(){
   });
 
   /* touch */
-  let tPan=false,tX=0,tVS=0,tVE=0,pDist=0,pVS=0,pVE=0,pFrac=0;
+  let tPan=false,tX=0,tY=0,tVS=0,tVE=0,pDist=0,pVS=0,pVE=0,pFrac=0;
   let tLastTap=0;
   document.addEventListener('touchstart',e=>{
     const svg=getSvg();if(!svg||!svg.contains(e.target))return;
     e.preventDefault();
+    window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     /* double-tap reset */
     const now=Date.now();
@@ -2386,7 +2423,11 @@ async function tl_fetchOCData(){
     const zs=getView(mode);
     const vs=zs&&zs.start!==null?zs.start:0;
     const ve=zs&&zs.end!==null?zs.end:cs.length-1;
-    if(e.touches.length===1){tPan=true;tX=e.touches[0].clientX;tVS=vs;tVE=ve;}
+    if(e.touches.length===1){
+      tPan=true;
+      tX=e.touches[0].clientX;tY=e.touches[0].clientY;
+      tVS=vs;tVE=ve;
+    }
     else if(e.touches.length===2){
       tPan=false;
       const rect=svg.getBoundingClientRect();
@@ -2400,6 +2441,11 @@ async function tl_fetchOCData(){
     e.preventDefault();
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const rect=svg.getBoundingClientRect();const W=rect.width-105;
+    /* cancel long press if finger moved >8px */
+    if(_tlLongPress&&!_tlLongPressActive&&e.touches.length===1){
+      const moved=Math.abs(e.touches[0].clientX-tX);
+      if(moved>8){clearTimeout(_tlLongPress);_tlLongPress=null;}
+    }
     /* if crosshair mode active: move crosshair, no pan */
     if(_tlLongPressActive&&e.touches.length===1){
       tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
@@ -2450,8 +2496,13 @@ async function tl_fetchOCData(){
     const yVal=tl_invY(svg._ymin+yFrac*(svg._ymax-svg._ymin),log);
     if(!Number.isFinite(yVal)||yVal<=0)return;
     svg.querySelectorAll('.tl-crosshair').forEach(el=>{
-      el.style.display='';
-      el.setAttribute('y1',syPos);el.setAttribute('y2',syPos);el.setAttribute('cy',syPos);
+      el.style.display='inline';
+      /* only set y on horizontal line and dot, not vertical line */
+      if(el.id!=='tlChVLine'){
+        if(el.getAttribute('y1')!==null)el.setAttribute('y1',syPos);
+        if(el.getAttribute('y2')!==null)el.setAttribute('y2',syPos);
+      }
+      if(el.getAttribute('cy')!==null)el.setAttribute('cy',syPos);
     });
     const priceEl=document.getElementById('tlCrosshairPrice');
     if(priceEl){
@@ -2463,7 +2514,7 @@ async function tl_fetchOCData(){
     const svgW=1100,padL=62,padR=20;
     const mouseXsvg=(clientX-rect.left)/rect.width*svgW;
     const vl=svg.querySelector('#tlChVLine');
-    if(vl){vl.setAttribute('x1',mouseXsvg);vl.setAttribute('x2',mouseXsvg);}
+    if(vl){vl.setAttribute('x1',mouseXsvg);vl.setAttribute('x2',mouseXsvg);vl.style.display='inline';}
     /* find nearest candle for OHLC tooltip */
     const cs=tl_candles[mode]||[];if(!cs.length)return;
     const vsF=zs.start!==null?zs.start:0;
@@ -2510,17 +2561,7 @@ async function tl_fetchOCData(){
     },500);
   },{passive:true});
 
-  document.addEventListener('touchmove',e=>{
-    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
-    if(e.touches.length!==1)return;
-    /* cancel long press if moved more than 10px before it fires */
-    if(_tlLongPress&&!_tlLongPressActive){
-      const t=e.touches[0];
-      const moved=Math.sqrt((t.clientX-tX)**2+(t.clientY-tY)**2);
-      if(moved>10){clearTimeout(_tlLongPress);_tlLongPress=null;}
-      return; /* let main touchmove handler run */
-    }
-  },{passive:true});
+  /* long-press cancel merged into main touchmove handler */
 
 })();
 
