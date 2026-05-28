@@ -508,11 +508,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.1</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.2</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.1 PWA';
+const VERSION='BtcLadder v86.28.2 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1458,7 +1458,8 @@ function rerender(){
       const rect=svg?svg.getBoundingClientRect():{left:0,right:0,top:0,bottom:0,width:0};
       const t0=e.touches[0];
       const inB=rect.width>0&&t0.clientX>=rect.left&&t0.clientX<=rect.right&&t0.clientY>=rect.top&&t0.clientY<=rect.bottom;
-      _tlLog(`START n=${e.touches.length} inB=${inB} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)}@${Math.round(rect.left)},${Math.round(rect.top)} touch=${Math.round(t0.clientX)},${Math.round(t0.clientY)} tgt=${e.target.tagName}`);
+      const svgAttached=!!(svg&&svg._tlTouchAttached);
+      _tlLog(`START n=${e.touches.length} inB=${inB} att=${svgAttached} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)}@${Math.round(rect.left)},${Math.round(rect.top)} touch=${Math.round(t0.clientX)},${Math.round(t0.clientY)} tgt=${e.target.tagName}`);
     },{passive:true});
     document.addEventListener('touchmove',e=>{
       _tlLog(`MOVE n=${e.touches.length} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} lpa=${!!window._tlDiag_lpa}`);
@@ -2438,106 +2439,128 @@ async function tl_fetchOCData(){
     tl_draw(tlViewerMode);
   });
 
-  /* ── TOUCH: pan, pinch-zoom, long-press crosshair ── */
+  /* ── TOUCH: all handlers on SVG element with touch-action:none ────────────
+     SVG has touch-action:none in HTML — browser won't scroll/zoom it.
+     All touch logic is on the SVG element itself (not document) so we can
+     safely call preventDefault without blocking page scrolling elsewhere.
+     Document-level touchmove for long-press crosshair update is passive:true.
+  ── */
   let tPan=false,tX=0,tY=0,tVS=0,tVE=0;
   let tPinch=false,pDist=0,pVS=0,pVE=0,pFrac=0;
   let tLastTap=0;
   let _tlLongPress=null,_tlLongPressActive=false;
 
-  /* attach touchstart directly to SVG so it fires before browser scroll */
+  function _tlResetTouchState(){
+    tPan=false;tPinch=false;_tlLongPressActive=false;
+    if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
+    window._tlDiag_tPan=false;window._tlDiag_tPinch=false;window._tlDiag_lpa=false;
+  }
+
+  function _tlHideCrosshair(){
+    const svg=getSvg();
+    if(svg)svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
+    const lbl=document.getElementById('tlCrosshairPrice');if(lbl)lbl.style.display='none';
+    const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
+    const tip=document.getElementById('tlTip');if(tip)tip.style.display='none';
+  }
+
   function _tlAttachTouch(){
     const svg=getSvg();if(!svg||svg._tlTouchAttached)return;
     svg._tlTouchAttached=true;
+
     svg.addEventListener('touchstart',e=>{
-    const rect=svg.getBoundingClientRect();
-    e.preventDefault();
-    window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
-    const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
-    const zs=getView(mode);
-    const vs=zs&&zs.start!==null?zs.start:0;
-    const ve=zs&&zs.end!==null?zs.end:cs.length-1;
-
-    /* cancel any pending long-press */
-    if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
-    _tlLongPressActive=false;
-
-    if(e.touches.length===1){
-      /* double-tap reset */
-      const now=Date.now();
-      if(now-tLastTap<300){
-        if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
-        tl_draw(mode);tLastTap=0;return;
-      }
-      tLastTap=now;
-      tPan=true;tPinch=false;window._tlDiag_tPan=true;window._tlDiag_tPinch=false;
-      tX=e.touches[0].clientX;tY=e.touches[0].clientY;
-      tVS=vs;tVE=ve;
-      /* start long-press timer */
-      _tlLongPress=setTimeout(()=>{
-        _tlLongPress=null;
-        _tlLongPressActive=true;window._tlDiag_lpa=true;
-        tPan=false;
-        tl_showCrosshairAt(tX,tY);
-      },500);
-    } else if(e.touches.length===2){
-      tPan=false;tPinch=true;window._tlDiag_tPan=false;window._tlDiag_tPinch=true;
-      pDist=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
-      pVS=vs;pVE=ve;
-      pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left-70)/(rect.width-105)));
-    }
-  },{passive:false});
-  } /* end _tlAttachTouch */
-
-  document.addEventListener('touchmove',e=>{
-    if(!tPan&&!tPinch&&!_tlLongPressActive)return;
-    const svg=getSvg();if(!svg)return;
-    e.preventDefault();
-    const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
-    const rect=svg.getBoundingClientRect();
-
-    if(_tlLongPressActive&&e.touches.length===1){
-      tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
-      return;
-    }
-    if(e.touches.length===1&&tPan){
-      /* cancel long-press if moved >8px */
-      if(_tlLongPress){
-        const moved=Math.abs(e.touches[0].clientX-tX);
-        if(moved>8){clearTimeout(_tlLongPress);_tlLongPress=null;}
-      }
-      const W=rect.width-105;
-      const span=tVE-tVS;
-      setView(mode,tVS-(e.touches[0].clientX-tX)/W*span,tVE-(e.touches[0].clientX-tX)/W*span);
-    } else if(e.touches.length===2&&tPinch){
-      const cur=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
-      const span=pVE-pVS;
-      const newSpan=Math.min(cs.length-1,Math.max(5,span*pDist/cur));
-      const pivot=pVS+pFrac*span;
-      setView(mode,pivot-pFrac*newSpan,pivot+(1-pFrac)*newSpan);
-    }
-  },{passive:false});
-
-  document.addEventListener('touchend',e=>{
-    if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
-    if(e.touches.length===0){
-      tPan=false;tPinch=false;_tlLongPressActive=false;window._tlDiag_tPan=false;window._tlDiag_tPinch=false;window._tlDiag_lpa=false;
-      const svg=getSvg();
-      if(svg)svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
-      const lbl=document.getElementById('tlCrosshairPrice');if(lbl)lbl.style.display='none';
-      const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
-      const tip=document.getElementById('tlTip');if(tip)tip.style.display='none';
-    } else if(e.touches.length===1&&tPinch){
-      /* went from 2 fingers to 1 — restart pan */
-      tPinch=false;tPan=true;
-      tX=e.touches[0].clientX;tY=e.touches[0].clientY;
-      const mode=tlViewerMode;const cs=tl_candles[mode]||[];
+      e.preventDefault(); /* safe: touch-action:none on SVG */
+      window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},600);
+      const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
       const zs=getView(mode);
-      tVS=zs&&zs.start!==null?zs.start:0;
-      tVE=zs&&zs.end!==null?zs.end:cs.length-1;
-    }
-  },{passive:true});
+      const vs=zs&&zs.start!==null?zs.start:0;
+      const ve=zs&&zs.end!==null?zs.end:cs.length-1;
+      _tlResetTouchState();
 
-  let _tlLongPress_dummy=null; /* long-press vars declared above */
+      if(e.touches.length===1){
+        /* double-tap reset */
+        const now=Date.now();
+        if(now-tLastTap<300){
+          if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
+          tl_draw(mode);tLastTap=0;return;
+        }
+        tLastTap=now;
+        tPan=true;window._tlDiag_tPan=true;
+        tX=e.touches[0].clientX;tY=e.touches[0].clientY;
+        tVS=vs;tVE=ve;
+        /* long-press: 500ms hold activates crosshair */
+        _tlLongPress=setTimeout(()=>{
+          _tlLongPress=null;
+          _tlLongPressActive=true;window._tlDiag_lpa=true;
+          tPan=false;window._tlDiag_tPan=false;
+          tl_showCrosshairAt(tX,tY);
+        },500);
+      } else if(e.touches.length===2){
+        tPinch=true;window._tlDiag_tPinch=true;
+        const rect=svg.getBoundingClientRect();
+        pDist=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
+        pVS=vs;pVE=ve;
+        pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/(rect.width)));
+      }
+    },{passive:false});
+
+    svg.addEventListener('touchmove',e=>{
+      e.preventDefault(); /* safe: touch-action:none on SVG */
+      const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
+      const svg2=getSvg();if(!svg2)return;
+      const rect=svg2.getBoundingClientRect();
+
+      if(_tlLongPressActive&&e.touches.length===1){
+        tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
+        return;
+      }
+      if(e.touches.length===1&&tPan){
+        /* cancel long-press if moved >8px */
+        if(_tlLongPress){
+          if(Math.abs(e.touches[0].clientX-tX)>8){
+            clearTimeout(_tlLongPress);_tlLongPress=null;
+          }
+        }
+        const W=rect.width;
+        const span=tVE-tVS;
+        setView(mode,tVS-(e.touches[0].clientX-tX)/W*span,tVE-(e.touches[0].clientX-tX)/W*span);
+      } else if(e.touches.length===2&&tPinch){
+        const cur=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
+        const span=pVE-pVS;
+        const newSpan=Math.min(cs.length-1,Math.max(5,span*pDist/cur));
+        const pivot=pVS+pFrac*span;
+        setView(mode,pivot-pFrac*newSpan,pivot+(1-pFrac)*newSpan);
+      }
+    },{passive:false});
+
+    svg.addEventListener('touchend',e=>{
+      if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
+      if(e.touches.length===0){
+        const wasLPA=_tlLongPressActive;
+        _tlResetTouchState();
+        if(wasLPA)_tlHideCrosshair();
+      } else if(e.touches.length===1&&tPinch){
+        /* went from 2 fingers to 1 — restart pan */
+        tPinch=false;window._tlDiag_tPinch=false;
+        tPan=true;window._tlDiag_tPan=true;
+        tX=e.touches[0].clientX;tY=e.touches[0].clientY;
+        const mode=tlViewerMode;const cs=tl_candles[mode]||[];
+        const zs=getView(mode);
+        tVS=zs&&zs.start!==null?zs.start:0;
+        tVE=zs&&zs.end!==null?zs.end:cs.length-1;
+      }
+    },{passive:true});
+
+    /* touchcancel: always reset state */
+    svg.addEventListener('touchcancel',()=>{
+      _tlResetTouchState();
+      _tlHideCrosshair();
+    },{passive:true});
+  }
+
+  /* attach now and expose for tl_draw to reattach after rebuild */
+  _tlAttachTouch();
+  window._tlAttachTouch=_tlAttachTouch;
 
   function tl_showCrosshairAt(clientX,clientY){
     const svg=getSvg();if(!svg)return;
