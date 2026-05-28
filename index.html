@@ -508,11 +508,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.2</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.3</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.2 PWA';
+const VERSION='BtcLadder v86.28.3 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1459,7 +1459,8 @@ function rerender(){
       const t0=e.touches[0];
       const inB=rect.width>0&&t0.clientX>=rect.left&&t0.clientX<=rect.right&&t0.clientY>=rect.top&&t0.clientY<=rect.bottom;
       const svgAttached=!!(svg&&svg._tlTouchAttached);
-      _tlLog(`START n=${e.touches.length} inB=${inB} att=${svgAttached} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)}@${Math.round(rect.left)},${Math.round(rect.top)} touch=${Math.round(t0.clientX)},${Math.round(t0.clientY)} tgt=${e.target.tagName}`);
+      const svgFired=!!window._tlDiag_svgFired;window._tlDiag_svgFired=false;
+      _tlLog(`START n=${e.touches.length} inB=${inB} att=${svgAttached} svgFired=${svgFired} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)}@${Math.round(rect.left)},${Math.round(rect.top)} touch=${Math.round(t0.clientX)},${Math.round(t0.clientY)} tgt=${e.target.tagName}`);
     },{passive:true});
     document.addEventListener('touchmove',e=>{
       _tlLog(`MOVE n=${e.touches.length} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} lpa=${!!window._tlDiag_lpa}`);
@@ -2471,6 +2472,7 @@ async function tl_fetchOCData(){
     svg.addEventListener('touchstart',e=>{
       e.preventDefault(); /* safe: touch-action:none on SVG */
       window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},600);
+      window._tlDiag_svgFired=true; /* confirm SVG listener fired */
       const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
       const zs=getView(mode);
       const vs=zs&&zs.start!==null?zs.start:0;
@@ -2561,6 +2563,10 @@ async function tl_fetchOCData(){
   /* attach now and expose for tl_draw to reattach after rebuild */
   _tlAttachTouch();
   window._tlAttachTouch=_tlAttachTouch;
+  /* hide crosshair and tooltip when page scrolls */
+  window.addEventListener('scroll',()=>{
+    _tlHideCrosshair();
+  },{passive:true});
 
   function tl_showCrosshairAt(clientX,clientY){
     const svg=getSvg();if(!svg)return;
