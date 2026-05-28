@@ -2405,82 +2405,106 @@ async function tl_fetchOCData(){
     tl_draw(tlViewerMode);
   });
 
-  /* touch */
-  let tPan=false,tX=0,tY=0,tVS=0,tVE=0,pDist=0,pVS=0,pVE=0,pFrac=0;
+  /* ── TOUCH: pan, pinch-zoom, long-press crosshair ── */
+  let tPan=false,tX=0,tY=0,tVS=0,tVE=0;
+  let tPinch=false,pDist=0,pVS=0,pVE=0,pFrac=0;
   let tLastTap=0;
+  let _tlLongPress=null,_tlLongPressActive=false;
+
   document.addEventListener('touchstart',e=>{
-    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
+    const svg=getSvg();if(!svg)return;
+    const rect=svg.getBoundingClientRect();
+    if(rect.width===0)return; /* section closed */
+    /* check at least one touch is within SVG bounds */
+    const t0=e.touches[0];
+    if(t0.clientX<rect.left||t0.clientX>rect.right||t0.clientY<rect.top||t0.clientY>rect.bottom)return;
     e.preventDefault();
     window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
-    /* double-tap reset */
-    const now=Date.now();
-    if(e.touches.length===1&&now-tLastTap<300){
-      if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
-      tl_draw(mode);tLastTap=0;return;
-    }
-    if(e.touches.length===1)tLastTap=now;
     const zs=getView(mode);
     const vs=zs&&zs.start!==null?zs.start:0;
     const ve=zs&&zs.end!==null?zs.end:cs.length-1;
+
+    /* cancel any pending long-press */
+    if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
+    _tlLongPressActive=false;
+
     if(e.touches.length===1){
-      tPan=true;
-      tX=e.touches[0].clientX;tY=e.touches[0].clientY;
+      /* double-tap reset */
+      const now=Date.now();
+      if(now-tLastTap<300){
+        if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
+        tl_draw(mode);tLastTap=0;return;
+      }
+      tLastTap=now;
+      tPan=true;tPinch=false;
+      tX=t0.clientX;tY=t0.clientY;
       tVS=vs;tVE=ve;
-    }
-    else if(e.touches.length===2){
-      tPan=false;
-      const rect=svg.getBoundingClientRect();
+      /* start long-press timer */
+      _tlLongPress=setTimeout(()=>{
+        _tlLongPress=null;
+        _tlLongPressActive=true;
+        tPan=false;
+        tl_showCrosshairAt(tX,tY);
+      },500);
+    } else if(e.touches.length===2){
+      tPan=false;tPinch=true;
       pDist=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
       pVS=vs;pVE=ve;
       pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left-70)/(rect.width-105)));
     }
   },{passive:false});
+
   document.addEventListener('touchmove',e=>{
-    if(!tPan&&!_tlLongPressActive&&!pDist)return; /* not in any active gesture */
+    if(!tPan&&!tPinch&&!_tlLongPressActive)return;
     const svg=getSvg();if(!svg)return;
     e.preventDefault();
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
-    const rect=svg.getBoundingClientRect();const W=rect.width-105;
-    /* cancel long press if finger moved >8px */
-    if(_tlLongPress&&!_tlLongPressActive&&e.touches.length===1){
-      const moved=Math.abs(e.touches[0].clientX-tX);
-      if(moved>8){clearTimeout(_tlLongPress);_tlLongPress=null;}
-    }
-    /* if crosshair mode active: move crosshair, no pan */
+    const rect=svg.getBoundingClientRect();
+
     if(_tlLongPressActive&&e.touches.length===1){
       tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
       return;
     }
     if(e.touches.length===1&&tPan){
+      /* cancel long-press if moved >8px */
+      if(_tlLongPress){
+        const moved=Math.abs(e.touches[0].clientX-tX);
+        if(moved>8){clearTimeout(_tlLongPress);_tlLongPress=null;}
+      }
+      const W=rect.width-105;
       const span=tVE-tVS;
       setView(mode,tVS-(e.touches[0].clientX-tX)/W*span,tVE-(e.touches[0].clientX-tX)/W*span);
-    }else if(e.touches.length===2){
+    } else if(e.touches.length===2&&tPinch){
       const cur=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
-      const span=pVE-pVS;const newSpan=Math.min(cs.length-1,Math.max(5,span*pDist/cur));
+      const span=pVE-pVS;
+      const newSpan=Math.min(cs.length-1,Math.max(5,span*pDist/cur));
       const pivot=pVS+pFrac*span;
       setView(mode,pivot-pFrac*newSpan,pivot+(1-pFrac)*newSpan);
     }
   },{passive:false});
+
   document.addEventListener('touchend',e=>{
+    if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
     if(e.touches.length===0){
-      tPan=false;pDist=0;
-      /* hide crosshair on touch end */
+      tPan=false;tPinch=false;_tlLongPressActive=false;
       const svg=getSvg();
       if(svg)svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
-      const lbl=document.getElementById('tlCrosshairPrice');
-      if(lbl)lbl.style.display='none';
-      const dateLbl=document.getElementById('tlCrosshairDate');
-      if(dateLbl)dateLbl.style.display='none';
-      const tip=document.getElementById('tlTip');
-      if(tip)tip.style.display='none';
-      if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
-      _tlLongPressActive=false;
+      const lbl=document.getElementById('tlCrosshairPrice');if(lbl)lbl.style.display='none';
+      const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
+      const tip=document.getElementById('tlTip');if(tip)tip.style.display='none';
+    } else if(e.touches.length===1&&tPinch){
+      /* went from 2 fingers to 1 — restart pan */
+      tPinch=false;tPan=true;
+      tX=e.touches[0].clientX;tY=e.touches[0].clientY;
+      const mode=tlViewerMode;const cs=tl_candles[mode]||[];
+      const zs=getView(mode);
+      tVS=zs&&zs.start!==null?zs.start:0;
+      tVE=zs&&zs.end!==null?zs.end:cs.length-1;
     }
   },{passive:true});
 
-  /* long-press: show crosshair + OHLC tooltip on touch */
-  let _tlLongPress=null,_tlLongPressActive=false;
+  let _tlLongPress_dummy=null; /* long-press vars declared above */
 
   function tl_showCrosshairAt(clientX,clientY){
     const svg=getSvg();if(!svg)return;
@@ -2548,21 +2572,7 @@ async function tl_fetchOCData(){
     }
   }
 
-  document.addEventListener('touchstart',e=>{
-    const svg=getSvg();if(!svg||!svg.contains(e.target))return;
-    if(e.touches.length!==1)return;
-    _tlLongPressActive=false;
-    const t=e.touches[0];
-    const startX=t.clientX,startY=t.clientY;
-    _tlLongPress=setTimeout(()=>{
-      _tlLongPress=null;
-      _tlLongPressActive=true;
-      tPan=false; /* disable pan while crosshair active */
-      tl_showCrosshairAt(startX,startY);
-    },500);
-  },{passive:true});
-
-  /* long-press cancel merged into main touchmove handler */
+  /* long-press integrated into main touchstart above */
 
 })();
 
