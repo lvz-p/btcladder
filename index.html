@@ -508,11 +508,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.1</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28 PWA';
+const VERSION='BtcLadder v86.28.1 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1064,7 +1064,7 @@ function renderChart(cur,ma,oc,tl=[]){
     el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{if(window._recentTouch)return;hideTip();clearHl()});
     /* mobile: only badge opens tooltip */
-    const badge=el.querySelector('.lbl-badge,.zone-badge');
+    const badge=el.querySelector('.lbl-badge,.zone-badge,.dgrp-badge');
     if(badge){
       badge.addEventListener('touchstart',e=>{
         window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
@@ -1458,7 +1458,7 @@ function rerender(){
       const rect=svg?svg.getBoundingClientRect():{left:0,right:0,top:0,bottom:0,width:0};
       const t0=e.touches[0];
       const inB=rect.width>0&&t0.clientX>=rect.left&&t0.clientX<=rect.right&&t0.clientY>=rect.top&&t0.clientY<=rect.bottom;
-      _tlLog(`START n=${e.touches.length} inB=${inB} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)} tgt=${e.target.tagName}`);
+      _tlLog(`START n=${e.touches.length} inB=${inB} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)}@${Math.round(rect.left)},${Math.round(rect.top)} touch=${Math.round(t0.clientX)},${Math.round(t0.clientY)} tgt=${e.target.tagName}`);
     },{passive:true});
     document.addEventListener('touchmove',e=>{
       _tlLog(`MOVE n=${e.touches.length} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} lpa=${!!window._tlDiag_lpa}`);
