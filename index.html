@@ -239,7 +239,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* TRENDLINE VIEWER */
-.tl-viewer{padding:14px 18px 18px}
+.tl-viewer{padding:14px 18px 18px;touch-action:none}
 .tl-crosshair{pointer-events:none;display:none}
 .tl-crosshair-price{pointer-events:none;display:none;position:absolute;left:0;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:11px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;transform:translateY(-50%)}
 .tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -509,11 +509,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.6</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.8</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.6 PWA';
+const VERSION='BtcLadder v86.28.8 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2499,11 +2499,11 @@ async function tl_fetchOCData(){
         pVS=vs;pVE=ve;
         pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/(rect.width)));
       }
-    },{passive:false});
+    },{passive:true});
 
     svg.addEventListener('touchmove',e=>{
       if(!tl_candles[tlViewerMode]||!tl_candles[tlViewerMode].length)return;
-      e.preventDefault();
+      e.preventDefault(); /* safe: touch-action:none on all ancestors */
       window._tlDiag_svgFired=true;
       /* cancel long-press if moved >8px */
       if(_tlLongPress&&e.touches.length===1){
@@ -2565,10 +2565,13 @@ async function tl_fetchOCData(){
 
 let tlViewerReady=false;
 document.getElementById('tlSection').addEventListener('toggle',()=>{
-  if(document.getElementById('tlSection').open&&!tlViewerReady&&Object.keys(tl_cands).length){
+  const sec=document.getElementById('tlSection');
+  /* touch-action:none when open so Safari doesn't intercept touch for scroll */
+  sec.style.touchAction=sec.open?'none':'';
+  if(sec.open&&!tlViewerReady&&Object.keys(tl_cands).length){
     tlViewerReady=true;tl_draw('1d');
   }
-  if(document.getElementById('tlSection').open){
+  if(sec.open){
     setTimeout(tl_fetchOCData,200); /* fetch on-chain in background */
   }
 });
