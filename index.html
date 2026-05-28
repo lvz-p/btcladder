@@ -385,7 +385,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
     <div class="tl-chart-wrap" style="position:relative">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none"></svg>
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
       <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
     </div>
@@ -1818,6 +1818,7 @@ function tl_draw(mode){
   if(!svg)return;
   /* preserve crosshair visibility across redraws */
   const _chWasVisible=svg.querySelector('.tl-crosshair')?.style.display==='inline';
+  svg._tlTouchAttached=false; /* reset so _tlAttachTouch re-registers after rebuild */
   svg.innerHTML='';
 
   const lines=tl_cands[mode];
@@ -2135,6 +2136,8 @@ function tl_draw(mode){
   });
 
   /* ── status ── */
+  /* reattach touch listener after SVG rebuild */
+  if(window._tlAttachTouch)window._tlAttachTouch();
   document.getElementById('tlStatus').textContent=`${vis.length} trendlines · ${cs.length} candles · ${mode}${showMA?' · MAs':''}${showOC&&window._tlOCData?' · On-chain':''}`;
 
   /* ── legends ── */
@@ -2441,13 +2444,12 @@ async function tl_fetchOCData(){
   let tLastTap=0;
   let _tlLongPress=null,_tlLongPressActive=false;
 
-  document.addEventListener('touchstart',e=>{
-    const svg=getSvg();if(!svg)return;
+  /* attach touchstart directly to SVG so it fires before browser scroll */
+  function _tlAttachTouch(){
+    const svg=getSvg();if(!svg||svg._tlTouchAttached)return;
+    svg._tlTouchAttached=true;
+    svg.addEventListener('touchstart',e=>{
     const rect=svg.getBoundingClientRect();
-    if(rect.width===0)return; /* section closed */
-    /* check at least one touch is within SVG bounds */
-    const t0=e.touches[0];
-    if(t0.clientX<rect.left||t0.clientX>rect.right||t0.clientY<rect.top||t0.clientY>rect.bottom)return;
     e.preventDefault();
     window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
@@ -2468,7 +2470,7 @@ async function tl_fetchOCData(){
       }
       tLastTap=now;
       tPan=true;tPinch=false;window._tlDiag_tPan=true;window._tlDiag_tPinch=false;
-      tX=t0.clientX;tY=t0.clientY;
+      tX=e.touches[0].clientX;tY=e.touches[0].clientY;
       tVS=vs;tVE=ve;
       /* start long-press timer */
       _tlLongPress=setTimeout(()=>{
@@ -2484,6 +2486,7 @@ async function tl_fetchOCData(){
       pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left-70)/(rect.width-105)));
     }
   },{passive:false});
+  } /* end _tlAttachTouch */
 
   document.addEventListener('touchmove',e=>{
     if(!tPan&&!tPinch&&!_tlLongPressActive)return;
@@ -2604,6 +2607,9 @@ async function tl_fetchOCData(){
 
   /* long-press integrated into main touchstart above */
 
+  /* attach touch to SVG now and expose for tl_draw to call after redraw */
+  _tlAttachTouch();
+  window._tlAttachTouch=_tlAttachTouch;
 })();
 
 
