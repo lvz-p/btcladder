@@ -508,11 +508,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.3</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.4</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.3 PWA';
+const VERSION='BtcLadder v86.28.4 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2356,6 +2356,7 @@ async function tl_fetchOCData(){
   /* crosshair: show on mousemove over SVG */
   let _chDebugLogged=false;
   document.addEventListener('mousemove',e=>{
+    if(window._recentTouch)return; /* suppress synthetic mousemove from touch */
     const svg=getSvg();if(!svg)return;
     const rect=svg.getBoundingClientRect();
     if(rect.width===0||rect.height===0)return; /* section closed */
@@ -2508,6 +2509,8 @@ async function tl_fetchOCData(){
 
     svg.addEventListener('touchmove',e=>{
       e.preventDefault(); /* safe: touch-action:none on SVG */
+      /* log to diag */
+      if(window._tlLog)window._tlLog(`SVG_MOVE n=${e.touches.length} tP=${tPan} tPi=${tPinch} lpa=${_tlLongPressActive}`);
       const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
       const svg2=getSvg();if(!svg2)return;
       const rect=svg2.getBoundingClientRect();
@@ -2565,6 +2568,17 @@ async function tl_fetchOCData(){
   window._tlAttachTouch=_tlAttachTouch;
   /* hide crosshair and tooltip when page scrolls */
   window.addEventListener('scroll',()=>{
+    _tlHideCrosshair();
+  },{passive:true});
+  /* safety net: reset all TL touch state when all fingers lift anywhere on page */
+  document.addEventListener('touchend',e=>{
+    if(e.touches.length===0){
+      _tlResetTouchState();
+    }
+  },{passive:true});
+  /* also reset on touchcancel */
+  document.addEventListener('touchcancel',()=>{
+    _tlResetTouchState();
     _tlHideCrosshair();
   },{passive:true});
 
