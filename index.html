@@ -249,7 +249,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-legend-group-label:hover{color:var(--text)}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
-.tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden}
+.tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden;touch-action:none}
 .tl-chart-wrap svg{width:100%;display:block}
 .tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .tl-leg-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
@@ -385,7 +385,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
     <div class="tl-chart-wrap" style="position:relative">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
+
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
       <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
     </div>
@@ -508,11 +509,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.4</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.6</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.4 PWA';
+const VERSION='BtcLadder v86.28.6 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2441,57 +2442,50 @@ async function tl_fetchOCData(){
     tl_draw(tlViewerMode);
   });
 
-  /* ── TOUCH: all handlers on SVG element with touch-action:none ────────────
-     SVG has touch-action:none in HTML — browser won't scroll/zoom it.
-     All touch logic is on the SVG element itself (not document) so we can
-     safely call preventDefault without blocking page scrolling elsewhere.
-     Document-level touchmove for long-press crosshair update is passive:true.
-  ── */
-  let tPan=false,tX=0,tY=0,tVS=0,tVE=0;
-  let tPinch=false,pDist=0,pVS=0,pVE=0,pFrac=0;
-  let tLastTap=0;
-  let _tlLongPress=null,_tlLongPressActive=false;
-
+  /* ── TOUCH: all listeners on SVG element, same pattern as tl_viewer_v2 ── */
   function _tlResetTouchState(){
     tPan=false;tPinch=false;_tlLongPressActive=false;
     if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
     window._tlDiag_tPan=false;window._tlDiag_tPinch=false;window._tlDiag_lpa=false;
   }
-
   function _tlHideCrosshair(){
-    const svg=getSvg();
-    if(svg)svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
+    const sv=getSvg();
+    if(sv)sv.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
     const lbl=document.getElementById('tlCrosshairPrice');if(lbl)lbl.style.display='none';
     const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
     const tip=document.getElementById('tlTip');if(tip)tip.style.display='none';
   }
+  let tPan=false,tX=0,tY=0,tVS=0,tVE=0;
+  let tPinch=false,pDist=0,pVS=0,pVE=0,pFrac=0;
+  let tLastTap=0;
+  let _tlLongPress=null,_tlLongPressActive=false;
 
   function _tlAttachTouch(){
     const svg=getSvg();if(!svg||svg._tlTouchAttached)return;
     svg._tlTouchAttached=true;
 
     svg.addEventListener('touchstart',e=>{
-      e.preventDefault(); /* safe: touch-action:none on SVG */
+      if(!tl_candles[tlViewerMode]||!tl_candles[tlViewerMode].length)return;
+      e.preventDefault();
       window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},600);
-      window._tlDiag_svgFired=true; /* confirm SVG listener fired */
-      const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
+      window._tlDiag_svgFired=true;
+      _tlResetTouchState();
+      const mode=tlViewerMode;
       const zs=getView(mode);
       const vs=zs&&zs.start!==null?zs.start:0;
-      const ve=zs&&zs.end!==null?zs.end:cs.length-1;
-      _tlResetTouchState();
-
+      const ve=zs&&zs.end!==null?zs.end:tl_candles[mode].length-1;
+      /* double-tap reset */
+      const now=Date.now();
+      if(e.touches.length===1&&now-tLastTap<300){
+        if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
+        tl_draw(mode);tLastTap=0;return;
+      }
+      if(e.touches.length===1)tLastTap=now;
       if(e.touches.length===1){
-        /* double-tap reset */
-        const now=Date.now();
-        if(now-tLastTap<300){
-          if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
-          tl_draw(mode);tLastTap=0;return;
-        }
-        tLastTap=now;
         tPan=true;window._tlDiag_tPan=true;
         tX=e.touches[0].clientX;tY=e.touches[0].clientY;
         tVS=vs;tVE=ve;
-        /* long-press: 500ms hold activates crosshair */
+        /* long-press crosshair */
         _tlLongPress=setTimeout(()=>{
           _tlLongPress=null;
           _tlLongPressActive=true;window._tlDiag_lpa=true;
@@ -2508,25 +2502,24 @@ async function tl_fetchOCData(){
     },{passive:false});
 
     svg.addEventListener('touchmove',e=>{
-      e.preventDefault(); /* safe: touch-action:none on SVG */
-      /* log to diag */
-      if(window._tlLog)window._tlLog(`SVG_MOVE n=${e.touches.length} tP=${tPan} tPi=${tPinch} lpa=${_tlLongPressActive}`);
-      const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
-      const svg2=getSvg();if(!svg2)return;
-      const rect=svg2.getBoundingClientRect();
-
+      if(!tl_candles[tlViewerMode]||!tl_candles[tlViewerMode].length)return;
+      e.preventDefault();
+      window._tlDiag_svgFired=true;
+      /* cancel long-press if moved >8px */
+      if(_tlLongPress&&e.touches.length===1){
+        if(Math.abs(e.touches[0].clientX-tX)>8){
+          clearTimeout(_tlLongPress);_tlLongPress=null;
+        }
+      }
       if(_tlLongPressActive&&e.touches.length===1){
         tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
         return;
       }
+      const mode=tlViewerMode;
+      const cs=tl_candles[mode]||[];
+      const rect=getSvg().getBoundingClientRect();
+      const W=rect.width;
       if(e.touches.length===1&&tPan){
-        /* cancel long-press if moved >8px */
-        if(_tlLongPress){
-          if(Math.abs(e.touches[0].clientX-tX)>8){
-            clearTimeout(_tlLongPress);_tlLongPress=null;
-          }
-        }
-        const W=rect.width;
         const span=tVE-tVS;
         setView(mode,tVS-(e.touches[0].clientX-tX)/W*span,tVE-(e.touches[0].clientX-tX)/W*span);
       } else if(e.touches.length===2&&tPinch){
@@ -2545,114 +2538,28 @@ async function tl_fetchOCData(){
         _tlResetTouchState();
         if(wasLPA)_tlHideCrosshair();
       } else if(e.touches.length===1&&tPinch){
-        /* went from 2 fingers to 1 — restart pan */
         tPinch=false;window._tlDiag_tPinch=false;
         tPan=true;window._tlDiag_tPan=true;
         tX=e.touches[0].clientX;tY=e.touches[0].clientY;
-        const mode=tlViewerMode;const cs=tl_candles[mode]||[];
-        const zs=getView(mode);
+        const mode=tlViewerMode;const zs=getView(mode);
         tVS=zs&&zs.start!==null?zs.start:0;
-        tVE=zs&&zs.end!==null?zs.end:cs.length-1;
+        tVE=zs&&zs.end!==null?zs.end:(tl_candles[mode]||[]).length-1;
       }
     },{passive:true});
 
-    /* touchcancel: always reset state */
     svg.addEventListener('touchcancel',()=>{
-      _tlResetTouchState();
-      _tlHideCrosshair();
+      _tlResetTouchState();_tlHideCrosshair();
     },{passive:true});
   }
 
-  /* attach now and expose for tl_draw to reattach after rebuild */
   _tlAttachTouch();
   window._tlAttachTouch=_tlAttachTouch;
-  /* hide crosshair and tooltip when page scrolls */
-  window.addEventListener('scroll',()=>{
-    _tlHideCrosshair();
-  },{passive:true});
-  /* safety net: reset all TL touch state when all fingers lift anywhere on page */
+  window.addEventListener('scroll',()=>{_tlHideCrosshair();},{passive:true});
+  /* safety net for stuck state */
   document.addEventListener('touchend',e=>{
-    if(e.touches.length===0){
-      _tlResetTouchState();
-    }
-  },{passive:true});
-  /* also reset on touchcancel */
-  document.addEventListener('touchcancel',()=>{
-    _tlResetTouchState();
-    _tlHideCrosshair();
+    if(e.touches.length===0)_tlResetTouchState();
   },{passive:true});
 
-  function tl_showCrosshairAt(clientX,clientY){
-    const svg=getSvg();if(!svg)return;
-    const mode=tlViewerMode;
-    const zs=getView(mode);if(!zs)return;
-    const rect=svg.getBoundingClientRect();
-    const svgH=520,svgPad={t:12,b:36};
-    const chartH=svgH-svgPad.t-svgPad.b;
-    const mouseYsvg=(clientY-rect.top)/rect.height*svgH;
-    const syPos=Math.max(svgPad.t,Math.min(svgPad.t+chartH,mouseYsvg));
-    const log=TL_DEFAULTS[mode]&&TL_DEFAULTS[mode].log;
-    if(!svg._ymin&&svg._ymin!==0)return;
-    const yFrac=1-(syPos-svgPad.t)/chartH;
-    const yVal=tl_invY(svg._ymin+yFrac*(svg._ymax-svg._ymin),log);
-    if(!Number.isFinite(yVal)||yVal<=0)return;
-    svg.querySelectorAll('.tl-crosshair').forEach(el=>{
-      el.style.display='inline';
-      /* only set y on horizontal line and dot, not vertical line */
-      if(el.id!=='tlChVLine'){
-        if(el.getAttribute('y1')!==null)el.setAttribute('y1',syPos);
-        if(el.getAttribute('y2')!==null)el.setAttribute('y2',syPos);
-      }
-      if(el.getAttribute('cy')!==null)el.setAttribute('cy',syPos);
-    });
-    const priceEl=document.getElementById('tlCrosshairPrice');
-    if(priceEl){
-      priceEl.style.display='block';
-      priceEl.style.top=(clientY-rect.top)/rect.height*100+'%';
-      priceEl.textContent='$'+Math.round(yVal).toLocaleString();
-    }
-    /* update vertical crosshair line */
-    const svgW=1100,padL=62,padR=20;
-    const mouseXsvg=(clientX-rect.left)/rect.width*svgW;
-    const vl=svg.querySelector('#tlChVLine');
-    if(vl){vl.setAttribute('x1',mouseXsvg);vl.setAttribute('x2',mouseXsvg);vl.style.display='inline';}
-    /* find nearest candle for OHLC tooltip */
-    const cs=tl_candles[mode]||[];if(!cs.length)return;
-    const vsF=zs.start!==null?zs.start:0;
-    const veF=zs.end!==null?zs.end:cs.length-1;
-    const span=veF-vsF||1;
-    const W=svgW;
-    const candleIdx=Math.round(vsF+(mouseXsvg-padL)/(W-padL-padR)*span);
-    const ci=Math.max(0,Math.min(cs.length-1,candleIdx));
-    const c=cs[ci];
-    if(c){
-      const tip=document.getElementById('tlTip');
-      if(tip){
-        const d=new Date(c.t);
-        const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const dateStr=`${d.getUTCDate()} ${MSHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-        /* show date label near x-axis */
-        const dateLbl=document.getElementById('tlCrosshairDate');
-        if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dateStr;
-          dateLbl.style.left=(clientX-rect.left)/rect.width*100+'%';}
-        tip.innerHTML=`<div style="font-size:11px;color:#94a3b8;margin-bottom:3px">${dateStr}</div>`+
-          `<div style="font-size:12px;font-family:var(--mono);line-height:1.7">`+
-          `<span style="color:#94a3b8">O</span> ${tl_fmtPrice(c.open)}&nbsp;&nbsp;`+
-          `<span style="color:#94a3b8">H</span> ${tl_fmtPrice(c.high)}<br>`+
-          `<span style="color:#94a3b8">L</span> ${tl_fmtPrice(c.low)}&nbsp;&nbsp;`+
-          `<span style="color:#94a3b8">C</span> ${tl_fmtPrice(c.close)}</div>`;
-        tip.style.display='block';
-        tip.style.left=(clientX+12)+'px';
-        tip.style.top=(clientY-60)+'px';
-      }
-    }
-  }
-
-  /* long-press integrated into main touchstart above */
-
-  /* attach touch to SVG now and expose for tl_draw to call after redraw */
-  _tlAttachTouch();
-  window._tlAttachTouch=_tlAttachTouch;
 })();
 
 
