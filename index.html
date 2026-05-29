@@ -267,9 +267,9 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
 .axisLabel{fill:#94a3b8;font-size:18px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:16px;font-family:var(--mono)}
-.tl-y-axis{position:absolute;top:0;left:0;bottom:0;pointer-events:none;overflow:hidden}
-.tl-y-lbl{position:absolute;right:4px;font-size:12px;font-family:var(--mono);color:#94a3b8;transform:translateY(-50%);white-space:nowrap;line-height:1}
-.tl-y-lbl.cur-price{color:#000;background:#f7931a;padding:1px 4px;border-radius:3px;font-weight:700}
+.tl-y-axis{position:absolute;top:0;left:0;bottom:0;pointer-events:none;overflow:visible}
+.tl-y-lbl{position:absolute;right:3px;font-size:12px;font-family:var(--mono);color:#94a3b8;transform:translateY(-50%);white-space:nowrap;line-height:1}
+.tl-y-lbl.cur-price{color:#000;background:#f7931a;padding:1px 3px;border-radius:3px;font-weight:700;font-size:11px}
 .tl-x-axis{position:absolute;left:0;right:0;bottom:0;height:36px;pointer-events:none;overflow:hidden}
 .tl-x-lbl{position:absolute;bottom:4px;font-size:12px;font-family:var(--mono);color:#94a3b8;transform:translateX(-50%);white-space:nowrap;line-height:1}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
@@ -295,6 +295,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   button.leg.tog{font-size:10px;padding:2px 7px}
   button.leg.tog.tier1{font-size:12px;padding:4px 11px}
   .axisLabel,.xLabel{font-size:19px}
+  .tl-chart-wrap{margin-left:4px}
   .leg-pip{width:16px}
   .leg-zone{width:16px;height:9px}
   /* range filter compact */
@@ -525,11 +526,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.24</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.26</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.24 PWA';
+const VERSION='BtcLadder v1.0.26 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1869,12 +1870,22 @@ function tl_draw(mode,fast=false){
   const log=TL_DEFAULTS[mode].log;
 
   const W=1100,H=520;
-  /* dynamic pad.l: target ~48px screen width for y-axis */
+  /* measure widest y-axis label to set exact pad.l */
   const _svgEl=document.getElementById('tlSvg');
-  const _svgW=Math.max(300,_svgEl?_svgEl.getBoundingClientRect().width:900);
-  const _targetYAxisPx=Math.max(48,Math.min(80,_svgW*0.11)); /* 11% of screen, 48-80px */
-  const _padL=Math.round(_targetYAxisPx/(_svgW||900)*W);
-  const pad={l:Math.max(80,_padL),r:20,t:12,b:48};
+  const _svgRenderedW=Math.max(300,_svgEl?_svgEl.getBoundingClientRect().width:900);
+  /* compute price range to find widest label */
+  const _testCs=tl_candles[mode]||[];
+  const _testPrices=_testCs.length?[Math.min(..._testCs.slice(-200).map(c=>c.low)),Math.max(..._testCs.slice(-200).map(c=>c.high))]:[];
+  const _widestLabel=_testPrices.length?[_testPrices[0],_testPrices[1]].map(p=>tl_fmtPriceShort(p)).sort((a,b)=>b.length-a.length)[0]:'$99.9k';
+  const _mEl=document.createElement('span');
+  _mEl.style.cssText='position:absolute;visibility:hidden;font-size:12px;font-family:var(--mono);white-space:nowrap;font-weight:700';
+  _mEl.textContent=_widestLabel;
+  document.body.appendChild(_mEl);
+  const _labelPx=Math.ceil(_mEl.getBoundingClientRect().width);
+  document.body.removeChild(_mEl);
+  const _padLpx=_labelPx+10; /* 10px margin */
+  const _padL=Math.round(_padLpx/_svgRenderedW*W);
+  const pad={l:Math.max(60,_padL),r:20,t:12,b:48};
   const _yLabels=[],_xLabels=[];let _cpY=null;
   const add=e=>{svg.appendChild(e);return e};
 
@@ -2865,6 +2876,15 @@ async function tl_fetchOCData(){
 
   _tlAttachTouch();
   window._tlAttachTouch=_tlAttachTouch;
+  /* redraw on resize - pad.l adjusts to fit labels */
+  if(window._tlResizeObserver)window._tlResizeObserver.disconnect();
+  let _tlResizeTimer=null;
+  window._tlResizeObserver=new ResizeObserver(()=>{
+    clearTimeout(_tlResizeTimer);
+    _tlResizeTimer=setTimeout(()=>tl_draw(tlViewerMode),150);
+  });
+  const _tlSvgEl=document.getElementById('tlSvg');
+  if(_tlSvgEl)window._tlResizeObserver.observe(_tlSvgEl);
   window.addEventListener('scroll',()=>{_tlHideCrosshair();},{passive:true});
   document.addEventListener('touchend',e=>{
     if(e.touches.length===0&&_ptrs.size===0&&(tPan||tPinch||_tlLongPressActive))_tlResetTouchState();
