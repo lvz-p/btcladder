@@ -106,6 +106,8 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .leg-dot-btc{width:10px;height:10px;border-radius:50%;background:var(--btc);flex-shrink:0}
 /* legend toggle button on/off states */
 button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;cursor:pointer;font-family:var(--font);font-size:10px;background:var(--surface)}
+button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700}
+#maExpandBtn{font-size:10px;padding:4px 8px}
 button.leg.tog:hover{background:var(--surface2)}
 button.leg.tog:not(.on){opacity:.32;text-decoration:line-through;background:transparent!important;color:var(--muted)!important}
 button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
@@ -282,6 +284,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   .stat-card .val{font-size:12px}
   /* legend: smaller buttons to fit in 1-2 rows */
   button.leg.tog{font-size:10px;padding:2px 7px}
+  button.leg.tog.tier1{font-size:12px;padding:4px 11px}
   .leg-pip{width:16px}
   .leg-zone{width:16px;height:9px}
   /* range filter compact */
@@ -341,12 +344,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 <!-- Row 2: All toggles unified as buttons -->
 <div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
   <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-    <button class="leg tog on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:2px 7px 2px 7px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 6px;cursor:pointer;font-size:9px;color:var(--muted);line-height:1">▾</button>
+    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 6px;cursor:pointer;font-size:9px;color:var(--muted);line-height:1">▾</button>
   </span>
-  <button class="leg tog on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
-  <button class="leg tog on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
-  <button class="leg tog on" id="zoneBtn"><div class="leg-zone"></div>Zones</button>
-  <button class="leg tog on" id="urpdBtn"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD</button>
+  <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
+  <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
+  <button class="leg tog tier1 on" id="zoneBtn"><div class="leg-zone"></div>Zones</button>
+  <button class="leg tog tier1 on" id="urpdBtn"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD</button>
 </div>
 <div id="maExpand" style="display:none;margin-bottom:12px;flex-wrap:wrap;gap:6px;padding-left:4px">
   <button class="leg tog on" data-cat="D"><div class="leg-pip D"></div>Daily</button>
@@ -511,11 +514,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.14</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.15</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.14 PWA';
+const VERSION='BtcLadder v1.0.15 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1513,6 +1516,11 @@ const tl_Y=(p,log)=>log?Math.log(p):p;
 const tl_invY=(y,log)=>log?Math.exp(y):y;
 const tl_clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const tl_fmtPrice=v=>v>=1000?'$'+Math.round(v).toLocaleString():'$'+v.toFixed(2);
+const tl_fmtPriceShort=v=>{
+  if(v>=1e6)return'$'+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3)return'$'+(v/1e3).toFixed(1)+'k';
+  return'$'+v.toFixed(0);
+};
 
 /* fetchAll — verbatim, async-safe */
 async function tl_fetchAll(tf,mode,custom){
@@ -1932,7 +1940,7 @@ function tl_draw(mode,fast=false){
     if(Number.isFinite(curY)&&curY>=pad.t&&curY<=H-pad.b){
       /* orange label on y-axis — contained within y-axis area, doesn't leak into chart */
       const cpRect=document.createElementNS('http://www.w3.org/2000/svg','rect');
-      const cpLabel=tl_fmtPrice(curPrice);
+      const cpLabel=tl_fmtPriceShort(curPrice);
       const cpW=Math.max(52, cpLabel.length*7+8);
       cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-12);
       cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',24);
@@ -1969,7 +1977,7 @@ function tl_draw(mode,fast=false){
     const gt=document.createElementNS('http://www.w3.org/2000/svg','text');
     gt.setAttribute('x',pad.l-6);gt.setAttribute('y',yy+4);
     gt.setAttribute('text-anchor','end');gt.setAttribute('class','axisLabel');
-    gt.textContent=tl_fmtPrice(val);add(gt);
+    gt.textContent=tl_fmtPriceShort(val);add(gt);
   }
 
   /* ── x-axis labels ── */
@@ -3454,16 +3462,23 @@ document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
     /* MA button: reflect combined D/W/M state */
     const maOn=catFilters['D']!==false&&catFilters['W']!==false&&catFilters['M']!==false;
     btn.classList.toggle('on',maOn);
+    function syncMABtn(){
+      /* MA tier1 is ON if any of D/W/M is on */
+      const anyOn=catFilters['D']!==false||catFilters['W']!==false||catFilters['M']!==false;
+      btn.classList.toggle('on',anyOn);
+    }
+    function syncTier2Visual(){
+      ['D','W','M'].forEach(c=>{
+        document.querySelectorAll(`#maExpand .tog[data-cat="${c}"]`).forEach(b=>b.classList.toggle('on',catFilters[c]!==false));
+      });
+    }
     btn.onclick=()=>{
-      /* single tap: toggle all MA on/off */
-      const allOn=catFilters['D']!==false&&catFilters['W']!==false&&catFilters['M']!==false;
-      const newState=!allOn;
+      /* toggle: if any on→turn all off; if all off→turn all on */
+      const anyOn=catFilters['D']!==false||catFilters['W']!==false||catFilters['M']!==false;
+      const newState=!anyOn;
       catFilters['D']=catFilters['W']=catFilters['M']=newState;
       btn.classList.toggle('on',newState);
-      /* sync tier-2 button visual state */
-      ['D','W','M'].forEach(c=>{
-        document.querySelectorAll(`.tog[data-cat="${c}"]`).forEach(b=>b.classList.toggle('on',newState));
-      });
+      syncTier2Visual();
       ss('filters',JSON.stringify(catFilters));rerender();
     };
     /* chevron: expand/collapse tier-2 */
@@ -3474,25 +3489,20 @@ document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
       const opening=ex.style.display==='none';
       ex.style.display=opening?'flex':'none';
       exBtn.textContent=opening?'▴':'▾';
-      /* sync tier-2 visual state when opening */
-      if(opening){
-        ['D','W','M'].forEach(c=>{
-          document.querySelectorAll(`#maExpand .tog[data-cat="${c}"]`).forEach(b=>{
-            b.classList.toggle('on',catFilters[c]!==false);
-          });
-        });
-      }
+      if(opening)syncTier2Visual();
     };
   } else {
     btn.classList.toggle('on',catFilters[c]!==false);
     btn.onclick=()=>{
       catFilters[c]=!btn.classList.contains('on');
       btn.classList.toggle('on',catFilters[c]!==false);
-      /* if D/W/M changed, update MA button state */
-      const maBtn=document.getElementById('maBtn');
-      if(maBtn&&['D','W','M'].includes(c)){
-        const maOn=catFilters['D']!==false&&catFilters['W']!==false&&catFilters['M']!==false;
-        maBtn.classList.toggle('on',maOn);
+      /* if D/W/M changed, update MA tier1 button: on if ANY tier2 on */
+      if(['D','W','M'].includes(c)){
+        const maBtn=document.getElementById('maBtn');
+        if(maBtn){
+          const anyOn=catFilters['D']!==false||catFilters['W']!==false||catFilters['M']!==false;
+          maBtn.classList.toggle('on',anyOn);
+        }
       }
       ss('filters',JSON.stringify(catFilters));rerender();
     };
