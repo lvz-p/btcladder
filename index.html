@@ -264,7 +264,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel{fill:#94a3b8;font-size:15px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:14px;font-family:var(--mono)}
+.axisLabel{fill:#94a3b8;font-size:16px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:15px;font-family:var(--mono)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
@@ -347,7 +347,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 <!-- Row 2: All toggles unified as buttons -->
 <div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
   <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:13px;color:var(--muted);line-height:1">▾</button>
+    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 10px;cursor:pointer;font-size:16px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▾</button>
   </span>
   <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
   <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
@@ -517,11 +517,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.16</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.17</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.16 PWA';
+const VERSION='BtcLadder v1.0.17 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1860,7 +1860,7 @@ function tl_draw(mode,fast=false){
   const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
   const log=TL_DEFAULTS[mode].log;
 
-  const W=1100,H=520,pad={l:80,r:20,t:12,b:44};
+  const W=1100,H=520,pad={l:96,r:20,t:12,b:48};
   const add=e=>{svg.appendChild(e);return e};
 
   /* ── zoom state ── */
@@ -1944,15 +1944,16 @@ function tl_draw(mode,fast=false){
       /* orange label on y-axis — contained within y-axis area, doesn't leak into chart */
       const cpRect=document.createElementNS('http://www.w3.org/2000/svg','rect');
       const cpLabel=tl_fmtPriceShort(curPrice);
-      const cpW=Math.max(52, cpLabel.length*7+8);
-      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-12);
-      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',24);
+      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-14);
+      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',28);
       cpRect.setAttribute('fill','#f7931a');cpRect.setAttribute('rx','3');
       add(cpRect);
       const cpText=document.createElementNS('http://www.w3.org/2000/svg','text');
       cpText.setAttribute('x',pad.l-6);cpText.setAttribute('y',curY+7);
-      cpText.setAttribute('text-anchor','end');cpText.setAttribute('fill','#000');
-      cpText.setAttribute('fill','#000');cpText.setAttribute('font-size','12');cpText.setAttribute('font-family','var(--mono)');cpText.setAttribute('font-weight','700');
+      cpText.setAttribute('text-anchor','end');
+      cpText.setAttribute('fill','#000');
+      cpText.setAttribute('font-size','16');
+      cpText.setAttribute('font-family','var(--mono)');
       cpText.setAttribute('font-weight','700');
       cpText.textContent=cpLabel;add(cpText);
     }
