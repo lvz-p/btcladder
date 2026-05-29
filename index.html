@@ -42,7 +42,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 /* HEADER — fix: only title + status dot, no timestamp line */
 .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
 .hdr-left{display:flex;align-items:center;gap:10px;overflow:visible}
-.hdr-title{font-family:var(--font);font-size:20px;font-weight:800;letter-spacing:-0.04em;line-height:1.3;overflow:visible;color:var(--text);display:block}
+.hdr-title{font-family:var(--font);font-size:16px;font-weight:800;letter-spacing:-0.04em;line-height:1.3;overflow:visible;color:var(--text);display:block}
 .hdr-title span{color:var(--btc)}
 /* status dot inline with title, no second line */
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--muted2);flex-shrink:0;transition:background .3s;margin-top:1px}
@@ -50,8 +50,8 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .sdot.bad{background:var(--red)}
 .sdot.loading{background:var(--btc);animation:blink 1.1s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn{font-family:var(--font);font-size:11px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
+.hdr-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--font);font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
 .btn:hover{background:var(--surface2);border-color:rgba(255,255,255,.2)}
 .btn.primary{background:var(--btc);color:#1a0900;border-color:var(--btc);font-weight:700}
 .btn.primary:hover{background:#ffaa33}
@@ -85,7 +85,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .filter-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .filter-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 3px}
 .tog-grp{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px}
-.tog{font-family:var(--font);font-size:13px;font-weight:700;padding:4px 11px;border-radius:999px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
+.tog{font-family:var(--font);font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
 .tog.on{background:var(--surface2);color:var(--text)}
 .tog[data-cat="D"].on{background:var(--col-D-dim);color:var(--col-D)}
 .tog[data-cat="W"].on{background:var(--col-W-dim);color:var(--col-W)}
@@ -105,7 +105,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .leg-zone{width:22px;height:11px;border-radius:3px;background:rgba(255,255,255,.13);border:.5px dashed rgba(255,255,255,.4);flex-shrink:0}
 .leg-dot-btc{width:10px;height:10px;border-radius:50%;background:var(--btc);flex-shrink:0}
 /* legend toggle button on/off states */
-button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:4px 10px;cursor:pointer;font-family:var(--font);font-size:13px;background:var(--surface)}
+button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:3px 8px;cursor:pointer;font-family:var(--font);font-size:11px;background:var(--surface)}
 button.leg.tog:hover{background:var(--surface2)}
 button.leg.tog:not(.on){opacity:.32;text-decoration:line-through;background:transparent!important;color:var(--muted)!important}
 button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
@@ -255,18 +255,18 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .tl-chart-wrap svg{width:100%;display:block;user-select:none;-webkit-user-select:none}
 .tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:0 18px}
-.tl-leg-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
+.tl-leg-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel{fill:#94a3b8;font-size:13px;font-family:var(--sans)}.xLabel{fill:#94a3b8;font-size:12px;font-family:var(--sans)}
+.axisLabel{fill:#94a3b8;font-size:14px;font-family:var(--sans)}.xLabel{fill:#94a3b8;font-size:13px;font-family:var(--sans)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
   body{padding:8px 12px 40px}
   /* header: compact, no wrap, less bottom margin */
   .hdr{flex-wrap:nowrap;align-items:center;margin-bottom:8px}
-  .hdr-title{white-space:nowrap;font-size:17px}
+  .hdr-title{white-space:nowrap;font-size:14px}
   .hdr-actions{flex-shrink:0;gap:5px}
   .hdr-actions .btn{font-size:10px;padding:4px 8px}
   /* hero: tighter padding so price sits close to top border */
@@ -304,7 +304,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="sdot loading" id="sdot"></div>
   </div>
   <div class="hdr-actions">
-    <button class="btn primary" id="refreshBtn">↻ Refresh</button>
+    <button class="btn primary" id="refreshBtn" title="Refresh" style="padding:5px 9px;font-size:14px">↻</button>
     <button class="btn" id="autoBtn"><div class="fill-6h"></div><div class="fill-1m"></div><span class="btn-label">Auto: off</span></button>
   </div>
 </header>
@@ -504,11 +504,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.29.12</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.1</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.29.12 PWA';
+const VERSION='BtcLadder v1.0.1 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1911,6 +1911,28 @@ function tl_draw(mode,fast=false){
   /* store y scale on svg for crosshair */
   svg._ymin=ymin;svg._ymax=ymax;
   const y=p=>pad.t+(1-(tl_Y(Math.max(p,1e-9),log)-ymin)/(ymax-ymin))*(H-pad.t-pad.b);
+
+  /* ── current price marker on y-axis ── */
+  const curPrice=cs.length?cs[cs.length-1].close:0;
+  if(curPrice>0){
+    const curY=y(curPrice);
+    if(Number.isFinite(curY)&&curY>=pad.t&&curY<=H-pad.b){
+      /* orange label on y-axis — contained within y-axis area, doesn't leak into chart */
+      const cpRect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      const cpLabel=tl_fmtPrice(curPrice);
+      const cpW=Math.max(52, cpLabel.length*7+8);
+      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-9);
+      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',18);
+      cpRect.setAttribute('fill','#f7931a');cpRect.setAttribute('rx','3');
+      add(cpRect);
+      const cpText=document.createElementNS('http://www.w3.org/2000/svg','text');
+      cpText.setAttribute('x',pad.l-6);cpText.setAttribute('y',curY+4.5);
+      cpText.setAttribute('text-anchor','end');cpText.setAttribute('fill','#000');
+      cpText.setAttribute('font-size','11');cpText.setAttribute('font-family','var(--sans)');
+      cpText.setAttribute('font-weight','700');
+      cpText.textContent=cpLabel;add(cpText);
+    }
+  }
 
   /* ── clip group ── */
   const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
