@@ -347,7 +347,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 <!-- Row 2: All toggles unified as buttons -->
 <div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
   <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 10px;cursor:pointer;font-size:16px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
+    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
   </span>
   <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
   <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
@@ -397,7 +397,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </select>
     </div>
     <div class="tl-chart-wrap" style="position:relative;touch-action:none">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
 
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
       <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
@@ -517,11 +517,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.18</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.19</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.18 PWA';
+const VERSION='BtcLadder v1.0.19 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
