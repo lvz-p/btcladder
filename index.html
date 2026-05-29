@@ -114,6 +114,7 @@ button.leg.tog.on[data-cat="W"]{background:var(--col-W-dim);color:var(--col-W);b
 button.leg.tog.on[data-cat="M"]{background:var(--col-M-dim);color:var(--col-M);border-color:rgba(244,114,182,.3)}
 button.leg.tog.on[data-cat="onchain"]{background:var(--col-OC-dim);color:var(--col-OC);border-color:rgba(251,191,36,.3)}
 button.leg.tog.on[data-cat="TL"]{background:rgba(74,222,128,.08);color:#94a3b8;border-color:rgba(148,163,184,.3)}
+button.leg.tog.on[data-cat="MA"]{background:linear-gradient(90deg,var(--col-D-dim),var(--col-W-dim),var(--col-M-dim));color:var(--text);border-color:rgba(148,163,184,.2)}
 /* Zones and URPD as leg-btn toggles */
 button.leg.tog#zoneBtn.on{background:var(--btc-dim)!important;border-color:rgba(247,147,26,.35)!important;color:var(--btc)!important}
 button.leg.tog#urpdBtn.on{background:rgba(96,165,250,.10)!important;border-color:rgba(96,165,250,.3)!important;color:#60a5fa!important}
@@ -338,14 +339,19 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </div>
 <!-- Row 2: All toggles unified as buttons -->
-<div class="legend" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
-  <button class="leg tog on" data-cat="D"><div class="leg-pip D"></div>Daily MA</button>
-  <button class="leg tog on" data-cat="W"><div class="leg-pip W"></div>Weekly MA</button>
-  <button class="leg tog on" data-cat="M"><div class="leg-pip M"></div>Monthly MA</button>
+<div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
+  <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
+    <button class="leg tog on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:2px 7px 2px 7px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 6px;cursor:pointer;font-size:9px;color:var(--muted);line-height:1">▾</button>
+  </span>
   <button class="leg tog on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
   <button class="leg tog on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
   <button class="leg tog on" id="zoneBtn"><div class="leg-zone"></div>Zones</button>
   <button class="leg tog on" id="urpdBtn"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD</button>
+</div>
+<div id="maExpand" style="display:none;margin-bottom:12px;flex-wrap:wrap;gap:6px;padding-left:4px">
+  <button class="leg tog on" data-cat="D"><div class="leg-pip D"></div>Daily</button>
+  <button class="leg tog on" data-cat="W"><div class="leg-pip W"></div>Weekly</button>
+  <button class="leg tog on" data-cat="M"><div class="leg-pip M"></div>Monthly</button>
 </div>
 
 <div class="chart-shell" id="chartShell">
@@ -505,11 +511,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.11</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.14</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.11 PWA';
+const VERSION='BtcLadder v1.0.14 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -521,6 +527,8 @@ const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
 let autoTimer=null,lastCurrent=null,lastMas=[],lastOnchain=[],lastDiag=[],lastPriceRows=[],lastOnchainDiag=[];
 let catFilters={D:true,W:true,M:true,onchain:true,TL:true};
 try{catFilters={...catFilters,...JSON.parse(gs('filters','{}')||'{}')}}catch(_){}
+/* migrate legacy MA key if saved */
+if(catFilters['MA']!==undefined){catFilters['D']=catFilters['W']=catFilters['M']=catFilters['MA'];delete catFilters['MA'];}
 let proxFilter=gs('proximity','10')||'10';
 let autoZone=gs('autoZone','true')!=='false';
 
@@ -3441,8 +3449,54 @@ async function computeNews(){
 
 /* ── CONTROLS ── */
 document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
-  btn.classList.toggle('on',catFilters[btn.dataset.cat]!==false);
-  btn.onclick=()=>{const c=btn.dataset.cat;catFilters[c]=!btn.classList.contains('on');btn.classList.toggle('on',catFilters[c]!==false);ss('filters',JSON.stringify(catFilters));rerender()};
+  const c=btn.dataset.cat;
+  if(c==='MA'){
+    /* MA button: reflect combined D/W/M state */
+    const maOn=catFilters['D']!==false&&catFilters['W']!==false&&catFilters['M']!==false;
+    btn.classList.toggle('on',maOn);
+    btn.onclick=()=>{
+      /* single tap: toggle all MA on/off */
+      const allOn=catFilters['D']!==false&&catFilters['W']!==false&&catFilters['M']!==false;
+      const newState=!allOn;
+      catFilters['D']=catFilters['W']=catFilters['M']=newState;
+      btn.classList.toggle('on',newState);
+      /* sync tier-2 button visual state */
+      ['D','W','M'].forEach(c=>{
+        document.querySelectorAll(`.tog[data-cat="${c}"]`).forEach(b=>b.classList.toggle('on',newState));
+      });
+      ss('filters',JSON.stringify(catFilters));rerender();
+    };
+    /* chevron: expand/collapse tier-2 */
+    const exBtn=document.getElementById('maExpandBtn');
+    if(exBtn)exBtn.onclick=()=>{
+      const ex=document.getElementById('maExpand');
+      if(!ex)return;
+      const opening=ex.style.display==='none';
+      ex.style.display=opening?'flex':'none';
+      exBtn.textContent=opening?'▴':'▾';
+      /* sync tier-2 visual state when opening */
+      if(opening){
+        ['D','W','M'].forEach(c=>{
+          document.querySelectorAll(`#maExpand .tog[data-cat="${c}"]`).forEach(b=>{
+            b.classList.toggle('on',catFilters[c]!==false);
+          });
+        });
+      }
+    };
+  } else {
+    btn.classList.toggle('on',catFilters[c]!==false);
+    btn.onclick=()=>{
+      catFilters[c]=!btn.classList.contains('on');
+      btn.classList.toggle('on',catFilters[c]!==false);
+      /* if D/W/M changed, update MA button state */
+      const maBtn=document.getElementById('maBtn');
+      if(maBtn&&['D','W','M'].includes(c)){
+        const maOn=catFilters['D']!==false&&catFilters['W']!==false&&catFilters['M']!==false;
+        maBtn.classList.toggle('on',maOn);
+      }
+      ss('filters',JSON.stringify(catFilters));rerender();
+    };
+  }
 });
 document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
   btn.classList.toggle('on',btn.dataset.prox===proxFilter);
