@@ -239,13 +239,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* TRENDLINE VIEWER */
-.tl-viewer{padding:14px 18px 18px}
+.tl-viewer{padding:14px 0 18px}.tl-ctrl-row{padding:0 18px}.tl-legend{padding:0 18px}
 .tl-ctrl-row{touch-action:pan-y} /* allow scroll through controls */
 .tl-legend-wrap{touch-action:pan-y} /* allow scroll through legend */
 .tl-status{touch-action:pan-y}
 .tl-crosshair{pointer-events:none;display:none}
 .tl-crosshair-price{pointer-events:none;display:none;position:absolute;left:0;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:11px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;transform:translateY(-50%)}
-.tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:0 18px}
 .tl-ctrl-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .tl-legend-group{margin-bottom:6px}
 .tl-legend-group-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-right:4px;cursor:pointer;user-select:none}
@@ -254,12 +254,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
 .tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .tl-chart-wrap svg{width:100%;display:block;user-select:none;-webkit-user-select:none}
-.tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:0 18px}
 .tl-leg-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel{fill:#94a3b8;font-size:12px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:11px;font-family:var(--mono)}
+.axisLabel{fill:#94a3b8;font-size:13px;font-family:var(--sans)}.xLabel{fill:#94a3b8;font-size:12px;font-family:var(--sans)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
@@ -386,7 +386,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
         <option value="whitered">White / Red</option>
       </select>
     </div>
-    <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
+    <div class="tl-status" id="tlStatus" style="padding:0 18px">Open to load trendline chart.</div>
     <div class="tl-chart-wrap" style="position:relative;touch-action:none">
       <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
 
@@ -508,11 +508,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.29.1</div>
+<div class="footer" id="footerTxt">BtcLadder v86.29.11</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.29.1 PWA';
+const VERSION='BtcLadder v86.29.11 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -674,6 +674,12 @@ function withinProx(l,cur){if(l.type==='current'||proxFilter==='all'||userZoomed
 function getLevels(cur,ma,oc,tl=[]){
   return[...ma,...oc,...tl,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
     .filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,cur))
+    .sort((a,b)=>a.price-b.price);
+}
+function getAllLevels(cur,ma,oc,tl=[]){
+  /* unfiltered — used for next lower/higher which ignores display filters */
+  return[...ma,...oc,...tl,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
+    .filter(l=>Number.isFinite(l.price)&&l.price>0)
     .sort((a,b)=>a.price-b.price);
 }
 
@@ -1437,7 +1443,7 @@ function rerender(){
   if(!lastCurrent)return;
   renderChart(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderTable(lastCurrent,lastMas,lastOnchain,lastTrendlines);
-  renderSummary(lastCurrent,getLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
+  renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
   /* TL Viewer OC status shown by tl_fetchOCData directly */
 }
@@ -1666,6 +1672,14 @@ async function tl_runForTf(tf){
       tl_candles['1d_ma']=data.map(k=>({t:Number(k[0]),open:Number(k[1]),high:Number(k[2]),low:Number(k[3]),close:Number(k[4]),volume:Number(k[5])}));
     }catch(e){console.warn('MA candles fetch failed:',e);}
   }
+  /* for weekly MA (W200), fetch 400 weekly candles separately — keep 200 for trendlines */
+  if(tf==='1w'&&(!tl_candles['1w_ma']||tl_candles['1w_ma'].length<390)){
+    try{
+      const url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=400';
+      const data=await fetchJson(url);
+      tl_candles['1w_ma']=data.map(k=>({t:Number(k[0]),open:Number(k[1]),high:Number(k[2]),low:Number(k[3]),close:Number(k[4]),volume:Number(k[5])}));
+    }catch(e){console.warn('W MA candles fetch failed:',e);}
+  }
   const cs=tl_candles[tf];
   let cands=[];
   if(tf==='1d'&&d.basis==='mix'){
@@ -1753,7 +1767,7 @@ function tl_renderLegend(lines){
   const el=document.getElementById('tlLegend');
   if(!el)return;
   el.innerHTML='';
-  lines.forEach(c=>{
+  lines.forEach((c,idx)=>{
     /* defaults already set by tl_draw — just render buttons */
     if(tl_visible[c.viewerTag]===undefined)tl_visible[c.viewerTag]=false;
     const off=tl_visible[c.viewerTag]===false;
@@ -1761,7 +1775,9 @@ function tl_renderLegend(lines){
     const isWick=c.anchorBasis==='wick';
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
-    b.innerHTML=`<span class="tl-leg-dot" style="background:${off?'transparent':col};border:1.5px ${isWick?'dashed':'solid'} ${col};width:10px;height:10px;border-radius:50%;display:inline-block"></span>${c.viewerTag}`;
+    b.innerHTML=isWick
+      ? `<span style="display:inline-block;width:16px;height:0;border-top:${idx<2?2.5:1.5}px dashed ${off?'rgba(255,255,255,.25)':col};vertical-align:middle;margin-right:2px"></span>${c.viewerTag}`
+      : `<span style="display:inline-block;width:16px;height:0;border-top:${idx<2?2.5:1.5}px solid ${off?'rgba(255,255,255,.25)':col};vertical-align:middle;margin-right:2px"></span>${c.viewerTag}`;
     b.onclick=()=>{tl_visible[c.viewerTag]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
   });
@@ -1842,19 +1858,19 @@ function tl_draw(mode,fast=false){
   /* ── MA config per mode ── */
   const MA_CONFIG={
     '1d':[
-      {period:50, col:'#60a5fa', label:'D50'},
-      {period:99, col:'#93c5fd', label:'D99'},
-      {period:200,col:'#3b82f6', label:'D200'},
-      {period:365,col:'#1d4ed8', label:'D365'},
+      {period:50, col:'#60a5fa', label:'D50',  dash:null,  width:2},
+      {period:99, col:'#93c5fd', label:'D99',  dash:'8,4', width:1.5},
+      {period:200,col:'#3b82f6', label:'D200', dash:'3,3', width:1.5},
+      {period:365,col:'#1d4ed8', label:'D365', dash:'8,3,2,3', width:1.5},
     ],
     '1w':[
-      {period:20, col:'#a78bfa', label:'W20'},
-      {period:100,col:'#8b5cf6', label:'W100'},
-      {period:200,col:'#6d28d9', label:'W200'},
+      {period:20, col:'#a78bfa', label:'W20',  dash:null,  width:2},
+      {period:100,col:'#8b5cf6', label:'W100', dash:'8,4', width:1.5},
+      {period:200,col:'#6d28d9', label:'W200', dash:'3,3', width:1.5},
     ],
     '1M':[
-      {period:7,  col:'#f472b6', label:'M7'},
-      {period:20, col:'#db2777', label:'M20'},
+      {period:7,  col:'#f472b6', label:'M7',   dash:null,  width:2},
+      {period:20, col:'#db2777', label:'M20',  dash:'8,4', width:1.5},
     ]
   };
   const OC_CONFIG=[
@@ -1876,20 +1892,21 @@ function tl_draw(mode,fast=false){
   }
 
   let allPrices=[...visCs.flatMap(c=>[c.low,c.high])];
-  /* always include MA values in y-scale for consistent range between fast/full draws */
+  /* include only VISIBLE MA values in y-scale using extended candles */
+  const maCs0=mode==='1d'&&tl_candles['1d_ma']&&tl_candles['1d_ma'].length>cs.length?tl_candles['1d_ma']:
+              mode==='1w'&&tl_candles['1w_ma']&&tl_candles['1w_ma'].length>cs.length?tl_candles['1w_ma']:cs;
+  const maOffset0=maCs0.length-cs.length;
   (MA_CONFIG[mode]||[]).forEach(m=>{
-    const hist=computeMA(cs,m.period);
+    if(tl_maVisible[m.label]===false)return;
+    const hist=computeMA(maCs0,m.period);
     if(!hist.length)return;
-    const offset=cs.length-hist.length;
+    const histOffset0=maOffset0-m.period+1;
     for(let i=vs;i<=ve;i++){
-      const hi=i-offset;
+      const hi=i+histOffset0;
       if(hi>=0&&hi<hist.length&&hist[hi]>0)allPrices.push(hist[hi]);
     }
   });
-  /* include trendline projections */
-  vis.forEach(c=>{
-    for(let i=vs;i<=ve;i++){const p=c.line.project(i);if(Number.isFinite(p)&&p>0)allPrices.push(p);}
-  });
+  /* include trendline projections — removed: trendlines should not affect y-scale */
   const rawLo=Math.min(...allPrices)*0.995;
   const rawHi=Math.max(...allPrices)*1.005;
   const ymin=tl_Y(rawLo,log),ymax=tl_Y(rawHi,log);
@@ -2001,11 +2018,21 @@ function tl_draw(mode,fast=false){
   /* ── MA lines — skip during pan ── */
   if(!fast&&showMA){
     /* use extended candles for daily MAs to support D200/D365 */
-    const maCs=mode==='1d'&&tl_candles['1d_ma']&&tl_candles['1d_ma'].length>cs.length?tl_candles['1d_ma']:cs;
+    const maCs=mode==='1d'&&tl_candles['1d_ma']&&tl_candles['1d_ma'].length>cs.length?tl_candles['1d_ma']:
+               mode==='1w'&&tl_candles['1w_ma']&&tl_candles['1w_ma'].length>cs.length?tl_candles['1w_ma']:cs;
     /* align maCs to cs by matching last candle */
     const maOffset=maCs.length-cs.length; /* maCs has more history */
+    const cur2=cs.length?cs[cs.length-1].close:0;
+    const shortestPeriod=(MA_CONFIG[mode]||[]).length?Math.min(...(MA_CONFIG[mode]||[]).map(m=>m.period)):0;
     (MA_CONFIG[mode]||[]).forEach(m=>{
-      if(tl_maVisible&&tl_maVisible[m.label]===false)return;
+      /* initialize default visibility if not yet set */
+      if(tl_maVisible[m.label]===undefined){
+        let maVal=0;
+        if(maCs.length>=m.period){let s=0;for(let i=maCs.length-m.period;i<maCs.length;i++)s+=maCs[i].close;maVal=s/m.period;}
+        const withinRange=!cur2||!maVal||Math.abs(maVal-cur2)/cur2<=0.25;
+        tl_maVisible[m.label]=(m.period===shortestPeriod)&&withinRange;
+      }
+      if(tl_maVisible[m.label]===false)return;
       const hist=computeMA(maCs,m.period);
       if(!hist.length)return;
       /* hist[j] corresponds to maCs[j+m.period-1]
@@ -2022,7 +2049,8 @@ function tl_draw(mode,fast=false){
       if(!d)return;
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');
       path.setAttribute('d',d);path.setAttribute('stroke',m.col);
-      path.setAttribute('stroke-width','1.5');path.setAttribute('fill','none');path.setAttribute('opacity','.8');
+      path.setAttribute('stroke-width',m.width||1.5);path.setAttribute('fill','none');path.setAttribute('opacity','.8');
+      if(m.dash)path.setAttribute('stroke-dasharray',m.dash);
       /* MA tooltip on hover */
       const maCurrentVal=computeMA(maCs,m.period);
       const maVal=maCurrentVal.length?maCurrentVal[maCurrentVal.length-1]:null;
@@ -2090,8 +2118,12 @@ function tl_draw(mode,fast=false){
     tll.setAttribute('x2',x2);tll.setAttribute('y2',y2);
     tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',idx<3?3:2);
     tll.setAttribute('opacity',idx<3?'.9':'.65');
-    if(isWick)tll.setAttribute('stroke-dasharray','6,3');
-    tll.setAttribute('stroke-linecap','round');
+    if(isWick){
+      tll.setAttribute('stroke-dasharray','8,4');
+      tll.setAttribute('stroke-linecap','butt'); /* butt needed for dashes to show */
+    } else {
+      tll.setAttribute('stroke-linecap','round');
+    }
     tll.setAttribute('data-tltag',c.viewerTag);tll.setAttribute('data-tlidx',idx);tll.setAttribute('data-tltype',c.type);
     tll.style.cursor='pointer';
     tll.addEventListener('mousemove',ev=>{
@@ -2146,7 +2178,8 @@ function tl_renderMALegend(mode,configs){
     if(tl_maVisible[m.label]===undefined){
       const isShortest=m.period===shortestPeriod;
       /* compute current MA value for distance check */
-      const maCs=mode==='1d'&&tl_candles['1d_ma']&&tl_candles['1d_ma'].length>0?tl_candles['1d_ma']:tl_candles[mode]||[];
+      const maCs=mode==='1d'&&tl_candles['1d_ma']&&tl_candles['1d_ma'].length>0?tl_candles['1d_ma']:
+                 mode==='1w'&&tl_candles['1w_ma']&&tl_candles['1w_ma'].length>0?tl_candles['1w_ma']:tl_candles[mode]||[];
       let maVal=0;
       if(maCs.length>=m.period){let s=0;for(let i=maCs.length-m.period;i<maCs.length;i++)s+=maCs[i].close;maVal=s/m.period;}
       const withinRange=!cur||!maVal||Math.abs(maVal-cur)/cur<=0.25;
@@ -2155,7 +2188,7 @@ function tl_renderMALegend(mode,configs){
     const off=tl_maVisible[m.label]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
-    b.innerHTML=`<span class="tl-leg-dot" style="background:${m.col}"></span>${m.label}`;
+    b.innerHTML=`<span style="display:inline-block;width:16px;height:0;border-top:${m.width||1.5}px ${m.dash?'dashed':'solid'} ${off?'rgba(255,255,255,.25)':m.col};vertical-align:middle;margin-right:2px"></span>${m.label}`;
     b.onclick=()=>{tl_maVisible[m.label]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
   });
@@ -2492,12 +2525,22 @@ async function tl_fetchOCData(){
     const mouseXsvg=(clientX-rect.left)/rect.width*svgW;
     const vl=svg.querySelector('#tlChVLine');
     if(vl){vl.setAttribute('x1',mouseXsvg);vl.setAttribute('x2',mouseXsvg);vl.style.display='inline';}
-    /* price label */
+    /* price label — switch side based on crosshair x position */
     const priceEl=document.getElementById('tlCrosshairPrice');
     if(priceEl){
+      const xPct=(clientX-rect.left)/rect.width;
       priceEl.style.display='block';
       priceEl.style.top=(clientY-rect.top)/rect.height*100+'%';
       priceEl.textContent='$'+Math.round(yVal).toLocaleString();
+      if(xPct<0.25){
+        /* near left edge — show on right */
+        priceEl.style.left='auto';priceEl.style.right='0';
+        priceEl.style.transform='translateY(-50%)';
+      } else {
+        /* default — show on left */
+        priceEl.style.left='0';priceEl.style.right='auto';
+        priceEl.style.transform='translateY(-50%)';
+      }
     }
     /* date label */
     const cs=tl_candles[tlViewerMode]||[];
@@ -2525,8 +2568,12 @@ async function tl_fetchOCData(){
             `<span style="color:#94a3b8">O</span> ${fmt(c.open)} <span style="color:#94a3b8">H</span> ${fmt(c.high)}<br>`+
             `<span style="color:#94a3b8">L</span> ${fmt(c.low)} <span style="color:#94a3b8">C</span> <span style="color:${isUp?'#4ade80':'#f87171'}">${fmt(c.close)}</span>`;
           tip.style.display='block';
-          tip.style.left=(clientX+12)+'px';
-          tip.style.top=(clientY-60)+'px';
+          /* position above and offset from thumb, clamped to viewport */
+          const _tw=tip.offsetWidth||130,_th=tip.offsetHeight||70;
+          const _tx=Math.min(clientX+24,window.innerWidth-_tw-8);
+          const _ty=Math.max(8,clientY-_th-24);
+          tip.style.left=_tx+'px';
+          tip.style.top=_ty+'px';
         }
       }
     }
@@ -2928,7 +2975,7 @@ async function refreshPriceOnly(){
     }catch(_){}
     /* update nearest support/resistance */
     if(lastMas.length||lastOnchain.length||lastTrendlines.length)
-      renderSummary(lastCurrent, getLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
+      renderSummary(lastCurrent, getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
     /* rerender ladder with new price */
     rerender();
     /* trendline breach detection */
