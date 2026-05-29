@@ -525,11 +525,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.23</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.24</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.23 PWA';
+const VERSION='BtcLadder v1.0.24 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1868,7 +1868,13 @@ function tl_draw(mode,fast=false){
   const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
   const log=TL_DEFAULTS[mode].log;
 
-  const W=1100,H=520,pad={l:120,r:20,t:12,b:48};
+  const W=1100,H=520;
+  /* dynamic pad.l: target ~48px screen width for y-axis */
+  const _svgEl=document.getElementById('tlSvg');
+  const _svgW=Math.max(300,_svgEl?_svgEl.getBoundingClientRect().width:900);
+  const _targetYAxisPx=Math.max(48,Math.min(80,_svgW*0.11)); /* 11% of screen, 48-80px */
+  const _padL=Math.round(_targetYAxisPx/(_svgW||900)*W);
+  const pad={l:Math.max(80,_padL),r:20,t:12,b:48};
   const _yLabels=[],_xLabels=[];let _cpY=null;
   const add=e=>{svg.appendChild(e);return e};
 
@@ -1966,6 +1972,16 @@ function tl_draw(mode,fast=false){
   cg.setAttribute('clip-path','url(#tlClip)');cg.setAttribute('id','tlCg');add(cg);
   const addC=e=>{cg.appendChild(e);return e};
 
+  /* ── current price dashed line ── */
+  if(_cpY!==null){
+    const cpLine=document.createElementNS('http://www.w3.org/2000/svg','line');
+    cpLine.setAttribute('x1',pad.l);cpLine.setAttribute('x2',W-pad.r);
+    cpLine.setAttribute('y1',_cpY);cpLine.setAttribute('y2',_cpY);
+    cpLine.setAttribute('stroke','rgba(226,232,240,.35)');cpLine.setAttribute('stroke-width','0.8');
+    cpLine.setAttribute('stroke-dasharray','4,4');
+    addC(cpLine);
+  }
+
   /* ── grid ── */
   for(let k=0;k<=5;k++){
     const yy=pad.t+k*(H-pad.t-pad.b)/5;
@@ -2012,7 +2028,7 @@ function tl_draw(mode,fast=false){
   chVLine.setAttribute('x1',0);chVLine.setAttribute('x2',0);
   chVLine.setAttribute('y1',pad.t);chVLine.setAttribute('y2',H-pad.b);
   chVLine.setAttribute('stroke','rgba(226,232,240,.75)');chVLine.setAttribute('stroke-width','1');
-  chVLine.setAttribute('stroke-dasharray','4,3');chVLine.setAttribute('class','tl-crosshair');
+  chVLine.setAttribute('stroke-dasharray','3,4');chVLine.setAttribute('class','tl-crosshair');
   add(chVLine);
   /* price dot on y axis */
   const chDot=document.createElementNS('http://www.w3.org/2000/svg','circle');
