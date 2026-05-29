@@ -397,7 +397,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </select>
     </div>
     <div class="tl-chart-wrap" style="position:relative;touch-action:none">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:390px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
 
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
       <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
@@ -517,11 +517,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.19</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.20</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.19 PWA';
+const VERSION='BtcLadder v1.0.20 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1944,15 +1944,15 @@ function tl_draw(mode,fast=false){
       /* orange label on y-axis — contained within y-axis area, doesn't leak into chart */
       const cpRect=document.createElementNS('http://www.w3.org/2000/svg','rect');
       const cpLabel=tl_fmtPriceShort(curPrice);
-      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-14);
-      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',28);
+      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-15);
+      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',30);
       cpRect.setAttribute('fill','#f7931a');cpRect.setAttribute('rx','3');
       add(cpRect);
       const cpText=document.createElementNS('http://www.w3.org/2000/svg','text');
       cpText.setAttribute('x',pad.l-6);cpText.setAttribute('y',curY+7);
       cpText.setAttribute('text-anchor','end');
       cpText.setAttribute('fill','#000');
-      cpText.setAttribute('font-size','16');
+      cpText.setAttribute('font-size','18');
       cpText.setAttribute('font-family','var(--mono)');
       cpText.setAttribute('font-weight','700');
       cpText.textContent=cpLabel;add(cpText);
