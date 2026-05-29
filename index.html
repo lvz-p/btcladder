@@ -92,7 +92,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .tog[data-cat="M"].on{background:var(--col-M-dim);color:var(--col-M)}
 .tog[data-cat="onchain"].on{background:var(--col-OC-dim);color:var(--col-OC)}
 .lbl-sm{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:0 4px;white-space:nowrap}
-.zone-tog{font-family:var(--font);font-size:13px;font-weight:700;padding:5px 12px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
+.zone-tog{font-family:var(--font);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
 .zone-tog.on{background:var(--btc-dim);border-color:rgba(247,147,26,.35);color:var(--btc)}
 
 /* LEGEND */
@@ -248,8 +248,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:0 18px}
 .tl-ctrl-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .tl-legend-group{margin-bottom:6px}
-.tl-legend-group-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-right:4px;cursor:pointer;user-select:none}
-.tl-legend-group-label:hover{color:var(--text)}
+.tl-legend-group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-right:4px;cursor:pointer;user-select:none}
+.tl-legend-group-label.all-off{text-decoration:line-through;opacity:.4}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
 .tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -259,7 +259,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel{fill:#94a3b8;font-size:14px;font-family:var(--sans)}.xLabel{fill:#94a3b8;font-size:13px;font-family:var(--sans)}
+.axisLabel{fill:#94a3b8;font-size:12px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:12px;font-family:var(--mono)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
@@ -504,11 +504,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.5</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.10</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.5 PWA';
+const VERSION='BtcLadder v1.0.10 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1779,11 +1779,15 @@ function tl_renderLegend(lines){
   });
   /* group toggle */
   const lbl=document.getElementById('tlLegTLLabel');
-  if(lbl)lbl.onclick=()=>{
-    const allOn=lines.every(c=>tl_visible[c.viewerTag]!==false);
-    lines.forEach(c=>tl_visible[c.viewerTag]=allOn?false:true);
-    tl_draw(tlViewerMode);
-  };
+  if(lbl){
+    const allOff=lines.length>0&&lines.every(c=>tl_visible[c.viewerTag]===false);
+    lbl.classList.toggle('all-off',allOff);
+    lbl.onclick=()=>{
+      const allOff2=lines.every(c=>tl_visible[c.viewerTag]===false);
+      lines.forEach(c=>tl_visible[c.viewerTag]=allOff2?true:false);
+      tl_draw(tlViewerMode);
+    };
+  }
 }
 
 function tl_highlight(tag){
@@ -1928,7 +1932,7 @@ function tl_draw(mode,fast=false){
       const cpText=document.createElementNS('http://www.w3.org/2000/svg','text');
       cpText.setAttribute('x',pad.l-6);cpText.setAttribute('y',curY+7);
       cpText.setAttribute('text-anchor','end');cpText.setAttribute('fill','#000');
-      cpText.setAttribute('font-size','20');cpText.setAttribute('font-family','var(--sans)');
+      cpText.setAttribute('fill','#000');cpText.setAttribute('font-size','12');cpText.setAttribute('font-family','var(--mono)');cpText.setAttribute('font-weight','700');
       cpText.setAttribute('font-weight','700');
       cpText.textContent=cpLabel;add(cpText);
     }
@@ -1954,9 +1958,8 @@ function tl_draw(mode,fast=false){
     gl.setAttribute('x1',pad.l);gl.setAttribute('x2',W-pad.r);gl.setAttribute('y1',yy);gl.setAttribute('y2',yy);
     gl.setAttribute('stroke','rgba(148,163,184,.12)');add(gl);
     const gt=document.createElementNS('http://www.w3.org/2000/svg','text');
-    gt.setAttribute('x',pad.l-6);gt.setAttribute('y',yy+5);
-    gt.setAttribute('text-anchor','end');gt.setAttribute('fill','#94a3b8');
-    gt.setAttribute('font-size','22');gt.setAttribute('font-family','var(--sans)');
+    gt.setAttribute('x',pad.l-6);gt.setAttribute('y',yy+4);
+    gt.setAttribute('text-anchor','end');gt.setAttribute('class','axisLabel');
     gt.textContent=tl_fmtPrice(val);add(gt);
   }
 
@@ -1974,8 +1977,7 @@ function tl_draw(mode,fast=false){
   lbls.filter((_,i)=>i%lstep===0).forEach(d=>{
     const lt=document.createElementNS('http://www.w3.org/2000/svg','text');
     lt.setAttribute('x',x(d.i));lt.setAttribute('y',H-10);
-    lt.setAttribute('text-anchor','middle');lt.setAttribute('fill','#94a3b8');
-    lt.setAttribute('font-size','20');lt.setAttribute('font-family','var(--sans)');
+    lt.setAttribute('text-anchor','middle');lt.setAttribute('class','xLabel');
     lt.textContent=d.lbl;add(lt);
   });
 
@@ -2214,11 +2216,15 @@ function tl_renderMALegend(mode,configs){
   });
   /* group toggle */
   const lbl=document.getElementById('tlLegMALabel');
-  if(lbl)lbl.onclick=()=>{
-    const allOn=configs.every(m=>tl_maVisible[m.label]!==false);
-    configs.forEach(m=>tl_maVisible[m.label]=allOn?false:true);
-    tl_draw(tlViewerMode);
-  };
+  if(lbl){
+    const allOff=configs.length>0&&configs.every(m=>tl_maVisible[m.label]===false);
+    lbl.classList.toggle('all-off',allOff);
+    lbl.onclick=()=>{
+      const allOff2=configs.every(m=>tl_maVisible[m.label]===false);
+      configs.forEach(m=>tl_maVisible[m.label]=allOff2?true:false);
+      tl_draw(tlViewerMode);
+    };
+  }
 }
 
 function tl_renderOCLegend(configs){
@@ -2247,11 +2253,15 @@ function tl_renderOCLegend(configs){
     el.appendChild(b);
   });
   const lbl=document.getElementById('tlLegOCLabel');
-  if(lbl)lbl.onclick=()=>{
-    const allOn=configs.every(oc=>tl_ocVisible[oc.key]!==false);
-    configs.forEach(oc=>tl_ocVisible[oc.key]=allOn?false:true);
-    tl_draw(tlViewerMode);
-  };
+  if(lbl){
+    const allOff=configs.length>0&&configs.every(oc=>tl_ocVisible[oc.key]===false);
+    lbl.classList.toggle('all-off',allOff);
+    lbl.onclick=()=>{
+      const allOff2=configs.every(oc=>tl_ocVisible[oc.key]===false);
+      configs.forEach(oc=>tl_ocVisible[oc.key]=allOff2?true:false);
+      tl_draw(tlViewerMode);
+    };
+  }
 }
 
 /* on-chain historical data fetch */
