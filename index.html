@@ -299,6 +299,39 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   /* ladder canvas 500px on mobile */
   #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:490px!important;max-height:490px!important}
 }
+
+/* ── TAB NAVIGATION ── */
+:root{--tab-h:52px}
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--tab-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  display:flex;align-items:stretch;
+  z-index:100;
+}
+.tab-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border:none;background:transparent;cursor:pointer;
+  color:var(--muted);font-size:9px;font-family:var(--mono);text-transform:uppercase;
+  letter-spacing:.06em;font-weight:700;transition:color .12s;padding-bottom:2px;
+}
+.tab-btn.active{color:var(--btc)}
+.tab-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+body{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 8px)}
+@media(min-width:641px){
+  .tab-bar{
+    position:static;height:auto;padding-bottom:0;
+    border-top:none;border-bottom:1px solid var(--border);
+    margin-bottom:16px;
+  }
+  .tab-btn{flex-direction:row;gap:6px;font-size:11px;padding:10px 16px;flex:none}
+  .tab-btn svg{width:16px;height:16px}
+  body{padding-bottom:0}
+}
 </style>
 </head>
 <body>
@@ -317,6 +350,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </header>
 
+<div class="tab-panel active" id="panel-ladder">
 <div class="hero">
   <div>
     <div class="hero-price">
@@ -380,11 +414,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <div class="tt-divider" id="ttDiv" style="display:none"></div>
   <div class="tt-members" id="ttMembers"></div>
 </div>
+</div>
 
-
-<details class="section" id="tlSection">
-  <summary>Trendlines</summary>
+<div class="tab-panel" id="panel-chart">
   <div class="tl-viewer">
+<div class="tl-viewer">
     <div class="tl-ctrl-row">
       <button class="btn active" id="tlDailyBtn">Daily</button>
       <button class="btn" id="tlWeeklyBtn">Weekly</button>
@@ -409,30 +443,33 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <div class="tl-legend-group" id="tlLegOCGroup"><span class="tl-legend-group-label" id="tlLegOCLabel">On-chain &nbsp;</span><span class="tl-legend" id="tlOCLegend"></span></div>
     </div>
   </div>
-</details>
+  </div>
+</div>
 
-<details class="section">
-  <summary>Levels List</summary>
-  <div class="section-body" style="margin-top:4px">
+<div class="tab-panel" id="panel-list">
+  <div class="section-body" style="margin-top:8px">
+<div class="section-body" style="margin-top:4px">
     <div id="tableFilterInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
     <div id="maTable"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
   </div>
-</details>
+  </div>
+</div>
 
-<details class="section">
-  <summary>User guide</summary>
-  <div class="section-body" style="margin-top:4px">
+<div class="tab-panel" id="panel-settings">
+  <div class="section-body" style="padding-top:12px">
+    <div class="gsec"><details open><summary>News</summary><div class="section-body" style="margin-top:8px">
+    <div id="newsBody" style="font-size:13px;color:var(--muted);padding:8px 0">Calculating…</div>
+  </div></details></div>
+    <div class="gsec"><details><summary>User Guide</summary><div class="section-body" style="margin-top:4px">
     <div class="guide-body">
-      <details class="gsec"><summary>How to read the chart</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <p>The vertical axis is a true price axis — vertical position corresponds directly to price. The orange BTC line is your current price anchor. Levels above are resistances; below are supports.</p>
           <p><strong style="color:var(--text)">Confluence zones</strong> (shaded bands) appear when multiple independent signals converge within a tight price range. Hover to see each member level's individual price.</p>
           <p>When several levels are too close on screen to display individually, they appear as a <strong style="color:var(--text)">×N badge</strong>. Hover to see all individual prices.</p>
           <p>Green % = level is above current price. Red % = below. Amber = within 0.8%.</p>
         </div>
       </details>
-      <details class="gsec"><summary>Tag structure</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <div class="mono-blk">
             X##MA — Moving Average<br>
             X = D (Daily) · W (Weekly) · M (Monthly)<br>
@@ -452,8 +489,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
           </div>
         </div>
       </details>
-      <details class="gsec"><summary>Trendlines — how they work</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <p>Trendlines are detected algorithmically across three timeframes: Daily (180 candles), Weekly (200 candles), and Monthly (full history).</p>
           <p>1. <strong style="color:var(--text)">Pivot detection</strong> — finds price points that are locally extreme within a window of surrounding candles (pivot highs for resistance, lows for support).</p>
           <p>2. <strong style="color:var(--text)">Line generation</strong> — draws candidate lines between every valid pair of pivots of the same type.</p>
@@ -463,49 +499,34 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
           <p>The <strong style="color:var(--text)"># rank</strong> in each tag reflects score ordering within that timeframe and type. Open the <strong style="color:var(--text)">Trendlines</strong> section to see the full chart with anchor points and line extensions.</p>
         </div>
       </details>
-      <details class="gsec"><summary>URPD overlay — what it shows</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <p><strong style="color:var(--text)">URPD-R</strong> (Unrealized Realized Price Distribution, Realized cap weighted) shows how much Bitcoin cost basis is concentrated at each price level.</p>
           <p>Each horizontal bar represents a $500 price bin (or $1,000 at All range). Bar width is proportional to the total realized cap of all Bitcoin last moved within that price range — a wider bar means more BTC was acquired near that price, making it a significant support or resistance zone.</p>
           <p>The <strong style="color:var(--text)">vertical reference line</strong> marks where the 100% (strongest) bin would reach. All bars are drawn relative to this fixed scale, so the reference line is always visible even when the strongest bin is outside the current window. Normalization is global across the full Bitcoin distribution.</p>
           <p>Toggle <strong style="color:var(--text)">▦ URPD</strong> to show or hide the overlay.</p>
         </div>
       </details>
-      <details class="gsec"><summary>On-chain levels</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <p><strong style="color:var(--text)">Realized Price (RP)</strong> — Average acquisition price of all BTC, weighted by last on-chain movement. Key long-term support in bear markets.</p>
           <p><strong style="color:var(--text)">STH Cost Basis (STHCB)</strong> — Cost basis of short-term holders (coins moved within ~155 days). Reflects recent speculative positioning.</p>
           <p><strong style="color:var(--text)">LTH Cost Basis (LTHCB)</strong> — Cost basis of long-term holders (coins unmoved 155+ days). Associated with macro accumulation zones.</p>
           <p><strong style="color:var(--text)">True Market Mean (TMM)</strong> — Economically weighted cost basis from Cointime Economics. Identifies macro equilibrium zones.</p>
         </div>
       </details>
-      <details class="gsec"><summary>Confluence zones &amp; display groups</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <p>Confluence zones use a mean-shift algorithm on the 1D price axis. Each level shifts toward its local density centroid, then levels with converged centers are grouped. Maximum zone width is 2% of price.</p>
           <p>Display groups (×N badges) are separate — a readability feature when lines are within ~18px on screen. They carry no analytical meaning. Hover to see individual prices.</p>
         </div>
       </details>
-      <details class="gsec"><summary>Zoom &amp; pan</summary>
-        <div class="gtxt">
+      <details class="gsec"><div class="gtxt">
           <p><strong style="color:var(--text)">Ctrl+scroll</strong> (or Cmd+scroll on Mac) zooms in/out centered on your cursor's price position.</p>
           <p><strong style="color:var(--text)">Click-drag</strong> pans the price axis up and down. When zoomed or panned, all price levels are shown regardless of the distance filter.</p>
           <p><strong style="color:var(--text)">Double-click</strong> resets to the active range preset. The ↺ Reset zoom button also appears when zoomed.</p>
         </div>
       </details>
     </div>
-  </div>
-</details>
-
-<details class="section" id="newsSection">
-  <summary>News</summary>
-  <div class="section-body" style="margin-top:8px">
-    <div id="newsBody" style="font-size:13px;color:var(--muted);padding:8px 0">Calculating…</div>
-  </div>
-</details>
-
-<details class="section">
-  <summary>Diagnostics</summary>
-  <div class="section-body" style="margin-top:4px">
+  </div></details></div>
+    <div class="gsec"><details><summary>Diagnostics</summary><div class="section-body" style="margin-top:4px">
     <div style="margin-bottom:8px">
       <button onclick="navigator.clipboard.writeText($('diagBody').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy diagnostics',2000)}).catch(()=>this.textContent='Failed')"
         style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono)">
@@ -514,14 +535,36 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <div id="diagBody"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
 
+  </div></details></div>
   </div>
-</details>
+</div>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.20</div>
+
+<nav class="tab-bar" id="tabBar">
+  <button class="tab-btn active" id="tab-ladder" onclick="switchTab('ladder')">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg>
+    Ladder
+  </button>
+  <button class="tab-btn" id="tab-chart" onclick="switchTab('chart')">
+    <svg viewBox="0 0 24 24"><polyline points="3,17 8,11 13,14 20,6"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+    Chart
+  </button>
+  <button class="tab-btn" id="tab-list" onclick="switchTab('list')">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    List
+  </button>
+  <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+
+<div class="footer" id="footerTxt">BtcLadder v1.1.0-nav</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.20 PWA';
+const VERSION='BtcLadder v1.1.0-nav PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1492,7 +1535,7 @@ async function refreshAll(){
     if(ur?.status==='fulfilled')lastUrpd=ur.value;
     else lastUrpd=[];
     /* refresh viewer if already open */
-    if(document.getElementById('tlSection')?.open){tlViewerReady=true;tl_draw(tlViewerMode);}
+    if(tlViewerReady){tl_draw(tlViewerMode);}
     setStatus('ok');
     rerender();
     /* compute news in background — doesn't block render */
@@ -2822,15 +2865,9 @@ async function tl_fetchOCData(){
 
 
 let tlViewerReady=false;
-document.getElementById('tlSection').addEventListener('toggle',()=>{
-  const sec=document.getElementById('tlSection');
-  if(sec.open&&!tlViewerReady&&Object.keys(tl_cands).length){
-    tlViewerReady=true;tl_draw('1d');
-  }
-  if(sec.open){
-    setTimeout(tl_fetchOCData,200); /* fetch on-chain in background */
-  }
-});
+/* tlSection removed - chart tab triggers draw via switchTab */
+/* pre-fetch OC data on load */
+setTimeout(tl_fetchOCData,2000);
 ['Daily','Weekly','Monthly'].forEach(label=>{
   const id='tl'+label+'Btn';
   const el=document.getElementById(id);
@@ -3576,6 +3613,19 @@ let rt=null;
 if(window.ResizeObserver){new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>rerender(),90)}).observe($('chartInner'))}
 $('footerTxt').textContent=VERSION;
 refreshAll();
+
+function switchTab(name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.id==='tab-'+name));
+  /* trigger tl_draw when switching to chart tab */
+  if(name==='chart'){
+    if(!tlViewerReady&&Object.keys(tl_cands).length){tlViewerReady=true;}
+    if(typeof tl_draw==='function')setTimeout(()=>{tl_draw(tlViewerMode);tl_fetchOCData();},50);
+  }
+  /* trigger rerender when switching to ladder/list */
+  if((name==='ladder'||name==='list')&&typeof rerender==='function')rerender();
+}
+
 </script>
 <script>
 if('serviceWorker' in navigator){
