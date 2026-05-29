@@ -239,7 +239,10 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* TRENDLINE VIEWER */
-.tl-viewer{padding:14px 18px 18px;touch-action:none}
+.tl-viewer{padding:14px 18px 18px}
+.tl-ctrl-row{touch-action:pan-y} /* allow scroll through controls */
+.tl-legend-wrap{touch-action:pan-y} /* allow scroll through legend */
+.tl-status{touch-action:pan-y}
 .tl-crosshair{pointer-events:none;display:none}
 .tl-crosshair-price{pointer-events:none;display:none;position:absolute;left:0;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:11px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;transform:translateY(-50%)}
 .tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -384,7 +387,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </select>
     </div>
     <div class="tl-status" id="tlStatus">Open to load trendline chart.</div>
-    <div class="tl-chart-wrap" style="position:relative">
+    <div class="tl-chart-wrap" style="position:relative;touch-action:none">
       <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
 
       <div id="tlCrosshairPrice" class="tl-crosshair-price"></div>
@@ -501,19 +504,15 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </button>
     </div>
     <div id="diagBody"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
-    <div style="margin-top:12px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)">TL Touch log (open TL section and interact):</div>
-      <pre id="tlTouchDiag" style="font-size:10px;font-family:var(--mono);color:var(--muted);line-height:1.5;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto"></pre>
-      <button onclick="navigator.clipboard.writeText(document.getElementById('tlTouchDiag').textContent).then(()=>this.textContent='Copied!').catch(()=>this.textContent='Failed');setTimeout(()=>this.textContent='Copy touch log',2000)" style="margin-top:4px;font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono)">Copy touch log</button>
-    </div>
+
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.8</div>
+<div class="footer" id="footerTxt">BtcLadder v86.28.45</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.8 PWA';
+const VERSION='BtcLadder v86.28.45 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1089,7 +1088,7 @@ function renderChart(cur,ma,oc,tl=[]){
     window._tdismissSet=true;
     document.addEventListener('touchstart',e=>{
       hideTip();clearHl();
-      /* if touch didn't start on canvas, reset pan/pinch state */
+      /* if touch didn't start on canvas, reset ladder pan/pinch state */
       const canvasEl=$('canvasCol');
       if(canvasEl&&!canvasEl.contains(e.target)){
         isTouchPanning=false;
@@ -1097,6 +1096,7 @@ function renderChart(cur,ma,oc,tl=[]){
         pinchStartLo=0;pinchStartHi=0;pinchStartDist=0;
         if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
       }
+      /* don't reset TL pointer state here - pointerdown handles that */
     },{passive:true});
   }
   if(!window._mmSet){
@@ -1125,17 +1125,17 @@ function renderChart(cur,ma,oc,tl=[]){
         const t=e.touches[0],r=tt.getBoundingClientRect();
         dragOX=t.clientX-r.left;dragOY=t.clientY-r.top;
         e.stopPropagation();
-      },{passive:false});
+      },{passive:true});
+      /* passive:true — tooltip drag is minor, don't block page scroll */
       document.addEventListener('touchmove',e=>{
         if(!dragActive)return;
-        e.preventDefault();
         const t=e.touches[0];
         const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
         let x=t.clientX-dragOX,y=t.clientY-dragOY;
         x=Math.max(8,Math.min(window.innerWidth-w-8,x));
         y=Math.max(8,Math.min(window.innerHeight-h-8,y));
         tt.style.left=x+'px';tt.style.top=y+'px';
-      },{passive:false});
+      },{passive:true});
       document.addEventListener('touchend',()=>{dragActive=false;},{passive:true});
     })();
   }
@@ -1246,8 +1246,7 @@ function renderChart(cur,ma,oc,tl=[]){
   document.addEventListener('touchmove',e=>{
     const cur=window._cur||lastCurrent;if(!cur)return;
     if(e.touches.length===1&&isTouchPanning){
-      /* pan */
-      e.preventDefault();
+      /* pan - touch-action:none on canvas handles scroll prevention */
       const rect=canvas.getBoundingClientRect();
       const crange=panStartHi-panStartLo;
       const delta=(e.touches[0].clientY-panStartY)/rect.height*crange;
@@ -1260,7 +1259,6 @@ function renderChart(cur,ma,oc,tl=[]){
       /* pinch zoom — only if pinch was started on canvas */
       const canvasEl=$('canvasCol');
       if(!canvasEl||(!canvasEl.contains(e.touches[0].target)&&!canvasEl.contains(e.touches[1].target)))return;
-      e.preventDefault();
       const clo=canvas._lo,chi=canvas._hi;
       if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
       if(!Number.isFinite(pinchStartLo)||!Number.isFinite(pinchStartHi)||pinchStartLo===0||pinchStartHi===0)return;
@@ -1273,7 +1271,7 @@ function renderChart(cur,ma,oc,tl=[]){
       const newHi=pivot+(pinchStartHi-pivot)*factor;
       applyZoom(newLo,newHi,cur);
     }
-  },{passive:false});
+  },{passive:true});
 
   document.addEventListener('touchend',e=>{
     if(e.touches.length===0){
@@ -1442,35 +1440,9 @@ function rerender(){
   renderSummary(lastCurrent,getLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
   /* TL Viewer OC status shown by tl_fetchOCData directly */
-
-  /* ── TL touch diagnostics ── */
-  if(!window._tlTouchDiagSet){
-    window._tlTouchDiagSet=true;
-    let _tlTouchLog=[];
-    function _tlLog(msg){
-      const ts=new Date().toTimeString().slice(0,8);
-      _tlTouchLog.push(`${ts} ${msg}`);
-      if(_tlTouchLog.length>30)_tlTouchLog.shift();
-      const el=document.getElementById('tlTouchDiag');
-      if(el)el.textContent=_tlTouchLog.join('\n');
-    }
-    document.addEventListener('touchstart',e=>{
-      const svg=document.getElementById('tlSvg');
-      const rect=svg?svg.getBoundingClientRect():{left:0,right:0,top:0,bottom:0,width:0};
-      const t0=e.touches[0];
-      const inB=rect.width>0&&t0.clientX>=rect.left&&t0.clientX<=rect.right&&t0.clientY>=rect.top&&t0.clientY<=rect.bottom;
-      const svgAttached=!!(svg&&svg._tlTouchAttached);
-      const svgFired=!!window._tlDiag_svgFired;window._tlDiag_svgFired=false;
-      _tlLog(`START n=${e.touches.length} inB=${inB} att=${svgAttached} svgFired=${svgFired} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} rect=${Math.round(rect.width)}x${Math.round(rect.height)}@${Math.round(rect.left)},${Math.round(rect.top)} touch=${Math.round(t0.clientX)},${Math.round(t0.clientY)} tgt=${e.target.tagName}`);
-    },{passive:true});
-    document.addEventListener('touchmove',e=>{
-      _tlLog(`MOVE n=${e.touches.length} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch} lpa=${!!window._tlDiag_lpa}`);
-    },{passive:true});
-    document.addEventListener('touchend',e=>{
-      _tlLog(`END rem=${e.touches.length} tP=${!!window._tlDiag_tPan} tPi=${!!window._tlDiag_tPinch}`);
-    },{passive:true});
-  }
 }
+
+
 function setStatus(state){$('sdot').className='sdot '+state}
 
 async function refreshAll(){
@@ -1814,14 +1786,14 @@ function tl_clearHighlight(){
   });
 }
 
-function tl_draw(mode){
+function tl_draw(mode,fast=false){
   tlViewerMode=mode;
   const svg=document.getElementById('tlSvg');
   const tip=document.getElementById('tlTip');
   if(!svg)return;
   /* preserve crosshair visibility across redraws */
   const _chWasVisible=svg.querySelector('.tl-crosshair')?.style.display==='inline';
-  svg._tlTouchAttached=false; /* reset so _tlAttachTouch re-registers after rebuild */
+  if(!fast)svg._tlTouchAttached=false; /* only reset on full draw */
   svg.innerHTML='';
 
   const lines=tl_cands[mode];
@@ -1904,18 +1876,16 @@ function tl_draw(mode){
   }
 
   let allPrices=[...visCs.flatMap(c=>[c.low,c.high])];
-  /* include MA values in view range */
-  if(showMA){
-    (MA_CONFIG[mode]||[]).forEach(m=>{
-      const hist=computeMA(cs,m.period);
-      if(!hist.length)return;
-      const offset=cs.length-hist.length;
-      for(let i=vs;i<=ve;i++){
-        const hi=i-offset;
-        if(hi>=0&&hi<hist.length&&hist[hi]>0)allPrices.push(hist[hi]);
-      }
-    });
-  }
+  /* always include MA values in y-scale for consistent range between fast/full draws */
+  (MA_CONFIG[mode]||[]).forEach(m=>{
+    const hist=computeMA(cs,m.period);
+    if(!hist.length)return;
+    const offset=cs.length-hist.length;
+    for(let i=vs;i<=ve;i++){
+      const hi=i-offset;
+      if(hi>=0&&hi<hist.length&&hist[hi]>0)allPrices.push(hist[hi]);
+    }
+  });
   /* include trendline projections */
   vis.forEach(c=>{
     for(let i=vs;i<=ve;i++){const p=c.line.project(i);if(Number.isFinite(p)&&p>0)allPrices.push(p);}
@@ -1938,7 +1908,7 @@ function tl_draw(mode){
   cr.setAttribute('width',W-pad.l-pad.r);cr.setAttribute('height',H-pad.t-pad.b);
   clip.appendChild(cr);defs.appendChild(clip);add(defs);
   const cg=document.createElementNS('http://www.w3.org/2000/svg','g');
-  cg.setAttribute('clip-path','url(#tlClip)');add(cg);
+  cg.setAttribute('clip-path','url(#tlClip)');cg.setAttribute('id','tlCg');add(cg);
   const addC=e=>{cg.appendChild(e);return e};
 
   /* ── grid ── */
@@ -2028,8 +1998,8 @@ function tl_draw(mode){
     addC(body);
   });
 
-  /* ── MA lines ── */
-  if(showMA){
+  /* ── MA lines — skip during pan ── */
+  if(!fast&&showMA){
     /* use extended candles for daily MAs to support D200/D365 */
     const maCs=mode==='1d'&&tl_candles['1d_ma']&&tl_candles['1d_ma'].length>cs.length?tl_candles['1d_ma']:cs;
     /* align maCs to cs by matching last candle */
@@ -2070,7 +2040,8 @@ function tl_draw(mode){
     });
   }
 
-  /* ── on-chain lines ── */
+  /* ── on-chain lines — skip during pan ── */
+  if(!fast){
   if(showOC&&window._tlOCData){
     OC_CONFIG.forEach(oc=>{
       if(tl_ocVisible&&tl_ocVisible[oc.key]===false)return;
@@ -2105,6 +2076,7 @@ function tl_draw(mode){
     });
   }
 
+  } /* end on-chain */
   /* ── trendlines ── */
   vis.forEach((c,idx)=>{
     const col=c.type==='support'?'#22c55e':'#ef4444';
@@ -2139,8 +2111,15 @@ function tl_draw(mode){
   });
 
   /* ── status ── */
-  /* reattach touch listener after SVG rebuild */
-  if(window._tlAttachTouch)window._tlAttachTouch();
+  /* store base view for transform-based pan */
+  if(tl_draw._vs&&tl_draw._vs[mode]){
+    _tlBaseVS=tl_draw._vs[mode].start;
+    _tlBaseVE=tl_draw._vs[mode].end;
+  }
+  /* reattach touch listener only after full SVG rebuild */
+  if(!fast&&window._tlAttachTouch)window._tlAttachTouch();
+  /* ensure crosshair elements start hidden after rebuild */
+  svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
   document.getElementById('tlStatus').textContent=`${vis.length} trendlines · ${cs.length} candles · ${mode}${showMA?' · MAs':''}${showOC&&window._tlOCData?' · On-chain':''}`;
 
   /* ── legends ── */
@@ -2297,6 +2276,7 @@ async function tl_fetchOCData(){
     if(!tl_draw._vs)return null;
     return tl_draw._vs[mode];
   }
+  let _setViewRaf=null;
   function setView(mode,vs,ve){
     const cs=tl_candles[mode]||[];
     if(!cs.length)return;
@@ -2306,14 +2286,27 @@ async function tl_fetchOCData(){
     if(origSpan<minSpan){const mid=(vs+ve)/2;vs=mid-minSpan/2;ve=mid+minSpan/2;}
     /* allow panning one full screen beyond data edges */
     const span=ve-vs;
-    const maxLeft=-(span*0.9);      /* leftmost candle can reach right edge */
-    const maxRight=(cs.length-1)+(span*0.9); /* rightmost candle can reach left edge */
-    /* clamp while preserving span — no zoom from hitting edge */
+    const maxLeft=-(span*0.9);
+    const maxRight=(cs.length-1)+(span*0.9);
     if(vs<maxLeft){vs=maxLeft;ve=vs+span;}
     if(ve>maxRight){ve=maxRight;vs=ve-span;}
     if(!tl_draw._vs)tl_draw._vs={};
     tl_draw._vs[mode]={start:vs,end:ve};
-    tl_draw(mode);
+    /* store view - actual redraw happens on gesture end or via transform */
+    if(_setViewRaf)cancelAnimationFrame(_setViewRaf);
+    const _rafMode=mode;
+    _setViewRaf=requestAnimationFrame(()=>{
+      _setViewRaf=null;
+      /* apply pan via SVG transform during gesture - no DOM rebuild */
+      _tl_applyTransform(_rafMode);
+    });
+  }
+
+  /* apply pan via SVG transform - no DOM rebuild */
+  let _tlBaseVS=null,_tlBaseVE=null; /* view at last full draw */
+  function _tl_applyTransform(mode){
+    /* fast draw during gesture - listeners stay registered since _tlTouchAttached not reset */
+    tl_draw(mode,true);
   }
 
   document.addEventListener('wheel',e=>{
@@ -2330,12 +2323,17 @@ async function tl_fetchOCData(){
     const factor=e.deltaY>0?1.15:1/1.15;
     const newSpan=Math.min(cs.length-1,Math.max(5,span*factor));
     setView(mode,pivot-frac*newSpan,pivot+(1-frac)*newSpan);
+    /* debounced full redraw to restore MAs and on-chain after zoom */
+    clearTimeout(window._tlEndDrawTimer);
+    window._tlEndDrawTimer=setTimeout(()=>tl_draw(tlViewerMode),150);
   },{passive:false});
 
   let dragging=false,dragX=0,dragVS=0,dragVE=0;
   document.addEventListener('mousedown',e=>{
     if(window._recentTouch)return;
-    const svg=getSvg();if(!svg||!svg.contains(e.target)||e.button!==0)return;
+    const svg=getSvg();if(!svg||e.button!==0)return;
+    const rect=svg.getBoundingClientRect();
+    if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)return;
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const zs=getView(mode);
     dragging=true;dragX=e.clientX;
@@ -2349,13 +2347,20 @@ async function tl_fetchOCData(){
     const mode=tlViewerMode;const cs=tl_candles[mode]||[];if(!cs.length)return;
     const rect=svg.getBoundingClientRect();
     const span=dragVE-dragVS;
-    const dI=-(e.clientX-dragX)/(rect.width-105)*span;
+    const dI=-(e.clientX-dragX)/rect.width*span;
     setView(mode,dragVS+dI,dragVE+dI);
   });
-  window.addEventListener('mouseup',()=>{if(window._recentTouch)return;dragging=false;const svg=getSvg();if(svg)svg.style.cursor='default';});
+  window.addEventListener('mouseup',()=>{
+    if(window._recentTouch)return;
+    if(!dragging)return;
+    dragging=false;
+    const svg=getSvg();if(svg)svg.style.cursor='default';
+    /* full redraw to restore MAs and on-chain lines after mouse pan */
+    clearTimeout(window._tlEndDrawTimer);
+    window._tlEndDrawTimer=setTimeout(()=>tl_draw(tlViewerMode),50);
+  });
 
   /* crosshair: show on mousemove over SVG */
-  let _chDebugLogged=false;
   document.addEventListener('mousemove',e=>{
     if(window._recentTouch)return; /* suppress synthetic mousemove from touch */
     const svg=getSvg();if(!svg)return;
@@ -2369,7 +2374,6 @@ async function tl_fetchOCData(){
       const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
       return;
     }
-    if(!_chDebugLogged){_chDebugLogged=true;console.log('crosshair firing, _ymin=',svg._ymin,'rect=',Math.round(rect.width),Math.round(rect.height),Math.round(rect.left),Math.round(rect.top));}
     const mode=tlViewerMode;
     /* only process if tl_draw has run and set scale */
     if(svg._ymin===undefined||svg._ymax===undefined)return;
@@ -2442,39 +2446,198 @@ async function tl_fetchOCData(){
     tl_draw(tlViewerMode);
   });
 
-  /* ── TOUCH: all listeners on SVG element, same pattern as tl_viewer_v2 ── */
+  /* ── TOUCH/POINTER: transplanted from working tl_touch_test.html ── */
   function _tlResetTouchState(){
     tPan=false;tPinch=false;_tlLongPressActive=false;
     if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
     window._tlDiag_tPan=false;window._tlDiag_tPinch=false;window._tlDiag_lpa=false;
   }
   function _tlHideCrosshair(){
-    const sv=getSvg();
-    if(sv)sv.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
+    const sv=getSvg();if(!sv)return;
+    sv.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
     const lbl=document.getElementById('tlCrosshairPrice');if(lbl)lbl.style.display='none';
     const dl=document.getElementById('tlCrosshairDate');if(dl)dl.style.display='none';
     const tip=document.getElementById('tlTip');if(tip)tip.style.display='none';
   }
+
   let tPan=false,tX=0,tY=0,tVS=0,tVE=0;
   let tPinch=false,pDist=0,pVS=0,pVE=0,pFrac=0;
-  let tLastTap=0;
   let _tlLongPress=null,_tlLongPressActive=false;
+  let tLastTap=0;
+  const _ptrs=new Map();
+
+  function tl_showCrosshairAt(clientX,clientY){
+    const svg=getSvg();if(!svg)return;
+    const rect=svg.getBoundingClientRect();
+    const svgH=520,svgPad={t:12,b:36};
+    const chartH=svgH-svgPad.t-svgPad.b;
+    const mouseYsvg=(clientY-rect.top)/rect.height*svgH;
+    const syPos=Math.max(svgPad.t,Math.min(svgPad.t+chartH,mouseYsvg));
+    const log=TL_DEFAULTS[tlViewerMode]&&TL_DEFAULTS[tlViewerMode].log;
+    if(svg._ymin===undefined||svg._ymax===undefined)return;
+    const yFrac=1-(syPos-svgPad.t)/chartH;
+    const yLogVal=svg._ymin+yFrac*(svg._ymax-svg._ymin);
+    const yVal=tl_invY(yLogVal,log);
+    if(!Number.isFinite(yVal)||yVal<=0)return;
+    /* show horizontal crosshair line */
+    svg.querySelectorAll('.tl-crosshair').forEach(el=>{
+      el.style.display='inline';
+      if(el.getAttribute('y1')!==null&&el.id!=='tlChVLine'){
+        el.setAttribute('y1',syPos);el.setAttribute('y2',syPos);
+      }
+      if(el.getAttribute('cy')!==null)el.setAttribute('cy',syPos);
+    });
+    /* show vertical crosshair line */
+    const svgW=1100,padL=62,padR=20;
+    const mouseXsvg=(clientX-rect.left)/rect.width*svgW;
+    const vl=svg.querySelector('#tlChVLine');
+    if(vl){vl.setAttribute('x1',mouseXsvg);vl.setAttribute('x2',mouseXsvg);vl.style.display='inline';}
+    /* price label */
+    const priceEl=document.getElementById('tlCrosshairPrice');
+    if(priceEl){
+      priceEl.style.display='block';
+      priceEl.style.top=(clientY-rect.top)/rect.height*100+'%';
+      priceEl.textContent='$'+Math.round(yVal).toLocaleString();
+    }
+    /* date label */
+    const cs=tl_candles[tlViewerMode]||[];
+    const zs=getView(tlViewerMode);
+    if(cs.length&&zs){
+      const vsF=zs.start!==null?zs.start:0;
+      const veF=zs.end!==null?zs.end:cs.length-1;
+      const span=veF-vsF||1;
+      const candleIdx=Math.round(vsF+(mouseXsvg-padL)/(svgW-padL-padR)*span);
+      const ci=Math.max(0,Math.min(cs.length-1,candleIdx));
+      const c=cs[ci];
+      if(c){
+        const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const d=new Date(c.t);
+        const dStr=`${d.getUTCDate()} ${MSHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+        const dateLbl=document.getElementById('tlCrosshairDate');
+        if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dStr;
+          dateLbl.style.left=(clientX-rect.left)/rect.width*100+'%';}
+        /* OHLC tooltip */
+        const tip=document.getElementById('tlTip');
+        if(tip){
+          const isUp=c.close>=c.open;
+          const fmt=p=>'$'+Math.round(p).toLocaleString();
+          tip.innerHTML=`<div style="font-size:10px;color:#94a3b8;margin-bottom:2px">${dStr}</div>`+
+            `<span style="color:#94a3b8">O</span> ${fmt(c.open)} <span style="color:#94a3b8">H</span> ${fmt(c.high)}<br>`+
+            `<span style="color:#94a3b8">L</span> ${fmt(c.low)} <span style="color:#94a3b8">C</span> <span style="color:${isUp?'#4ade80':'#f87171'}">${fmt(c.close)}</span>`;
+          tip.style.display='block';
+          tip.style.left=(clientX+12)+'px';
+          tip.style.top=(clientY-60)+'px';
+        }
+      }
+    }
+  }
 
   function _tlAttachTouch(){
-    const svg=getSvg();if(!svg||svg._tlTouchAttached)return;
+    const svg=getSvg();if(!svg)return;
+    /* remove previous listeners before re-registering */
+    if(svg._tlAbortCtrl)svg._tlAbortCtrl.abort();
+    svg._tlAbortCtrl=new AbortController();
+    const sig={signal:svg._tlAbortCtrl.signal};
     svg._tlTouchAttached=true;
 
+    /* ── POINTER (touchscreen laptop) ── */
+    svg.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse')return;
+      svg.setPointerCapture(e.pointerId);
+      _ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      window._recentTouch=true;clearTimeout(window._rtTimer);
+      window._rtTimer=setTimeout(()=>{window._recentTouch=false;},600);
+      if(_ptrs.size===1){
+        _tlResetTouchState();
+        const now=Date.now();
+        if(now-tLastTap<300){
+          if(tl_draw._vs)tl_draw._vs[tlViewerMode]={start:null,end:null};
+          tl_draw(tlViewerMode);tLastTap=0;return;
+        }
+        tLastTap=now;
+        tPan=true;window._tlDiag_tPan=true;
+        tX=e.clientX;tY=e.clientY;
+        const zs=getView(tlViewerMode);
+        const cs=tl_candles[tlViewerMode]||[];
+        tVS=zs&&zs.start!==null?zs.start:0;
+        tVE=zs&&zs.end!==null?zs.end:cs.length-1;
+        _tlLongPress=setTimeout(()=>{
+          _tlLongPress=null;_tlLongPressActive=true;window._tlDiag_lpa=true;
+          tPan=false;window._tlDiag_tPan=false;
+          tl_showCrosshairAt(tX,tY);
+        },500);
+      } else if(_ptrs.size===2){
+        if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
+        tPan=false;tPinch=true;window._tlDiag_tPan=false;window._tlDiag_tPinch=true;
+        const pts=[..._ptrs.values()];
+        pDist=Math.abs(pts[0].x-pts[1].x)||1;
+        const zs=getView(tlViewerMode);
+        const cs=tl_candles[tlViewerMode]||[];
+        pVS=zs&&zs.start!==null?zs.start:0;
+        pVE=zs&&zs.end!==null?zs.end:cs.length-1;
+        const rect=svg.getBoundingClientRect();
+        pFrac=Math.max(0,Math.min(1,((pts[0].x+pts[1].x)/2-rect.left)/rect.width));
+      }
+    },{...sig});
+
+    svg.addEventListener('pointermove',e=>{
+      if(e.pointerType==='mouse')return;
+      if(!_ptrs.has(e.pointerId))return;
+      const prev=_ptrs.get(e.pointerId);
+      const dx=e.clientX-prev.x;
+      _ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(_tlLongPress&&Math.abs(e.clientX-tX)>8){clearTimeout(_tlLongPress);_tlLongPress=null;}
+      if(_tlLongPressActive&&_ptrs.size===1){tl_showCrosshairAt(e.clientX,e.clientY);return;}
+      const mode=tlViewerMode;const cs=tl_candles[mode]||[];
+      const rect=svg.getBoundingClientRect();
+      if(_ptrs.size===1&&tPan){
+        const zs=getView(mode);
+        const cvs=zs&&zs.start!==null?zs.start:0;
+        const cve=zs&&zs.end!==null?zs.end:cs.length-1;
+        const cspan=cve-cvs;
+        setView(mode,cvs-dx/rect.width*cspan,cve-dx/rect.width*cspan);
+      } else if(_ptrs.size===2&&tPinch){
+        const pts=[..._ptrs.values()];
+        const cur=Math.abs(pts[0].x-pts[1].x)||1;
+        const span=pVE-pVS;
+        const newSpan=Math.min(cs.length-1,Math.max(5,span*pDist/cur));
+        const pivot=pVS+pFrac*span;
+        setView(mode,pivot-pFrac*newSpan,pivot+(1-pFrac)*newSpan);
+      }
+    },{...sig});
+
+    svg.addEventListener('pointerup',e=>{
+      if(e.pointerType==='mouse')return;
+      _ptrs.delete(e.pointerId);
+      if(_ptrs.size===0){
+        const wasLPA=_tlLongPressActive;
+        _tlResetTouchState();_ptrs.clear();
+        if(wasLPA)_tlHideCrosshair();
+        /* debounced full redraw - prevents multiple fires from one gesture */
+        clearTimeout(window._tlEndDrawTimer);
+        window._tlEndDrawTimer=setTimeout(()=>{
+          tl_draw(tlViewerMode);
+        },50);
+      }
+    },{...sig});
+
+    svg.addEventListener('pointercancel',e=>{
+      if(e.pointerType==='mouse')return;
+      _ptrs.clear();_tlResetTouchState();_tlHideCrosshair();
+    },{...sig});
+
+    /* ── TOUCH (mobile) ── */
     svg.addEventListener('touchstart',e=>{
+      if(_ptrs.size>0)return;
       if(!tl_candles[tlViewerMode]||!tl_candles[tlViewerMode].length)return;
-      e.preventDefault();
-      window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},600);
-      window._tlDiag_svgFired=true;
       _tlResetTouchState();
+      window._recentTouch=true;clearTimeout(window._rtTimer);
+      window._rtTimer=setTimeout(()=>{window._recentTouch=false;},600);
       const mode=tlViewerMode;
       const zs=getView(mode);
+      const cs=tl_candles[mode]||[];
       const vs=zs&&zs.start!==null?zs.start:0;
-      const ve=zs&&zs.end!==null?zs.end:tl_candles[mode].length-1;
-      /* double-tap reset */
+      const ve=zs&&zs.end!==null?zs.end:cs.length-1;
       const now=Date.now();
       if(e.touches.length===1&&now-tLastTap<300){
         if(tl_draw._vs)tl_draw._vs[mode]={start:null,end:null};
@@ -2483,45 +2646,40 @@ async function tl_fetchOCData(){
       if(e.touches.length===1)tLastTap=now;
       if(e.touches.length===1){
         tPan=true;window._tlDiag_tPan=true;
-        tX=e.touches[0].clientX;tY=e.touches[0].clientY;
-        tVS=vs;tVE=ve;
-        /* long-press crosshair */
+        tX=e.touches[0].clientX;tY=e.touches[0].clientY;tVS=vs;tVE=ve;
         _tlLongPress=setTimeout(()=>{
-          _tlLongPress=null;
-          _tlLongPressActive=true;window._tlDiag_lpa=true;
+          _tlLongPress=null;_tlLongPressActive=true;window._tlDiag_lpa=true;
           tPan=false;window._tlDiag_tPan=false;
           tl_showCrosshairAt(tX,tY);
         },500);
       } else if(e.touches.length===2){
+        if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
         tPinch=true;window._tlDiag_tPinch=true;
         const rect=svg.getBoundingClientRect();
         pDist=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
         pVS=vs;pVE=ve;
-        pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/(rect.width)));
+        pFrac=Math.max(0,Math.min(1,((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/rect.width));
       }
-    },{passive:true});
+    },{passive:true,...sig});
 
     svg.addEventListener('touchmove',e=>{
+      if(_ptrs.size>0)return;
       if(!tl_candles[tlViewerMode]||!tl_candles[tlViewerMode].length)return;
-      e.preventDefault(); /* safe: touch-action:none on all ancestors */
-      window._tlDiag_svgFired=true;
-      /* cancel long-press if moved >8px */
-      if(_tlLongPress&&e.touches.length===1){
-        if(Math.abs(e.touches[0].clientX-tX)>8){
-          clearTimeout(_tlLongPress);_tlLongPress=null;
-        }
+      if(_tlLongPress&&e.touches.length===1&&Math.abs(e.touches[0].clientX-tX)>8){
+        clearTimeout(_tlLongPress);_tlLongPress=null;
       }
       if(_tlLongPressActive&&e.touches.length===1){
-        tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);
-        return;
+        tl_showCrosshairAt(e.touches[0].clientX,e.touches[0].clientY);return;
       }
-      const mode=tlViewerMode;
-      const cs=tl_candles[mode]||[];
-      const rect=getSvg().getBoundingClientRect();
-      const W=rect.width;
+      const mode=tlViewerMode;const cs=tl_candles[mode]||[];
+      const rect=svg.getBoundingClientRect();
       if(e.touches.length===1&&tPan){
-        const span=tVE-tVS;
-        setView(mode,tVS-(e.touches[0].clientX-tX)/W*span,tVE-(e.touches[0].clientX-tX)/W*span);
+        const zs=getView(mode);
+        const cvs=zs&&zs.start!==null?zs.start:0;
+        const cve=zs&&zs.end!==null?zs.end:cs.length-1;
+        const cspan=cve-cvs;
+        const dx=e.touches[0].clientX-tX;
+        setView(mode,tVS-dx/rect.width*cspan,tVE-dx/rect.width*cspan);
       } else if(e.touches.length===2&&tPinch){
         const cur=Math.abs(e.touches[0].clientX-e.touches[1].clientX)||1;
         const span=pVE-pVS;
@@ -2529,35 +2687,38 @@ async function tl_fetchOCData(){
         const pivot=pVS+pFrac*span;
         setView(mode,pivot-pFrac*newSpan,pivot+(1-pFrac)*newSpan);
       }
-    },{passive:false});
+    },{passive:true,...sig});
 
     svg.addEventListener('touchend',e=>{
-      if(_tlLongPress){clearTimeout(_tlLongPress);_tlLongPress=null;}
+      if(_ptrs.size>0)return;
       if(e.touches.length===0){
         const wasLPA=_tlLongPressActive;
         _tlResetTouchState();
         if(wasLPA)_tlHideCrosshair();
+        /* debounced full redraw - prevents multiple fires from one gesture */
+        if(window._tlLog)window._tlLog('GESTURE END - scheduling draw');
+        clearTimeout(window._tlEndDrawTimer);
+        window._tlEndDrawTimer=setTimeout(()=>{
+          if(window._tlLog)window._tlLog('GESTURE END - full draw');
+          tl_draw(tlViewerMode);
+        },50);
       } else if(e.touches.length===1&&tPinch){
-        tPinch=false;window._tlDiag_tPinch=false;
-        tPan=true;window._tlDiag_tPan=true;
+        tPinch=false;tPan=true;window._tlDiag_tPinch=false;window._tlDiag_tPan=true;
         tX=e.touches[0].clientX;tY=e.touches[0].clientY;
         const mode=tlViewerMode;const zs=getView(mode);
         tVS=zs&&zs.start!==null?zs.start:0;
         tVE=zs&&zs.end!==null?zs.end:(tl_candles[mode]||[]).length-1;
       }
-    },{passive:true});
+    },{passive:true,...sig});
 
-    svg.addEventListener('touchcancel',()=>{
-      _tlResetTouchState();_tlHideCrosshair();
-    },{passive:true});
+    svg.addEventListener('touchcancel',()=>{_tlResetTouchState();_tlHideCrosshair();},{passive:true,...sig});
   }
 
   _tlAttachTouch();
   window._tlAttachTouch=_tlAttachTouch;
   window.addEventListener('scroll',()=>{_tlHideCrosshair();},{passive:true});
-  /* safety net for stuck state */
   document.addEventListener('touchend',e=>{
-    if(e.touches.length===0)_tlResetTouchState();
+    if(e.touches.length===0&&_ptrs.size===0&&(tPan||tPinch||_tlLongPressActive))_tlResetTouchState();
   },{passive:true});
 
 })();
@@ -2566,8 +2727,6 @@ async function tl_fetchOCData(){
 let tlViewerReady=false;
 document.getElementById('tlSection').addEventListener('toggle',()=>{
   const sec=document.getElementById('tlSection');
-  /* touch-action:none when open so Safari doesn't intercept touch for scroll */
-  sec.style.touchAction=sec.open?'none':'';
   if(sec.open&&!tlViewerReady&&Object.keys(tl_cands).length){
     tlViewerReady=true;tl_draw('1d');
   }
