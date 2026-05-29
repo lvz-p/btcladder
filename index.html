@@ -107,7 +107,9 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 /* legend toggle button on/off states */
 button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;cursor:pointer;font-family:var(--font);font-size:10px;background:var(--surface)}
 button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700}
-#maExpandBtn{font-size:10px;padding:4px 8px}
+#maExpandBtn{font-size:13px;padding:2px 8px}
+.ma-t2{font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:.05em;cursor:pointer;text-transform:uppercase;transition:all .12s;user-select:none}
+.ma-t2:not(.on){color:var(--muted)!important;text-decoration:line-through;opacity:.4}
 button.leg.tog:hover{background:var(--surface2)}
 button.leg.tog:not(.on){opacity:.32;text-decoration:line-through;background:transparent!important;color:var(--muted)!important}
 button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
@@ -262,7 +264,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel{fill:#94a3b8;font-size:13px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:13px;font-family:var(--mono)}
+.axisLabel{fill:#94a3b8;font-size:15px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:14px;font-family:var(--mono)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
@@ -285,6 +287,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   /* legend: smaller buttons to fit in 1-2 rows */
   button.leg.tog{font-size:10px;padding:2px 7px}
   button.leg.tog.tier1{font-size:12px;padding:4px 11px}
+  .axisLabel,.xLabel{font-size:17px}
   .leg-pip{width:16px}
   .leg-zone{width:16px;height:9px}
   /* range filter compact */
@@ -344,17 +347,17 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 <!-- Row 2: All toggles unified as buttons -->
 <div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
   <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 6px;cursor:pointer;font-size:9px;color:var(--muted);line-height:1">▾</button>
+    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:13px;color:var(--muted);line-height:1">▾</button>
   </span>
   <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
   <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trendlines</button>
   <button class="leg tog tier1 on" id="zoneBtn"><div class="leg-zone"></div>Zones</button>
   <button class="leg tog tier1 on" id="urpdBtn"><div style="width:22px;height:11px;border-radius:2px;background:rgba(96,165,250,0.25);flex-shrink:0"></div>URPD</button>
 </div>
-<div id="maExpand" style="display:none;margin-bottom:12px;flex-wrap:wrap;gap:6px;padding-left:4px">
-  <button class="leg tog on" data-cat="D"><div class="leg-pip D"></div>Daily</button>
-  <button class="leg tog on" data-cat="W"><div class="leg-pip W"></div>Weekly</button>
-  <button class="leg tog on" data-cat="M"><div class="leg-pip M"></div>Monthly</button>
+<div id="maExpand" style="display:none;margin-bottom:8px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
+  <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
+  <span class="ma-t2 on" data-cat="W" style="color:var(--col-W)">WEEKLY</span>
+  <span class="ma-t2 on" data-cat="M" style="color:var(--col-M)">MONTHLY</span>
 </div>
 
 <div class="chart-shell" id="chartShell">
@@ -514,11 +517,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.15</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.16</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.15 PWA';
+const VERSION='BtcLadder v1.0.16 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3469,7 +3472,7 @@ document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
     }
     function syncTier2Visual(){
       ['D','W','M'].forEach(c=>{
-        document.querySelectorAll(`#maExpand .tog[data-cat="${c}"]`).forEach(b=>b.classList.toggle('on',catFilters[c]!==false));
+        document.querySelectorAll(`#maExpand .ma-t2[data-cat="${c}"]`).forEach(t=>t.classList.toggle('on',catFilters[c]!==false));
       });
     }
     btn.onclick=()=>{
@@ -3491,18 +3494,31 @@ document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
       exBtn.textContent=opening?'▴':'▾';
       if(opening)syncTier2Visual();
     };
+    /* wire text label clicks */
+    document.querySelectorAll('#maExpand .ma-t2').forEach(t=>{
+      t.onclick=()=>{
+        const c=t.dataset.cat;
+        catFilters[c]=!t.classList.contains('on');
+        t.classList.toggle('on',catFilters[c]!==false);
+        const maBtn=document.getElementById('maBtn');
+        if(maBtn){const anyOn=catFilters['D']!==false||catFilters['W']!==false||catFilters['M']!==false;maBtn.classList.toggle('on',anyOn);}
+        ss('filters',JSON.stringify(catFilters));rerender();
+      };
+    });
   } else {
     btn.classList.toggle('on',catFilters[c]!==false);
     btn.onclick=()=>{
       catFilters[c]=!btn.classList.contains('on');
       btn.classList.toggle('on',catFilters[c]!==false);
-      /* if D/W/M changed, update MA tier1 button: on if ANY tier2 on */
+      /* if D/W/M changed, update MA tier1 and tier-2 text labels */
       if(['D','W','M'].includes(c)){
         const maBtn=document.getElementById('maBtn');
         if(maBtn){
           const anyOn=catFilters['D']!==false||catFilters['W']!==false||catFilters['M']!==false;
           maBtn.classList.toggle('on',anyOn);
         }
+        /* sync text label */
+        document.querySelectorAll(`#maExpand .ma-t2[data-cat="${c}"]`).forEach(t=>t.classList.toggle('on',catFilters[c]!==false));
       }
       ss('filters',JSON.stringify(catFilters));rerender();
     };
