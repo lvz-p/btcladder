@@ -252,8 +252,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-legend-group-label:hover{color:var(--text)}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
-.tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden;touch-action:none}
-.tl-chart-wrap svg{width:100%;display:block}
+.tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.tl-chart-wrap svg{width:100%;display:block;user-select:none;-webkit-user-select:none}
 .tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .tl-leg-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
 .tl-leg-btn:hover{background:var(--surface)}
@@ -508,11 +508,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.28.45</div>
+<div class="footer" id="footerTxt">BtcLadder v86.29.1</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.28.45 PWA';
+const VERSION='BtcLadder v86.29.1 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
