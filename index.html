@@ -377,16 +377,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <button class="btn" id="tlWeeklyBtn">Weekly</button>
       <button class="btn" id="tlMonthlyBtn">Monthly</button>
       <div class="tl-ctrl-sep"></div>
-      <button class="btn active" id="tlMABtn">MAs</button>
-      <button class="btn active" id="tlOCBtn">On-chain</button>
-      <div class="tl-ctrl-sep"></div>
       <select id="tlCandleStyle" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:3px 7px;font-size:12px;color:var(--text);cursor:pointer">
         <option value="filledhollow">Filled / Hollow</option>
         <option value="greenred">Green / Red</option>
         <option value="whitered">White / Red</option>
       </select>
     </div>
-    <div class="tl-status" id="tlStatus" style="padding:0 18px">Open to load trendline chart.</div>
     <div class="tl-chart-wrap" style="position:relative;touch-action:none">
       <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:400px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
 
@@ -508,11 +504,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v86.29.11</div>
+<div class="footer" id="footerTxt">BtcLadder v86.29.12</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v86.29.11 PWA';
+const VERSION='BtcLadder v86.29.12 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1814,7 +1810,7 @@ function tl_draw(mode,fast=false){
 
   const lines=tl_cands[mode];
   if(!lines||!lines.length){
-    document.getElementById('tlStatus').textContent='No trendlines. Refresh to load.';
+    /* no status */
     return;
   }
 
@@ -1832,10 +1828,10 @@ function tl_draw(mode,fast=false){
   });
 
   const cs=tl_candles[mode]||[];
-  if(!cs.length){document.getElementById('tlStatus').textContent='No candle data. Refresh to load.';return;}
+  if(!cs.length)return;
 
-  const showMA=document.getElementById('tlMABtn')?.classList.contains('active');
-  const showOC=document.getElementById('tlOCBtn')?.classList.contains('active');
+  const showMA=true; /* always show MAs — controlled via legend toggles */
+  const showOC=true; /* always show on-chain — controlled via legend toggles */
   const candleStyle=document.getElementById('tlCandleStyle')?.value||'standard';
   const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
   const log=TL_DEFAULTS[mode].log;
@@ -2152,7 +2148,7 @@ function tl_draw(mode,fast=false){
   if(!fast&&window._tlAttachTouch)window._tlAttachTouch();
   /* ensure crosshair elements start hidden after rebuild */
   svg.querySelectorAll('.tl-crosshair').forEach(el=>el.style.display='none');
-  document.getElementById('tlStatus').textContent=`${vis.length} trendlines · ${cs.length} candles · ${mode}${showMA?' · MAs':''}${showOC&&window._tlOCData?' · On-chain':''}`;
+  /* status line removed */
 
   /* ── legends ── */
   tl_renderLegend(lines);
@@ -2167,9 +2163,8 @@ function tl_renderMALegend(mode,configs){
   const el=document.getElementById('tlMALegend');
   const grp=document.getElementById('tlLegMAGroup');
   if(!el||!grp)return;
-  const show=document.getElementById('tlMABtn')?.classList.contains('active');
-  grp.style.display=show?'':'none';
-  if(!show){el.innerHTML='';return;}
+  const show=true; /* always show MA legend */
+  grp.style.display='';
   el.innerHTML='';
   const cur=lastCurrent||window._cur||0;
   /* only shortest MA period on by default per timeframe */
@@ -2205,9 +2200,8 @@ function tl_renderOCLegend(configs){
   const el=document.getElementById('tlOCLegend');
   const grp=document.getElementById('tlLegOCGroup');
   if(!el||!grp)return;
-  const show=document.getElementById('tlOCBtn')?.classList.contains('active');
-  grp.style.display=(show&&window._tlOCData)?'':'none';
-  if(!show||!window._tlOCData){el.innerHTML='';return;}
+  if(!window._tlOCData){el.innerHTML='';grp.style.display='none';return;}
+  grp.style.display='';
   el.innerHTML='';
   const cur=lastCurrent||window._cur||0;
   configs.forEach(oc=>{
