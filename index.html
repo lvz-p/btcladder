@@ -109,9 +109,8 @@ button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius
 button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700}
 #maExpandBtn{font-size:13px;padding:2px 8px}
 .ma-t2{font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:.05em;cursor:pointer;text-transform:uppercase;transition:all .12s;user-select:none}
-.rng-t2{font-size:11px;font-family:var(--font);font-weight:700;cursor:pointer;transition:all .12s;user-select:none;color:var(--muted);opacity:.5}
+.rng-t2{font-size:11px;font-family:var(--mono);font-weight:700;cursor:pointer;transition:all .12s;user-select:none;color:var(--muted);opacity:.45}
 .rng-t2.on{opacity:1;color:var(--text)}
-.rng-t2:not(.on){text-decoration:line-through}
 .ma-t2:not(.on){color:var(--muted)!important;text-decoration:line-through;opacity:.4}
 button.leg.tog:hover{background:var(--surface2)}
 button.leg.tog:not(.on){opacity:.32;text-decoration:line-through;background:transparent!important;color:var(--muted)!important}
@@ -526,11 +525,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.22</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.23</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.22 PWA';
+const VERSION='BtcLadder v1.0.23 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1869,7 +1868,7 @@ function tl_draw(mode,fast=false){
   const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
   const log=TL_DEFAULTS[mode].log;
 
-  const W=1100,H=520,pad={l:96,r:20,t:12,b:48};
+  const W=1100,H=520,pad={l:120,r:20,t:12,b:48};
   const _yLabels=[],_xLabels=[];let _cpY=null;
   const add=e=>{svg.appendChild(e);return e};
 
@@ -3528,6 +3527,8 @@ document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
       const ex=document.getElementById('maExpand');
       if(!ex)return;
       const opening=ex.style.display==='none';
+      /* close range expand if open */
+      if(opening){const rEx=document.getElementById('rangeExpand');const rBtn=document.getElementById('rangeExpandBtn');if(rEx&&rEx.style.display!=='none'){rEx.style.display='none';if(rBtn)rBtn.textContent='▼';}}
       ex.style.display=opening?'flex':'none';
       exBtn.textContent=opening?'▲':'▼';
       if(opening)syncTier2Visual();
@@ -3579,6 +3580,8 @@ if(rangeExpandBtn)rangeExpandBtn.onclick=()=>{
   const ex=document.getElementById('rangeExpand');
   if(!ex)return;
   const opening=ex.style.display==='none';
+  /* close MA expand if open */
+  if(opening){const maEx=document.getElementById('maExpand');const maBtn=document.getElementById('maExpandBtn');if(maEx&&maEx.style.display!=='none'){maEx.style.display='none';if(maBtn)maBtn.textContent='▼';}}
   ex.style.display=opening?'flex':'none';
   rangeExpandBtn.textContent=opening?'▲':'▼';
   if(opening)updateRangeLabel();
