@@ -280,12 +280,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   .stat-card .lbl{font-size:10px}
   .stat-card .val{font-size:12px}
   /* legend: smaller buttons to fit in 1-2 rows */
-  button.leg.tog{font-size:11px;padding:3px 7px}
+  button.leg.tog{font-size:10px;padding:2px 7px}
   .leg-pip{width:16px}
   .leg-zone{width:16px;height:9px}
   /* range filter compact */
   .filter-bar{gap:4px;margin-bottom:6px}
-  .tog{font-size:11px;padding:3px 9px}
+  .tog{font-size:10px;padding:2px 8px}
   .lbl-sm{font-size:10px}
   /* chart */
   .chart-inner{grid-template-columns:36px 1fr 222px}
@@ -504,11 +504,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.3</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.5</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.3 PWA';
+const VERSION='BtcLadder v1.0.5 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1836,7 +1836,7 @@ function tl_draw(mode,fast=false){
   const vis=lines.filter(c=>tl_visible[c.viewerTag]!==false);
   const log=TL_DEFAULTS[mode].log;
 
-  const W=1100,H=520,pad={l:62,r:20,t:12,b:36};
+  const W=1100,H=520,pad={l:80,r:20,t:12,b:44};
   const add=e=>{svg.appendChild(e);return e};
 
   /* ── zoom state ── */
@@ -1921,14 +1921,14 @@ function tl_draw(mode,fast=false){
       const cpRect=document.createElementNS('http://www.w3.org/2000/svg','rect');
       const cpLabel=tl_fmtPrice(curPrice);
       const cpW=Math.max(52, cpLabel.length*7+8);
-      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-9);
-      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',18);
+      cpRect.setAttribute('x',0);cpRect.setAttribute('y',curY-12);
+      cpRect.setAttribute('width',pad.l-2);cpRect.setAttribute('height',24);
       cpRect.setAttribute('fill','#f7931a');cpRect.setAttribute('rx','3');
       add(cpRect);
       const cpText=document.createElementNS('http://www.w3.org/2000/svg','text');
-      cpText.setAttribute('x',pad.l-6);cpText.setAttribute('y',curY+4.5);
+      cpText.setAttribute('x',pad.l-6);cpText.setAttribute('y',curY+7);
       cpText.setAttribute('text-anchor','end');cpText.setAttribute('fill','#000');
-      cpText.setAttribute('font-size','11');cpText.setAttribute('font-family','var(--sans)');
+      cpText.setAttribute('font-size','20');cpText.setAttribute('font-family','var(--sans)');
       cpText.setAttribute('font-weight','700');
       cpText.textContent=cpLabel;add(cpText);
     }
@@ -1954,7 +1954,9 @@ function tl_draw(mode,fast=false){
     gl.setAttribute('x1',pad.l);gl.setAttribute('x2',W-pad.r);gl.setAttribute('y1',yy);gl.setAttribute('y2',yy);
     gl.setAttribute('stroke','rgba(148,163,184,.12)');add(gl);
     const gt=document.createElementNS('http://www.w3.org/2000/svg','text');
-    gt.setAttribute('x',8);gt.setAttribute('y',yy+4);gt.setAttribute('class','axisLabel');
+    gt.setAttribute('x',pad.l-6);gt.setAttribute('y',yy+5);
+    gt.setAttribute('text-anchor','end');gt.setAttribute('fill','#94a3b8');
+    gt.setAttribute('font-size','22');gt.setAttribute('font-family','var(--sans)');
     gt.textContent=tl_fmtPrice(val);add(gt);
   }
 
@@ -1971,8 +1973,9 @@ function tl_draw(mode,fast=false){
   const lstep=Math.max(1,Math.ceil(lbls.length/7));
   lbls.filter((_,i)=>i%lstep===0).forEach(d=>{
     const lt=document.createElementNS('http://www.w3.org/2000/svg','text');
-    lt.setAttribute('x',x(d.i));lt.setAttribute('y',H-8);
-    lt.setAttribute('text-anchor','middle');lt.setAttribute('class','xLabel');
+    lt.setAttribute('x',x(d.i));lt.setAttribute('y',H-10);
+    lt.setAttribute('text-anchor','middle');lt.setAttribute('fill','#94a3b8');
+    lt.setAttribute('font-size','20');lt.setAttribute('font-family','var(--sans)');
     lt.textContent=d.lbl;add(lt);
   });
 
