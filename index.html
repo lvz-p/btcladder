@@ -259,7 +259,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.axisLabel{fill:#94a3b8;font-size:12px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:12px;font-family:var(--mono)}
+.axisLabel{fill:#94a3b8;font-size:13px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:13px;font-family:var(--mono)}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
@@ -302,6 +302,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <div class="hdr-left">
     <span class="hdr-title">BTC <span>Ladder</span></span>
     <div class="sdot loading" id="sdot"></div>
+    <span id="lastUpdateTime" style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:4px"></span>
   </div>
   <div class="hdr-actions">
     <button class="btn primary" id="refreshBtn" title="Refresh" style="padding:0;width:22px;height:22px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%">↻</button>
@@ -318,7 +319,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
         <span class="price-chg" id="priceChg"></span>
       </div>
     </div>
-    <div class="price-sub" id="priceSub">Loading from exchanges…</div>
+    <!-- priceSub removed - last update shown in header -->
   </div>
   <div class="hero-stats">
     <div class="stat-card"><div class="lbl" style="color:var(--red)">Next lower</div><div class="val s" id="supportVal"><span id="supportName" style="font-size:13px;font-weight:700"></span> <span id="supportPrice">—</span></div></div>
@@ -504,11 +505,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.10</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.11</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.10 PWA';
+const VERSION='BtcLadder v1.0.11 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1456,7 +1457,7 @@ async function refreshAll(){
     lastCurrent=pr.price;lastPriceRows=pr.rows;
     renderAnimatedPrice(lastCurrent, window._prevPrice);
     window._prevPrice=lastCurrent;
-    $('priceSub').textContent=`${pr.rows.filter(r=>r.ok).length} verified sources · ${new Date().toLocaleTimeString()}`;
+    const _lut=document.getElementById('lastUpdateTime');if(_lut)_lut.textContent=new Date().toLocaleTimeString();
     try{
       const tk=await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
       const chg=Number(tk?.priceChangePercent);
@@ -2992,7 +2993,7 @@ async function refreshPriceOnly(){
     lastCurrent = pr.price;
     renderAnimatedPrice(lastCurrent, window._prevPrice);
     window._prevPrice=lastCurrent;
-    $('priceSub').textContent = `${pr.rows.filter(r=>r.ok).length} verified sources · ${new Date().toLocaleTimeString()}`;
+    const _lut2=document.getElementById('lastUpdateTime');if(_lut2)_lut2.textContent=new Date().toLocaleTimeString();
     try{
       const tk = await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
       const chg = Number(tk?.priceChangePercent);
