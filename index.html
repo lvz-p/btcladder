@@ -523,11 +523,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.33</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.36</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.33 PWA';
+const VERSION='BtcLadder v1.0.36 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -807,7 +807,7 @@ function buildTipHTML(tip,cur){
       }
       return`<div class="tt-member">
         <span class="tt-mbadge" style="background:${m.bg};color:${m.col}">${m.code}</span>
-        ${m.isOC||m.isBtc?`<span class="tt-mname">${m.label}</span>`:''}
+        ${m.isOC&&m.label?`<span class="tt-mname">${m.label}</span>`:''}
         <span class="tt-mprice">${fmt(m.price)}</span>
         <span class="tt-mpct ${pCls}">${pctStr(m.d)}</span>
       </div>`;
@@ -965,7 +965,7 @@ function renderChart(cur,ma,oc,tl=[]){
   canvas+=`<div class="btc-dot-glow" style="top:${btcYpct}%"></div>`;
   canvas+=`<div class="btc-line" style="top:${btcYpct}%"></div>`;
   canvas+=`<div class="btc-dot" style="top:${btcYpct}%"></div>`;
-  tipMap.set('BTC',{code:'BTC',label:'Current BTC',price:cur,d:0,col:COL.BTC,bg:COL_BG.BTC,isBtc:true});
+  tipMap.set('BTC',{code:'BTC',label:'',price:cur,d:0,col:COL.BTC,bg:COL_BG.BTC,isBtc:true});
   canvas+=`<div class="hover-zone" data-code="BTC" style="top:${btcYpct}%"></div>`;
 
   /* store current price range on canvas element for zoom/pan handlers */
@@ -978,7 +978,7 @@ function renderChart(cur,ma,oc,tl=[]){
   $('chartInner').style.height=colH;
 
   /* ── DISPLAY GROUPING — fix: BTC included, pure pixel proximity ── */
-  const btcEntry={type:'current',price:cur,label:'Current BTC',exactY:btcY,tipCode:'BTC'};
+  const btcEntry={type:'current',price:cur,label:'',exactY:btcY,tipCode:'BTC'};
   const levelEntries=nonCur.map(l=>({
     ...l,exactY:toY(l.price),
     tipCode:l.type==='zone'?('ZONE:'+l.items.map(x=>levelCode(x)).join('+')):levelCode(l)
@@ -1151,16 +1151,16 @@ function renderChart(cur,ma,oc,tl=[]){
         dragOX=t.clientX-r.left;dragOY=t.clientY-r.top;
         e.stopPropagation();
       },{passive:true});
-      /* passive:true — tooltip drag is minor, don't block page scroll */
       document.addEventListener('touchmove',e=>{
         if(!dragActive)return;
+        e.preventDefault(); /* prevent page scroll while dragging tooltip */
         const t=e.touches[0];
         const w=tt.offsetWidth||220,h=tt.offsetHeight||120;
         let x=t.clientX-dragOX,y=t.clientY-dragOY;
         x=Math.max(8,Math.min(window.innerWidth-w-8,x));
         y=Math.max(8,Math.min(window.innerHeight-h-8,y));
         tt.style.left=x+'px';tt.style.top=y+'px';
-      },{passive:true});
+      },{passive:false});
       document.addEventListener('touchend',()=>{dragActive=false;},{passive:true});
     })();
   }
