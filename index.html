@@ -115,6 +115,7 @@ button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700}
 button.leg.tog:hover{background:var(--surface2)}
 button.leg.tog:not(.on){opacity:.32;text-decoration:line-through;background:transparent!important;color:var(--muted)!important}
 button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
+#rangeBtn:not(.on){text-decoration:none}
 button.leg.tog.on[data-cat="D"]{background:var(--col-D-dim);color:var(--col-D);border-color:rgba(96,165,250,.3)}
 button.leg.tog.on[data-cat="W"]{background:var(--col-W-dim);color:var(--col-W);border-color:rgba(167,139,250,.3)}
 button.leg.tog.on[data-cat="M"]{background:var(--col-M-dim);color:var(--col-M);border-color:rgba(244,114,182,.3)}
@@ -254,14 +255,16 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-crosshair-price{pointer-events:none;display:none;position:absolute;left:0;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:11px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;transform:translateY(-50%)}
 .tl-ctrl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:0 18px}
 .tl-ctrl-sep{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 2px}
-.tl-legend-group{margin-bottom:6px}
-.tl-legend-group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-right:4px;cursor:pointer;user-select:none}
+.tl-legend-group{padding:7px 0;border-bottom:1px solid var(--border2);display:flex;flex-wrap:wrap;align-items:center;gap:5px;row-gap:5px}
+.tl-legend-group:last-child{border-bottom:none}
+.tl-legend-group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-right:4px;cursor:pointer;user-select:none;flex-shrink:0;min-width:76px}
 .tl-legend-group-label.all-off{text-decoration:line-through;opacity:.4}
+.tl-legend-group-hdr{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);flex-shrink:0;min-width:76px;cursor:pointer;user-select:none}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
 .tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:visible;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .tl-chart-wrap svg{width:100%;display:block;user-select:none;-webkit-user-select:none}
-.tl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:0 18px}
+.tl-legend{margin-top:10px;padding:0 18px}
 .tl-leg-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:2px 7px;cursor:pointer;font-size:10px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
@@ -344,9 +347,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 <!-- Single row: Range chevron + all toggles -->
 <div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
-  <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-    <span id="rangeLabel" style="font-size:12px;font-weight:700;font-family:var(--font);padding:4px 10px;color:var(--muted)">±10%</span><button id="rangeExpandBtn" title="Expand range options" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
-  </span>
+  <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
   <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
     <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
   </span>
@@ -412,10 +413,10 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <div id="tlCrosshairDate" style="display:none;position:absolute;bottom:2px;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:10px;font-family:var(--mono);color:#e2e8f0;white-space:nowrap;pointer-events:none"></div>
     </div>
     <div id="tlTip" class="tlTip"></div>
-    <div id="tlLegendWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
-      <div class="tl-legend-group"><span class="tl-legend-group-label" id="tlLegTLLabel">Trendlines &nbsp;</span><span class="tl-legend" id="tlLegend"></span></div>
-      <div class="tl-legend-group" id="tlLegMAGroup"><span class="tl-legend-group-label" id="tlLegMALabel">MAs &nbsp;</span><span class="tl-legend" id="tlMALegend"></span></div>
-      <div class="tl-legend-group" id="tlLegOCGroup"><span class="tl-legend-group-label" id="tlLegOCLabel">On-chain &nbsp;</span><span class="tl-legend" id="tlOCLegend"></span></div>
+    <div id="tlLegendWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:0;padding:0 18px">
+      <div class="tl-legend-group" id="tlLegTLGroup"><span class="tl-legend-group-hdr" id="tlLegTLLabel">Trendlines</span><span id="tlLegend" style="display:contents"></span></div>
+      <div class="tl-legend-group" id="tlLegMAGroup"><span class="tl-legend-group-label tl-legend-group-hdr" id="tlLegMALabel">MAs&nbsp;</span><span class="tl-legend-btns" id="tlMALegend"></span></div>
+      <div class="tl-legend-group" id="tlLegOCGroup"><span class="tl-legend-group-label tl-legend-group-hdr" id="tlLegOCLabel">On-chain&nbsp;</span><span class="tl-legend-btns" id="tlOCLegend"></span></div>
     </div>
   </div>
 </details>
@@ -505,12 +506,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<details class="section" id="newsSection">
-  <summary>News</summary>
-  <div class="section-body" style="margin-top:8px">
-    <div id="newsBody" style="font-size:13px;color:var(--muted);padding:8px 0">Calculating…</div>
-  </div>
-</details>
+
 
 <details class="section">
   <summary>Diagnostics</summary>
@@ -526,11 +522,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.28</div>
+<div class="footer" id="footerTxt">BtcLadder v1.0.31</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.28 PWA';
+const VERSION='BtcLadder v1.0.31 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -570,6 +566,7 @@ function resetZoom(){
   zoomLo=null;zoomHi=null;userZoomed=false;
   document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.toggle('on',b.dataset.prox===proxFilter));
   const zr=$('zoomReset');if(zr)zr.style.display='none';
+  updateRangeBtn();
   rerender();
 }
 
@@ -578,6 +575,7 @@ function applyZoom(newLo,newHi,cur){
   const minSpan=cur*0.002;
   if(newHi-newLo<minSpan){const mid=(newLo+newHi)/2;newLo=mid-minSpan/2;newHi=mid+minSpan/2;}
   zoomLo=newLo;zoomHi=newHi;userZoomed=true;
+  if(typeof updateRangeBtn==='function')updateRangeBtn();
   document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.remove('on'));
   const zr=$('zoomReset');if(zr)zr.style.display='';
   rerender();
@@ -1505,7 +1503,6 @@ async function refreshAll(){
     setStatus('ok');
     rerender();
     /* compute news in background — doesn't block render */
-    setTimeout(computeNews, 100);
     window._tlOCData=null; /* invalidate OC cache on refresh */
     _tlOCFetching=false; /* reset fetch flag */
     setTimeout(tl_fetchOCData,300); /* pre-fetch OC data - shared by viewer and news */
@@ -1792,6 +1789,7 @@ function tl_renderLegend(lines){
   const el=document.getElementById('tlLegend');
   if(!el)return;
   el.innerHTML='';
+  el.style.cssText='display:contents';
   lines.forEach((c,idx)=>{
     /* defaults already set by tl_draw — just render buttons */
     if(tl_visible[c.viewerTag]===undefined)tl_visible[c.viewerTag]=false;
@@ -2280,6 +2278,7 @@ function tl_renderMALegend(mode,configs){
   const show=true; /* always show MA legend */
   grp.style.display='';
   el.innerHTML='';
+  el.style.cssText='display:contents';
   const cur=lastCurrent||window._cur||0;
   /* only shortest MA period on by default per timeframe */
   const shortestPeriod=configs.length?Math.min(...configs.map(m=>m.period)):0;
@@ -2321,6 +2320,7 @@ function tl_renderOCLegend(configs){
   if(!window._tlOCData){el.innerHTML='';grp.style.display='none';return;}
   grp.style.display='';
   el.innerHTML='';
+  el.style.cssText='display:contents';
   const cur=lastCurrent||window._cur||0;
   configs.forEach(oc=>{
     if(tl_ocVisible[oc.key]===undefined){
@@ -3233,305 +3233,7 @@ function renderAnimatedPrice(newPrice, oldPrice){
 }
 
 
-/* ══════════════════════════════════════════════════════════════════════════
-   NEWS SECTION — self-contained. Remove this block + <details id="newsSection">.
-   ══════════════════════════════════════════════════════════════════════════ */
 
-let _newsCandles=null;
-
-async function fetchNewsCandles(){
-  try{
-    const url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=400';
-    const data=await fetchJson(url);
-    return data.map(k=>({t:Number(k[0]),open:Number(k[1]),high:Number(k[2]),low:Number(k[3]),close:Number(k[4]),volume:Number(k[5])}));
-  }catch(e){console.warn('News candles fetch failed:',e.message);return null;}
-}
-
-async function computeNews(){
-  const el=$('newsBody');if(!el)return;
-  el.innerHTML='<span style="color:var(--muted);font-size:12px">Calculating signals…</span>';
-  try{
-    if(!_newsCandles||_newsCandles.length<200) _newsCandles=await fetchNewsCandles();
-    const cs=_newsCandles;
-    const cur=lastCurrent;
-    if(!cs||!cs.length||!cur){el.innerHTML='<span style="color:var(--muted);font-size:12px">Insufficient data.</span>';return;}
-
-    const items=[];
-    const debug=[];
-    const now=Date.now();
-    debug.push(`Candles: ${cs.length} daily · BTC: $${Math.round(cur).toLocaleString()}`);
-
-    const fmtP=n=>n?'$'+Math.round(n).toLocaleString():'—';
-    const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    function fmtDate(ts){const d=new Date(ts);return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;}
-    function fmtWeekOf(ts){const d=new Date(ts);return `week of ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;}
-    function fmtMonthOf(ts){const d=new Date(ts);return `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;}
-    function fmtFutureDate(daysAhead){const d=new Date(now+daysAhead*864e5);return `est. ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;}
-    function fmtFutureWeek(weeksAhead){const d=new Date(now+weeksAhead*7*864e5);return `est. week of ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;}
-    function fmtFutureMonth(monthsAhead){const d=new Date(now+monthsAhead*30*864e5);return `est. ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;}
-
-    function linSlope(arr){
-      const n=arr.length;if(n<2)return 0;
-      let sx=0,sy=0,sxy=0,sxx=0;
-      for(let i=0;i<n;i++){sx+=i;sy+=arr[i];sxy+=i*arr[i];sxx+=i*i;}
-      const denom=n*sxx-sx*sx;
-      return denom===0?0:(n*sxy-sx*sy)/denom;
-    }
-    function maHistory(candles,period){
-      if(candles.length<period)return[];
-      const vals=[];
-      for(let i=period-1;i<candles.length;i++){
-        let sum=0;for(let j=i-period+1;j<=i;j++)sum+=candles[j].close;
-        vals.push(sum/period);
-      }
-      return vals;
-    }
-
-    /* sanity filter: crossing price must be within 15% of current BTC */
-    function plausibleCross(projP){return projP>cur*0.85&&projP<cur*1.15;}
-
-    const SLOPE_WIN=10;
-
-    /* ── 1. YVWAP ── */
-    try{
-      const yearStart=new Date(new Date().getUTCFullYear(),0,1).getTime();
-      const calCs=cs.filter(c=>c.t>=yearStart);
-      const rol365=cs.slice(-365);
-      let calVwap=null,rolVwap=null;
-      if(calCs.length>=10){
-        let spv=0,sv=0;calCs.forEach(c=>{const tp=(c.high+c.low+c.close)/3;spv+=tp*c.volume;sv+=c.volume;});
-        if(sv>0)calVwap=spv/sv;
-      }
-      if(rol365.length>=60){
-        let spv=0,sv=0;rol365.forEach(c=>{const tp=(c.high+c.low+c.close)/3;spv+=tp*c.volume;sv+=c.volume;});
-        if(sv>0)rolVwap=spv/sv;
-      }
-      debug.push(`Cal YVWAP: ${calVwap?'$'+Math.round(calVwap).toLocaleString():'n/a'} · Rolling 365: ${rolVwap?'$'+Math.round(rolVwap).toLocaleString():'n/a'}`);
-      if(calVwap||rolVwap){
-        const lines=[];
-        if(calVwap){const d=((cur-calVwap)/calVwap*100);lines.push(`Calendar year VWAP (Jan 1–today): ${fmtP(calVwap)} · BTC ${d>=0?'+':''}${d.toFixed(1)}% ${d>=0?'above':'below'}`);}
-        if(rolVwap){const d=((cur-rolVwap)/rolVwap*100);lines.push(`Rolling 365-day VWAP: ${fmtP(rolVwap)} · BTC ${d>=0?'+':''}${d.toFixed(1)}% ${d>=0?'above':'below'}`);}
-        items.push({type:'info',col:'#60a5fa',crossTs:0,title:'Binance YVWAP',body:lines.join('\n'),note:'Calculated from Binance spot volume only'});
-      }
-    }catch(e){debug.push('YVWAP error: '+e.message);}
-
-    /* ── 2. Volatility ── */
-    try{
-      if(cs.length>=90){
-        function rolVol(candles,win){
-          const ret=[];
-          for(let i=1;i<candles.length;i++)ret.push(Math.log(candles[i].close/candles[i-1].close));
-          const sl=ret.slice(-win),mean=sl.reduce((a,b)=>a+b,0)/sl.length;
-          return Math.sqrt(sl.reduce((a,b)=>a+(b-mean)**2,0)/sl.length)*Math.sqrt(365)*100;
-        }
-        const vol14=rolVol(cs,14),vol90=rolVol(cs,90),ratio=vol14/vol90;
-        debug.push(`Vol14: ${vol14.toFixed(1)}% · Vol90: ${vol90.toFixed(1)}% · ratio: ${ratio.toFixed(2)}`);
-        if(ratio>1.25||ratio<0.75){
-          const elevated=ratio>1;
-          items.push({type:'info',col:'#fbbf24',crossTs:1,
-            title:`Volatility ${elevated?'elevated':'compressed'}`,
-            body:`14-day vol ${vol14.toFixed(1)}% annualised · ${elevated?'+':''}${((ratio-1)*100).toFixed(0)}% vs 90-day average`,
-            note:elevated?'Elevated volatility often accompanies directional moves':'Compressed volatility often precedes sharp expansion'
-          });
-        }
-      }
-    }catch(e){debug.push('Vol error: '+e.message);}
-
-    /* ── 3. MA crossovers ── */
-    const wkCs=tl_candles['1w']||[];
-    const mCs=tl_candles['1M']||[];
-    const CROSS_PAIRS=[
-      {fast:50,slow:200,name:'D50 × D200',golden:'Golden Cross',death:'Death Cross',cs:cs,tf:'1d',lookBack:30,lookFwd:14},
-      {fast:50,slow:99, name:'D50 × D99', golden:'Bullish Cross',death:'Bearish Cross',cs:cs,tf:'1d',lookBack:30,lookFwd:14},
-      {fast:99,slow:200,name:'D99 × D200',golden:'Bullish Cross',death:'Bearish Cross',cs:cs,tf:'1d',lookBack:30,lookFwd:14},
-    ];
-    if(wkCs.length>=110)CROSS_PAIRS.push(
-      {fast:20,slow:100,name:'W20 × W100',golden:'Bullish Cross',death:'Bearish Cross',cs:wkCs,tf:'1w',lookBack:20,lookFwd:6}
-    );
-    if(wkCs.length>=210)CROSS_PAIRS.push(
-      {fast:20,slow:200,name:'W20 × W200',golden:'Bullish Cross',death:'Bearish Cross',cs:wkCs,tf:'1w',lookBack:12,lookFwd:6}
-    );
-    if(mCs.length>0)CROSS_PAIRS.push(
-      {fast:7,slow:20,name:'M7 × M20',golden:'Bullish Cross',death:'Bearish Cross',cs:mCs,tf:'1M',lookBack:9,lookFwd:3}
-    );
-
-    for(const pair of CROSS_PAIRS){
-      try{
-        const pcs=pair.cs;
-        const fastH=maHistory(pcs,pair.fast);
-        const slowH=maHistory(pcs,pair.slow);
-        const minLen=Math.min(fastH.length,slowH.length);
-        if(minLen<2){debug.push(`${pair.name}: insufficient (fast:${fastH.length} slow:${slowH.length})`);continue;}
-        const fNow=fastH[fastH.length-1];
-        const sNow=slowH[slowH.length-1];
-        const isDaily=pair.tf==='1d',isWeekly=pair.tf==='1w';
-
-        /* recent cross — iterate from most recent backward */
-        let crossedCandleIdx=null,crossDir=null,candlesAgo=null;
-        const lb=Math.min(pair.lookBack,minLen-1);
-        for(let ago=1;ago<=lb;ago++){
-          /* fH and sH index from their end */
-          const fi=fastH[fastH.length-ago],   si=slowH[slowH.length-ago];
-          const fp=fastH[fastH.length-ago-1], sp=slowH[slowH.length-ago-1];
-          if(!Number.isFinite(fi)||!Number.isFinite(si)||!Number.isFinite(fp)||!Number.isFinite(sp))continue;
-          if(fp<sp&&fi>=si){crossDir='up';candlesAgo=ago;crossedCandleIdx=pcs.length-ago;break;}
-          if(fp>sp&&fi<=si){crossDir='dn';candlesAgo=ago;crossedCandleIdx=pcs.length-ago;break;}
-        }
-        debug.push(`${pair.name}: fast=${Math.round(fNow)} slow=${Math.round(sNow)} gap=${Math.round(fNow-sNow)} cross=${candlesAgo!==null?crossDir+'@'+candlesAgo:'none'}`);
-
-        if(candlesAgo!==null){
-          const isGolden=crossDir==='up';
-          const crossTs=pcs[crossedCandleIdx]?pcs[crossedCandleIdx].t:now;
-          let timeStr='';
-          const daysAgo=Math.round((now-crossTs)/864e5);
-          if(isDaily) timeStr=`${daysAgo} day${daysAgo!==1?'s':''} ago (${fmtDate(crossTs)})`;
-          else if(isWeekly) timeStr=`${candlesAgo} week${candlesAgo!==1?'s':''} ago (${fmtWeekOf(crossTs)})`;
-          else timeStr=`${candlesAgo} month${candlesAgo!==1?'s':''} ago (${fmtMonthOf(crossTs)})`;
-          const [fTag,sTag]=pair.name.split(' × ');
-          const crossPrice=pcs[crossedCandleIdx]?pcs[crossedCandleIdx].close:null;
-          items.push({
-            type:isGolden?'bull':'bear',col:isGolden?'#4ade80':'#f87171',crossTs,
-            title:isGolden?pair.golden:pair.death,
-            body:`${pair.name} · ${timeStr}${crossPrice?' · crossed near '+fmtP(crossPrice):''}`,
-            note:isGolden?`${fTag} crossed above ${sTag} — historically bullish`:`${fTag} crossed below ${sTag} — historically bearish`
-          });
-          continue;
-        }
-
-        /* pending cross */
-        const fSlope=linSlope(fastH.slice(-SLOPE_WIN));
-        const sSlope=linSlope(slowH.slice(-SLOPE_WIN));
-        const slopeDiff=fSlope-sSlope;
-        if(Math.abs(slopeDiff)<1e-6)continue;
-        const t=(sNow-fNow)/slopeDiff;
-        const isGolden=fNow<sNow&&fSlope>sSlope;
-        const isDeath=fNow>sNow&&fSlope<sSlope;
-        if((!isGolden&&!isDeath)||t<=0||t>pair.lookFwd)continue;
-        const projP=fNow+fSlope*t;
-        /* sanity: crossing price within 15% of current BTC */
-        if(!plausibleCross(projP)){debug.push(`${pair.name}: pending filtered — proj ${Math.round(projP)} too far from BTC ${Math.round(cur)}`);continue;}
-        const [fTag,sTag]=pair.name.split(' × ');
-        let futureStr='';
-        const futureDays=isDaily?t:isWeekly?t*7:t*30;
-        const futureTs=now+futureDays*864e5;
-        if(isDaily) futureStr=`~${Math.round(t)} days (${fmtFutureDate(t)})`;
-        else if(isWeekly) futureStr=`~${Math.round(t)} weeks (${fmtFutureWeek(t)})`;
-        else futureStr=`~${Math.round(t)} months (${fmtFutureMonth(t)})`;
-        debug.push(`${pair.name}: pending ${isGolden?'golden':'death'} in ${t.toFixed(1)} · proj: ${Math.round(projP)}`);
-        items.push({
-          type:isGolden?'bull':'bear',col:isGolden?'#4ade80':'#f87171',crossTs:futureTs,
-          title:`${isGolden?pair.golden:pair.death} forming`,
-          body:`${fTag} on track to cross ${isGolden?'above':'below'} ${sTag} in ${futureStr} near ${fmtP(projP)}`,
-          note:`${isGolden?'Bullish':'Bearish'} signal forming · assumes current MA trajectories continue`
-        });
-      }catch(e){debug.push(`${pair.name} error: ${e.message}`);}
-    }
-
-    /* ── 4. Trendline convergences ── */
-    try{
-      const tls=lastTrendlines.filter(l=>l.sourceType==='trendline'&&l._tlLine);
-      debug.push(`Trendlines: ${tls.length}`);
-      const res=tls.filter(l=>l.tlType==='resistance');
-      const sup=tls.filter(l=>l.tlType==='support');
-      for(const r of res){
-        for(const s of sup){
-          if((r.tlTf||r._tlLine.tf)!==(s.tlTf||s._tlLine.tf))continue;
-          const rSlope=r._tlLine.m||r._tlLine.slope||0;
-          const sSlope=s._tlLine.m||s._tlLine.slope||0;
-          const rNow=r.price,sNow=s.price;
-          if(rNow<=sNow)continue;
-          const diff=sSlope-rSlope;
-          if(diff<=0)continue;
-          const t=(rNow-sNow)/diff;
-          if(t<=0||t>30)continue;
-          const projP=rNow+rSlope*t;
-          if(!plausibleCross(projP)){debug.push(`TL: ${r.label} vs ${s.label} filtered — proj ${Math.round(projP)}`);continue;}
-          const bothUp=rSlope>0&&sSlope>0,bothDn=rSlope<0&&sSlope<0;
-          const wType=bothUp?'Rising wedge':bothDn?'Falling wedge':'Symmetrical triangle';
-          const bias=bothUp?' — typically resolves bearish':bothDn?' — typically resolves bullish':' — breakout direction unclear';
-          const col=bothDn?'#4ade80':bothUp?'#f87171':'#fbbf24';
-          const rDir=rSlope>0?'rising':'falling',sDir=sSlope>0?'rising':'falling';
-          debug.push(`TL: ${r.label}(${rDir}) vs ${s.label}(${sDir}) in ${t.toFixed(1)}d at ${Math.round(projP)}`);
-          items.push({
-            type:bothDn?'bull':bothUp?'bear':'neu',col,crossTs:now+t*864e5,
-            title:`${wType} — ${r.label} & ${s.label}`,
-            body:`${r.label} (${rDir}) and ${s.label} (${sDir}) converge in ~${Math.round(t)} days (${fmtFutureDate(t)}) near ${fmtP(projP)}`,
-            note:wType+bias+' · valid unless either line is invalidated'
-          });
-        }
-      }
-    }catch(e){debug.push('TL convergence error: '+e.message);}
-
-    /* ── 5. Trendline vs MA ── */
-    try{
-      const maTargets=[
-        {tag:'D200MA',hist:maHistory(cs,200)},
-        {tag:'D50MA', hist:maHistory(cs,50)},
-      ];
-      if(wkCs.length>=100)maTargets.push({tag:'W100MA',hist:maHistory(wkCs,100)});
-      if(wkCs.length>=200)maTargets.push({tag:'W200MA',hist:maHistory(wkCs,200)});
-      const topTls=lastTrendlines.filter(l=>l.sourceType==='trendline'&&l._tlLine&&(l.label||'').match(/^[DW](TR|TS)[12]$/));
-      for(const tl of topTls){
-        const tlSlope=tl._tlLine.m||tl._tlLine.slope||0;
-        const tlNow=tl.price;
-        const tlDir=tlSlope>0?'rising':'falling';
-        for(const ma of maTargets){
-          if(!ma.hist.length)continue;
-          const maNow=ma.hist[ma.hist.length-1];
-          const maSlope=linSlope(ma.hist.slice(-SLOPE_WIN));
-          const maDir=maSlope>0?'rising':'falling';
-          const diff=tlSlope-maSlope;
-          if(Math.abs(diff)<1e-6)continue;
-          const t=(maNow-tlNow)/diff;
-          if(t<=0||t>20)continue;
-          const projP=tlNow+tlSlope*t;
-          if(!plausibleCross(projP)){debug.push(`${tl.label} vs ${ma.tag}: filtered proj ${Math.round(projP)}`);continue;}
-          const isRes=tl.tlType==='resistance';
-          debug.push(`${tl.label} vs ${ma.tag}: t=${t.toFixed(1)} proj=${Math.round(projP)} TLdir=${tlDir} MAdir=${maDir}`);
-          items.push({
-            type:'info',col:isRes?'#f87171':'#4ade80',crossTs:now+t*864e5,
-            title:`${tl.label} converging with ${ma.tag}`,
-            body:`${isRes?'Resistance':'Support'} trendline (${tlDir}) meets ${ma.tag} (${maDir}) in ~${Math.round(t)} days (${fmtFutureDate(t)}) near ${fmtP(projP)}`,
-            note:`${isRes?'Potential resistance confluence':'Potential support confluence'} · assumes ${ma.tag} slope continues`
-          });
-        }
-      }
-    }catch(e){debug.push('TL vs MA error: '+e.message);}
-
-    /* ── sort: info first, then future (soonest first), then past (newest first) ── */
-    items.sort((a,b)=>{
-      const aInfo=a.type==='info',bInfo=b.type==='info';
-      if(aInfo&&!bInfo)return -1;if(bInfo&&!aInfo)return 1;
-      const aFut=a.crossTs>now,bFut=b.crossTs>now;
-      if(aFut&&!bFut)return -1;if(bFut&&!aFut)return 1;
-      if(aFut&&bFut)return a.crossTs-b.crossTs;
-      return b.crossTs-a.crossTs;
-    });
-
-    /* ── render ── */
-    const debugText=debug.join('\n');
-    const debugHTML=`<details style="margin-top:12px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">Debug info</summary>
-      <pre style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px;line-height:1.6;white-space:pre-wrap;word-break:break-all">${debugText}</pre>
-      <button id="newsDebugCopyBtn" style="margin-top:6px;font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono)">Copy debug</button>
-    </details>`;
-
-    el.innerHTML=(items.length?items.map(item=>`
-      <div style="border-left:3px solid ${item.col};background:${item.col}11;border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:8px;white-space:pre-line">
-        <div style="font-size:12px;font-weight:700;color:${item.col};margin-bottom:2px">${item.title}</div>
-        <div style="font-size:13px;color:var(--text);margin-bottom:2px">${item.body}</div>
-        <div style="font-size:11px;color:var(--muted)">${item.note}</div>
-      </div>`).join(''):'<span style="color:var(--muted);font-size:13px">No notable signals detected.</span>')+debugHTML;
-
-    const copyBtn=document.getElementById('newsDebugCopyBtn');
-    if(copyBtn)copyBtn.onclick=()=>navigator.clipboard.writeText(debugText)
-      .then(()=>{copyBtn.textContent='Copied!';setTimeout(()=>copyBtn.textContent='Copy debug',2000);})
-      .catch(()=>copyBtn.textContent='Failed');
-
-  }catch(e){
-    const el=$('newsBody');
-    if(el)el.innerHTML=`<span style="color:var(--muted);font-size:12px">Error: ${e.message}</span>`;
-  }
-}
 /* ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── CONTROLS ── */
@@ -3607,32 +3309,33 @@ document.querySelectorAll('.tog[data-prox]').forEach(btn=>{
   btn.onclick=()=>{proxFilter=btn.dataset.prox;ss('proximity',proxFilter);zoomLo=null;zoomHi=null;userZoomed=false;document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.toggle('on',b.dataset.prox===proxFilter));rerender()};
 });
 /* Range chevron button */
-function updateRangeLabel(){
-  const lbl=document.getElementById('rangeLabel');
-  if(lbl)lbl.textContent=proxFilter==='all'?'All':'±'+proxFilter+'%';
+function updateRangeBtn(){
+  const btn=document.getElementById('rangeBtn');
+  if(!btn)return;
+  btn.textContent=proxFilter==='all'?'All':'±'+proxFilter+'%';
+  /* dim when userZoomed overrides the filter */
+  btn.classList.toggle('on',!userZoomed);
   /* sync expand row visual */
   document.querySelectorAll('#rangeExpand .rng-t2').forEach(t=>t.classList.toggle('on',t.dataset.prox===proxFilter));
 }
-updateRangeLabel();
-const rangeExpandBtn=document.getElementById('rangeExpandBtn');
-if(rangeExpandBtn)rangeExpandBtn.onclick=()=>{
+updateRangeBtn();
+const rangeBtn=document.getElementById('rangeBtn');
+if(rangeBtn)rangeBtn.onclick=()=>{
   const ex=document.getElementById('rangeExpand');
   if(!ex)return;
   const opening=ex.style.display==='none';
   /* close MA expand if open */
   if(opening){const maEx=document.getElementById('maExpand');const maBtn=document.getElementById('maExpandBtn');if(maEx&&maEx.style.display!=='none'){maEx.style.display='none';if(maBtn)maBtn.textContent='▼';}}
   ex.style.display=opening?'flex':'none';
-  rangeExpandBtn.textContent=opening?'▲':'▼';
-  if(opening)updateRangeLabel();
 };
 document.querySelectorAll('#rangeExpand .rng-t2').forEach(t=>{
   t.onclick=()=>{
     proxFilter=t.dataset.prox;
     ss('proximity',proxFilter);
     zoomLo=null;zoomHi=null;userZoomed=false;
-    updateRangeLabel();
     const ex=document.getElementById('rangeExpand');
-    if(ex){ex.style.display='none';rangeExpandBtn.textContent='▼';}
+    if(ex)ex.style.display='none';
+    updateRangeBtn();
     rerender();
   };
 });
