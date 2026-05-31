@@ -539,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.14-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.17-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.14-msm PWA';
+const VERSION='BtcLadder v1.2.17-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -911,8 +911,7 @@ function renderChart(cur,ma,oc,tl=[]){
     const maxBarPct=18; /* % of canvas width — fixed scale reference */
     /* 100% reference line — always drawn, full canvas height.
        Color matches grid/border tone (muted slate), not any data category. */
-    const urpdOffset=(_msmData&&showUrpd)?30:0;
-    canvas+=`<div style="position:absolute;left:${urpdOffset}%;top:0;width:${maxBarPct}%;height:100%;border-right:1.5px solid rgba(148,163,184,0.35);pointer-events:none;z-index:0"></div>`;
+    canvas+=`<div style="position:absolute;left:0;top:0;width:${maxBarPct}%;height:100%;border-right:1.5px solid rgba(148,163,184,0.35);pointer-events:none;z-index:0"></div>`;
     /* bars — filter to visible price range only */
     /* adaptive binning: merge to $1000 bins when showing All range (cleaner visual) */
     let renderBins=lastUrpd;
@@ -936,7 +935,7 @@ function renderChart(cur,ma,oc,tl=[]){
       const barH=Math.max(1.5,yBot-yTop);
       const relNorm=b.norm/urpdTrueMax; /* guaranteed 0..1 */
       const barW=(relNorm*maxBarPct).toFixed(2);
-      canvas+=`<div style="position:absolute;left:${urpdOffset}%;top:${(yTop/H*100).toFixed(2)}%;height:${(barH/H*100).toFixed(2)}%;width:${barW}%;background:rgba(96,165,250,${(0.12+relNorm*0.20).toFixed(2)});pointer-events:none;z-index:0"></div>`;
+      canvas+=`<div style="position:absolute;left:0;top:${(yTop/H*100).toFixed(2)}%;height:${(barH/H*100).toFixed(2)}%;width:${barW}%;background:rgba(96,165,250,${(0.12+relNorm*0.20).toFixed(2)});pointer-events:none;z-index:0"></div>`;
     });
   }
     nonCur.filter(l=>l.type==='zone').forEach(l=>{
@@ -946,10 +945,10 @@ function renderChart(cur,ma,oc,tl=[]){
     canvas+=`<div class="azone" style="top:${topPct}%;height:${hPct}%"></div>`;
   });
 
-  /* ── MSM STATE STRIP: left of URPD ── */
+  /* ── MSM STATE STRIP: left:18%, width:30%, fades right into canvas ── */
   if(showUrpd&&_msmData){
-    const msmW=30;  /* % of canvas width */
-    const urpdStart=msmW; /* URPD now starts after MSM */
+    const msmLeft=18; /* starts right of URPD */
+    const msmW=30;    /* fades out within this width */
     const d=_msmData.latest;
     const zoneColors={
       CAP:[37,99,235],
@@ -967,29 +966,27 @@ function renderChart(cur,ma,oc,tl=[]){
       if(tp>=65&&sp>=65)return'PRE';
       return'NEU';
     }
-    /* vertical zone gradient with horizontal fade baked in using two gradients */
+    /* vertical zone gradient */
     const SAMPLES=40;
-    const gradStops=[];
+    const vStops=[];
     for(let i=0;i<=SAMPLES;i++){
       const pct=i/SAMPLES;
       const price=hi-(hi-lo)*pct;
-      const zone=zoneAt(price);
-      const c=zoneColors[zone];
-      gradStops.push(`rgba(${c[0]},${c[1]},${c[2]},0.30) ${(pct*100).toFixed(1)}%`);
+      const c=zoneColors[zoneAt(price)];
+      vStops.push(`rgba(${c[0]},${c[1]},${c[2]},0.30) ${(pct*100).toFixed(1)}%`);
     }
-    /* vertical zone gradient */
-    canvas+=`<div style="position:absolute;left:0;top:0;width:${msmW}%;height:100%;background:linear-gradient(to bottom,${gradStops.join(',')});pointer-events:none;z-index:0"></div>`;
-    /* horizontal fade: mask the right portion to transparent using a separate div */
-    canvas+=`<div style="position:absolute;left:0;top:0;width:${msmW}%;height:100%;background:linear-gradient(to right,transparent 0%,var(--bg) 100%);opacity:0.7;pointer-events:none;z-index:1"></div>`;
-    /* text label only - no filled bar */
+    /* vertical zone gradient with mask for true transparent right-fade */
+    canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:${msmW}%;height:100%;background:linear-gradient(to bottom,${vStops.join(',')});-webkit-mask:linear-gradient(to right,black 0%,black 30%,transparent 100%);mask:linear-gradient(to right,black 0%,black 30%,transparent 100%);pointer-events:none;z-index:0"></div>`;
+    /* badge near left edge of strip (~22-24% of canvas) on price line */
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
     const curZone=zoneAt(cur);
     const zoneCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
+    const badgeLeft=(msmLeft+4).toFixed(1); /* ~22% — left side of strip */
     const _isMob=window.innerWidth<641;
     const _bfs=_isMob?'10px':'11px';
     const _bpad=_isMob?'1px 4px':'2px 6px';
-    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" ontouchend="event.preventDefault();event.stopPropagation();msmShowTooltip(event);" style="position:absolute;left:${(msmW/2).toFixed(1)}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:rgba(12,15,25,0.90);color:${zoneCol[curZone]};font-size:${_bfs};font-weight:700;font-family:var(--mono);padding:${_bpad};border-radius:3px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap">${curZone}</div>`;
+    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" ontouchend="event.preventDefault();event.stopPropagation();msmShowTooltip(event);" style="position:absolute;left:${badgeLeft}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:rgba(12,15,25,0.92);color:${zoneCol[curZone]};font-size:${_bfs};font-weight:700;font-family:var(--mono);padding:${_bpad};border-radius:3px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap">${curZone}</div>`;
   }
 
   /* tip store — keyed by code string */
