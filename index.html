@@ -539,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.12-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.14-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.12-msm PWA';
+const VERSION='BtcLadder v1.2.14-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -967,7 +967,7 @@ function renderChart(cur,ma,oc,tl=[]){
       if(tp>=65&&sp>=65)return'PRE';
       return'NEU';
     }
-    /* single gradient div - no banding */
+    /* vertical zone gradient with horizontal fade baked in using two gradients */
     const SAMPLES=40;
     const gradStops=[];
     for(let i=0;i<=SAMPLES;i++){
@@ -975,21 +975,21 @@ function renderChart(cur,ma,oc,tl=[]){
       const price=hi-(hi-lo)*pct;
       const zone=zoneAt(price);
       const c=zoneColors[zone];
-      gradStops.push(`rgba(${c[0]},${c[1]},${c[2]},0.22) ${(pct*100).toFixed(1)}%`);
+      gradStops.push(`rgba(${c[0]},${c[1]},${c[2]},0.30) ${(pct*100).toFixed(1)}%`);
     }
+    /* vertical zone gradient */
     canvas+=`<div style="position:absolute;left:0;top:0;width:${msmW}%;height:100%;background:linear-gradient(to bottom,${gradStops.join(',')});pointer-events:none;z-index:0"></div>`;
-    /* right border separating MSM from URPD */
-    canvas+=`<div style="position:absolute;left:${msmW}%;top:0;width:1px;height:100%;background:rgba(148,163,184,0.2);pointer-events:none;z-index:1"></div>`;
-    /* price line indicator: filled bar spanning full strip width */
+    /* horizontal fade: mask the right portion to transparent using a separate div */
+    canvas+=`<div style="position:absolute;left:0;top:0;width:${msmW}%;height:100%;background:linear-gradient(to right,transparent 0%,var(--bg) 100%);opacity:0.7;pointer-events:none;z-index:1"></div>`;
+    /* text label only - no filled bar */
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
     const curZone=zoneAt(cur);
     const zoneCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
-    const zc=zoneColors[curZone];
-    /* filled bar at price line */
-    canvas+=`<div style="position:absolute;left:0;top:${curYpct}%;width:${msmW}%;height:3px;background:rgba(${zc[0]},${zc[1]},${zc[2]},0.7);transform:translateY(-50%);pointer-events:none;z-index:2"></div>`;
-    /* text label centered on bar - dark bg, no border */
-    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" ontouchend="event.preventDefault();event.stopPropagation();msmShowTooltip(event);" style="position:absolute;left:${(msmW/2).toFixed(1)}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:rgba(15,18,28,0.88);color:${zoneCol[curZone]};font-size:11px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:3px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap">${curZone}</div>`;
+    const _isMob=window.innerWidth<641;
+    const _bfs=_isMob?'10px':'11px';
+    const _bpad=_isMob?'1px 4px':'2px 6px';
+    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" ontouchend="event.preventDefault();event.stopPropagation();msmShowTooltip(event);" style="position:absolute;left:${(msmW/2).toFixed(1)}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:rgba(12,15,25,0.90);color:${zoneCol[curZone]};font-size:${_bfs};font-weight:700;font-family:var(--mono);padding:${_bpad};border-radius:3px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap">${curZone}</div>`;
   }
 
   /* tip store — keyed by code string */
