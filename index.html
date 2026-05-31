@@ -539,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.10-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.11-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.10-msm PWA';
+const VERSION='BtcLadder v1.2.11-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -948,7 +948,7 @@ function renderChart(cur,ma,oc,tl=[]){
   /* ── MSM STATE STRIP: immediately right of URPD strip ── */
   if(showUrpd&&_msmData){
     const urpdW=18;
-    const msmW=22; /* slightly wider than URPD for badge room */
+    const msmW=30; /* wider strip for badge + color visibility */
     const msmLeft=urpdW;
     const d=_msmData.latest;
     const zoneColors={
@@ -989,7 +989,8 @@ function renderChart(cur,ma,oc,tl=[]){
     const badgeCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
     const badgeBgSolid={CAP:'#1e2240',ACC:'#1e2535',NEU:'#252830',PRE:'#2a2010',DIS:'#2a1515'};
     const msmCenterPct=(msmLeft+msmW/2).toFixed(1);
-    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" style="position:absolute;left:${msmCenterPct}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:${badgeBgSolid[curZone]};color:${badgeCol[curZone]};font-size:10px;font-weight:700;font-family:var(--mono);padding:2px 6px;border-radius:4px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap;border:1px solid ${badgeCol[curZone]};min-width:32px;text-align:center">${curZone}</div>`;
+    /* font size matches price labels (12px), larger tap target for mobile */
+    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" ontouchend="event.preventDefault();event.stopPropagation();msmShowTooltip(event);" style="position:absolute;left:${msmCenterPct}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:${badgeBgSolid[curZone]};color:${badgeCol[curZone]};font-size:12px;font-weight:700;font-family:var(--mono);padding:3px 8px;border-radius:4px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap;border:1px solid ${badgeCol[curZone]};min-width:36px;text-align:center">${curZone}</div>`;
   }
 
   /* tip store — keyed by code string */
@@ -3492,7 +3493,14 @@ function msmUpdate(price){
   /* badge is rendered in the canvas strip via rerender - just store state */
 }
 function msmShowTooltip(ev){
-  if(!_msmLast)return;
+  if(!_msmLast){
+    /* MSM data not yet loaded - try to recompute */
+    if(_msmData&&lastCurrent)msmUpdate(lastCurrent);
+    if(!_msmLast)return;
+  }
+  /* get position from touch or mouse */
+  const clientX=ev.touches?ev.touches[0]?.clientX||ev.changedTouches[0]?.clientX:ev.clientX;
+  const clientY=ev.touches?ev.touches[0]?.clientY||ev.changedTouches[0]?.clientY:ev.clientY;
   const {sig,tp,sp,sopr,price,d}=_msmLast;
   const tip=document.getElementById('msmTooltip');if(!tip)return;
   const st=document.getElementById('msmTipState');if(st){st.textContent=sig;st.className='msm-state '+sig;}
@@ -3521,11 +3529,15 @@ function msmShowTooltip(ev){
     if(fire.ACC)h+=`<div style="margin-top:3px"><span style="color:#60a5fa">ACC</span> · BTC &lt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.ACC).toLocaleString()}</span></div>`;
     if(fire.PRE)h+=`<div style="margin-top:3px"><span style="color:#d97706">PRE</span> · BTC &gt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.PRE).toLocaleString()}</span></div>`;
     fireEl.innerHTML=h;}
-  const rect=ev.target.getBoundingClientRect();
   tip.style.display='block';
   const tw=tip.offsetWidth||280;
-  let left=rect.left;if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;
-  tip.style.left=Math.max(8,left)+'px';tip.style.top=(rect.bottom+8)+'px';
+  const th=tip.offsetHeight||200;
+  let left=clientX-tw/2;
+  if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;
+  left=Math.max(8,left);
+  let top=clientY-th-16;
+  if(top<8)top=clientY+16;
+  tip.style.left=left+'px';tip.style.top=top+'px';
   setTimeout(()=>document.addEventListener('click',function h(e){if(!tip.contains(e.target)&&e.target.id!=='msmBadge'){tip.style.display='none';document.removeEventListener('click',h);}},10));
 }
 async function msmFetchAndInit(){
