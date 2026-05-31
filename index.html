@@ -71,9 +71,9 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .price-big .pk-inner{font-family:var(--font);font-weight:800;display:block;transform-style:preserve-3d;backface-visibility:hidden}
 .price-chg-wrap{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
 .price-chg-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);line-height:1}
-.price-chg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
-.price-chg.up{background:rgba(74,222,128,.12);color:var(--green)}
-.price-chg.dn{background:rgba(248,113,113,.12);color:var(--red)}
+.price-chg{font-size:11px;font-weight:700;font-family:var(--mono);white-space:nowrap}
+.price-chg.up{color:var(--green)}
+.price-chg.dn{color:var(--red)}
 .price-sub{font-size:13px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
 .hero-stats{display:flex;gap:10px;flex-wrap:wrap}
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;min-width:120px}
@@ -352,7 +352,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
           <span class="price-chg-lbl">24h</span>
           <span class="price-chg" id="priceChg"></span>
         </div>
-        <span class="msm-badge LOAD" id="msmBadge" onclick="msmShowTooltip(event)" title="Market State — tap for details">—</span>
       </div>
     </div>
     <!-- priceSub removed - last update shown in header -->
@@ -540,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.7-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.9-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.7-msm PWA';
+const VERSION='BtcLadder v1.2.9-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -945,6 +944,64 @@ function renderChart(cur,ma,oc,tl=[]){
     const hPct=Math.max(3,((yBot-yTop)/H*100)).toFixed(2);
     canvas+=`<div class="azone" style="top:${topPct}%;height:${hPct}%"></div>`;
   });
+
+  /* ── MSM STATE STRIP: immediately right of URPD strip ── */
+  if(showUrpd&&_msmData){
+    const urpdW=18; /* must match URPD maxBarPct */
+    const msmW=18;  /* same width as URPD for symmetry */
+    const msmLeft=urpdW; /* sits right of URPD */
+    const d=_msmData.latest;
+    const zoneColors={
+      CAP:[37,99,235],
+      ACC:[96,165,250],
+      NEU:[100,116,139],
+      PRE:[217,119,6],
+      DIS:[185,28,28]
+    };
+    function zoneAt(p){
+      const tp=_msmPct(p/d.tmm,_msmData.tmmH);
+      const sp=_msmPct(p/d.sthcb,_msmData.sthH);
+      if(tp<=15&&sp<=15)return'CAP';
+      if(tp>=85&&sp>=85)return'DIS';
+      if(tp<=35&&sp<=35)return'ACC';
+      if(tp>=65&&sp>=65)return'PRE';
+      return'NEU';
+    }
+    /* smooth gradient: sample many price points, interpolate color continuously */
+    const steps=300;
+    const priceStep=(hi-lo)/steps;
+    /* collect zone at each step */
+    const zoneArr=[];
+    for(let i=0;i<=steps;i++) zoneArr.push(zoneAt(lo+i*priceStep));
+    /* draw with smooth blending using weighted average over window */
+    const BLEND_WIN=12;
+    for(let i=0;i<=steps;i++){
+      const p=lo+i*priceStep;
+      const yTop=toY(Math.min(hi,p+priceStep*0.6));
+      const yBot=toY(Math.max(lo,p-priceStep*0.4));
+      const sliceH=Math.max(0.5,(yBot-yTop)/H*100);
+      const sliceTop=(yTop/H*100).toFixed(3);
+      /* weighted average of surrounding zone colors */
+      let r=0,g=0,b=0,w=0;
+      for(let j=Math.max(0,i-BLEND_WIN);j<=Math.min(steps,i+BLEND_WIN);j++){
+        const weight=BLEND_WIN-Math.abs(i-j)+1;
+        const c=zoneColors[zoneArr[j]];
+        r+=c[0]*weight;g+=c[1]*weight;b+=c[2]*weight;w+=weight;
+      }
+      r=Math.round(r/w);g=Math.round(g/w);b=Math.round(b/w);
+      canvas+=`<div style="position:absolute;left:${msmLeft}%;top:${sliceTop}%;height:${sliceH.toFixed(3)}%;width:${msmW}%;background:rgba(${r},${g},${b},0.22);pointer-events:none;z-index:0"></div>`;
+    }
+    /* left border of MSM strip */
+    canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:1px;height:100%;background:rgba(148,163,184,0.2);pointer-events:none;z-index:1"></div>`;
+    /* state badge centered in strip on BTC price line */
+    const curY=toY(cur);
+    const curYpct=(curY/H*100).toFixed(2);
+    const curZone=zoneAt(cur);
+    const badgeCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
+    const badgeBg={CAP:'rgba(37,99,235,.2)',ACC:'rgba(96,165,250,.2)',NEU:'rgba(100,116,139,.2)',PRE:'rgba(217,119,6,.2)',DIS:'rgba(185,28,28,.2)'};
+    /* center badge in strip: left = msmLeft + msmW/2, translateX(-50%) */
+    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" style="position:absolute;left:${(msmLeft+msmW/2).toFixed(1)}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:${badgeBg[curZone]};color:${badgeCol[curZone]};font-size:11px;font-weight:700;font-family:var(--mono);padding:3px 7px;border-radius:4px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap;border:1px solid ${badgeCol[curZone]}40">${curZone}</div>`;
+  }
 
   /* tip store — keyed by code string */
   const tipMap=new Map();
@@ -3443,8 +3500,7 @@ function msmUpdate(price){
   const tp=_msmPct(price/d.tmm,_msmData.tmmH),sp=_msmPct(price/d.sthcb,_msmData.sthH);
   const sig=_msmSig(tp,sp,d.sopr);
   _msmLast={sig,tp,sp,sopr:d.sopr,price,d};
-  const b=document.getElementById('msmBadge');
-  if(b){b.textContent=sig;b.className='msm-badge '+sig;}
+  /* badge is rendered in the canvas strip via rerender - just store state */
 }
 function msmShowTooltip(ev){
   if(!_msmLast)return;
