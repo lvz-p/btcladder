@@ -539,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.9-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.10-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.9-msm PWA';
+const VERSION='BtcLadder v1.2.10-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -947,9 +947,9 @@ function renderChart(cur,ma,oc,tl=[]){
 
   /* ── MSM STATE STRIP: immediately right of URPD strip ── */
   if(showUrpd&&_msmData){
-    const urpdW=18; /* must match URPD maxBarPct */
-    const msmW=18;  /* same width as URPD for symmetry */
-    const msmLeft=urpdW; /* sits right of URPD */
+    const urpdW=18;
+    const msmW=22; /* slightly wider than URPD for badge room */
+    const msmLeft=urpdW;
     const d=_msmData.latest;
     const zoneColors={
       CAP:[37,99,235],
@@ -967,40 +967,29 @@ function renderChart(cur,ma,oc,tl=[]){
       if(tp>=65&&sp>=65)return'PRE';
       return'NEU';
     }
-    /* smooth gradient: sample many price points, interpolate color continuously */
-    const steps=300;
-    const priceStep=(hi-lo)/steps;
-    /* collect zone at each step */
-    const zoneArr=[];
-    for(let i=0;i<=steps;i++) zoneArr.push(zoneAt(lo+i*priceStep));
-    /* draw with smooth blending using weighted average over window */
-    const BLEND_WIN=12;
-    for(let i=0;i<=steps;i++){
-      const p=lo+i*priceStep;
-      const yTop=toY(Math.min(hi,p+priceStep*0.6));
-      const yBot=toY(Math.max(lo,p-priceStep*0.4));
-      const sliceH=Math.max(0.5,(yBot-yTop)/H*100);
-      const sliceTop=(yTop/H*100).toFixed(3);
-      /* weighted average of surrounding zone colors */
-      let r=0,g=0,b=0,w=0;
-      for(let j=Math.max(0,i-BLEND_WIN);j<=Math.min(steps,i+BLEND_WIN);j++){
-        const weight=BLEND_WIN-Math.abs(i-j)+1;
-        const c=zoneColors[zoneArr[j]];
-        r+=c[0]*weight;g+=c[1]*weight;b+=c[2]*weight;w+=weight;
-      }
-      r=Math.round(r/w);g=Math.round(g/w);b=Math.round(b/w);
-      canvas+=`<div style="position:absolute;left:${msmLeft}%;top:${sliceTop}%;height:${sliceH.toFixed(3)}%;width:${msmW}%;background:rgba(${r},${g},${b},0.22);pointer-events:none;z-index:0"></div>`;
+    /* build CSS linear-gradient — single div, no banding */
+    /* sample price points from hi (top=0%) to lo (bottom=100%) */
+    const SAMPLES=40;
+    const gradStops=[];
+    for(let i=0;i<=SAMPLES;i++){
+      const pct=i/SAMPLES;
+      const price=hi-(hi-lo)*pct; /* hi at top, lo at bottom */
+      const zone=zoneAt(price);
+      const c=zoneColors[zone];
+      gradStops.push(`rgba(${c[0]},${c[1]},${c[2]},0.25) ${(pct*100).toFixed(1)}%`);
     }
-    /* left border of MSM strip */
+    const grad=`linear-gradient(to bottom,${gradStops.join(',')})`;
+    canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:${msmW}%;height:100%;background:${grad};pointer-events:none;z-index:0"></div>`;
+    /* left border */
     canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:1px;height:100%;background:rgba(148,163,184,0.2);pointer-events:none;z-index:1"></div>`;
-    /* state badge centered in strip on BTC price line */
+    /* state badge - solid opaque bg, centered in strip on price line */
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
     const curZone=zoneAt(cur);
     const badgeCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
-    const badgeBg={CAP:'rgba(37,99,235,.2)',ACC:'rgba(96,165,250,.2)',NEU:'rgba(100,116,139,.2)',PRE:'rgba(217,119,6,.2)',DIS:'rgba(185,28,28,.2)'};
-    /* center badge in strip: left = msmLeft + msmW/2, translateX(-50%) */
-    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" style="position:absolute;left:${(msmLeft+msmW/2).toFixed(1)}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:${badgeBg[curZone]};color:${badgeCol[curZone]};font-size:11px;font-weight:700;font-family:var(--mono);padding:3px 7px;border-radius:4px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap;border:1px solid ${badgeCol[curZone]}40">${curZone}</div>`;
+    const badgeBgSolid={CAP:'#1e2240',ACC:'#1e2535',NEU:'#252830',PRE:'#2a2010',DIS:'#2a1515'};
+    const msmCenterPct=(msmLeft+msmW/2).toFixed(1);
+    canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" style="position:absolute;left:${msmCenterPct}%;top:${curYpct}%;transform:translate(-50%,-50%);z-index:10;background:${badgeBgSolid[curZone]};color:${badgeCol[curZone]};font-size:10px;font-weight:700;font-family:var(--mono);padding:2px 6px;border-radius:4px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap;border:1px solid ${badgeCol[curZone]};min-width:32px;text-align:center">${curZone}</div>`;
   }
 
   /* tip store — keyed by code string */
