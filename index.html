@@ -539,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.17-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.20-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.17-msm PWA';
+const VERSION='BtcLadder v1.2.20-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -948,7 +948,7 @@ function renderChart(cur,ma,oc,tl=[]){
   /* ── MSM STATE STRIP: left:18%, width:30%, fades right into canvas ── */
   if(showUrpd&&_msmData){
     const msmLeft=18; /* starts right of URPD */
-    const msmW=30;    /* fades out within this width */
+    const msmW=25;    /* fades out within this width */
     const d=_msmData.latest;
     const zoneColors={
       CAP:[37,99,235],
@@ -966,23 +966,45 @@ function renderChart(cur,ma,oc,tl=[]){
       if(tp>=65&&sp>=65)return'PRE';
       return'NEU';
     }
-    /* vertical zone gradient */
-    const SAMPLES=40;
+    /* vertical zone gradient - high sample count for smooth transitions */
+    const SAMPLES=120;
     const vStops=[];
+    let _prevC=null;
     for(let i=0;i<=SAMPLES;i++){
       const pct=i/SAMPLES;
       const price=hi-(hi-lo)*pct;
       const c=zoneColors[zoneAt(price)];
+      /* at zone boundaries, interpolate over 3 steps for smooth blend */
+      if(_prevC&&(_prevC[0]!==c[0]||_prevC[1]!==c[1]||_prevC[2]!==c[2])){
+        const blend1=[
+          Math.round((_prevC[0]*2+c[0])/3),
+          Math.round((_prevC[1]*2+c[1])/3),
+          Math.round((_prevC[2]*2+c[2])/3)
+        ];
+        const blend2=[
+          Math.round((_prevC[0]+c[0]*2)/3),
+          Math.round((_prevC[1]+c[1]*2)/3),
+          Math.round((_prevC[2]+c[2]*2)/3)
+        ];
+        const prevPct=((i-1)/SAMPLES*100).toFixed(1);
+        const midPct=((i-0.5)/SAMPLES*100).toFixed(1);
+        vStops.push(`rgba(${blend1[0]},${blend1[1]},${blend1[2]},0.30) ${prevPct}%`);
+        vStops.push(`rgba(${blend2[0]},${blend2[1]},${blend2[2]},0.30) ${midPct}%`);
+      }
       vStops.push(`rgba(${c[0]},${c[1]},${c[2]},0.30) ${(pct*100).toFixed(1)}%`);
+      _prevC=c;
     }
     /* vertical zone gradient with mask for true transparent right-fade */
-    canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:${msmW}%;height:100%;background:linear-gradient(to bottom,${vStops.join(',')});-webkit-mask:linear-gradient(to right,black 0%,black 30%,transparent 100%);mask:linear-gradient(to right,black 0%,black 30%,transparent 100%);pointer-events:none;z-index:0"></div>`;
-    /* badge near left edge of strip (~22-24% of canvas) on price line */
+    /* asymmetric double fade: fast in (left), slow out (right) */
+    const maskGrad='linear-gradient(to right,transparent 0%,black 20%,black 45%,transparent 100%)';
+    canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:${msmW}%;height:100%;background:linear-gradient(to bottom,${vStops.join(',')});-webkit-mask:${maskGrad};mask:${maskGrad};pointer-events:none;z-index:0"></div>`;
+    /* badge with minimum padding from left border to avoid URPD overlap */
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
     const curZone=zoneAt(cur);
     const zoneCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
-    const badgeLeft=(msmLeft+4).toFixed(1); /* ~22% — left side of strip */
+    /* badge at 30% of strip width from strip start = msmLeft + msmW*0.30 */
+    const badgeLeft=(msmLeft+msmW*0.30).toFixed(1);
     const _isMob=window.innerWidth<641;
     const _bfs=_isMob?'10px':'11px';
     const _bpad=_isMob?'1px 4px':'2px 6px';
