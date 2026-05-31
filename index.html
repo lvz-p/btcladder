@@ -71,7 +71,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .price-big .pk-inner{font-family:var(--font);font-weight:800;display:block;transform-style:preserve-3d;backface-visibility:hidden}
 .price-chg-wrap{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
 .price-chg-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);line-height:1}
-.price-chg{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
+.price-chg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
 .price-chg.up{background:rgba(74,222,128,.12);color:var(--green)}
 .price-chg.dn{background:rgba(248,113,113,.12);color:var(--red)}
 .price-sub{font-size:13px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
@@ -313,7 +313,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 }
 
 /* ── MSM: Market State Model ── */
-.msm-badge{display:inline-flex;align-items:center;font-size:12px;font-weight:700;font-family:var(--mono);padding:3px 9px;border-radius:999px;letter-spacing:.06em;cursor:pointer;transition:opacity .15s}
+.msm-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:999px;letter-spacing:.06em;cursor:pointer;transition:opacity .15s}
 .msm-badge.NEU,.msm-state.NEU{background:var(--surface2);color:#94a3b8}
 .msm-badge.ACC,.msm-state.ACC{background:rgba(96,165,250,.12);color:#60a5fa}
 .msm-badge.CAP,.msm-state.CAP{background:rgba(37,99,235,.15);color:#2563eb}
@@ -323,8 +323,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .msm-state{font-size:14px;font-weight:800;font-family:var(--mono);padding:4px 12px;border-radius:4px;letter-spacing:.06em}
 .msm-tip-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)}
 .msm-tip-row:last-child{border-bottom:none}
-.msm-tip-lbl{color:var(--muted);font-size:11px}
-.msm-tip-val{color:var(--text);font-size:11px;text-align:right;max-width:160px}
+.msm-tip-lbl{color:var(--muted);font-size:12px;font-family:var(--mono)}
+.msm-tip-val{color:var(--text);font-size:12px;font-family:var(--mono);text-align:right}
 </style>
 </head>
 <body>
@@ -540,11 +540,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.5-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.7-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.5-msm PWA';
+const VERSION='BtcLadder v1.2.7-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3472,7 +3472,7 @@ function msmShowTooltip(ev){
   if(sig!=='NEU'){const vpr=_msmVPR(price,d);if(vpr&&vprEl){vprEl.style.display='block';vprEl.innerHTML=`<span style="color:${MSM_COL[sig]};font-weight:700">VPR (${sig}):</span> $${Math.round(vpr.lo).toLocaleString()} – $${Math.round(vpr.hi).toLocaleString()}<div style="margin-top:2px;color:#64748b;font-size:10px">Range where ${sig} is valid at current on-chain levels</div>`;}}
   else if(vprEl)vprEl.style.display='none';
   const fireEl=document.getElementById('msmTipFire');
-  if(fireEl){const fire=_msmFire(d);let h='<div style="color:#64748b;font-size:10px;margin-bottom:4px">Theoretical thresholds (SOPR gate ignored):</div>';
+  if(fireEl){const fire=_msmFire(d);let h='<div style="color:#64748b;font-size:11px;margin-bottom:4px">If signal fired (SOPR aside):</div>';
     if(fire.ACC)h+=`<div style="margin-top:3px"><span style="color:#60a5fa">ACC</span> · BTC &lt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.ACC).toLocaleString()}</span></div>`;
     if(fire.PRE)h+=`<div style="margin-top:3px"><span style="color:#d97706">PRE</span> · BTC &gt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.PRE).toLocaleString()}</span></div>`;
     fireEl.innerHTML=h;}
@@ -3519,8 +3519,8 @@ if('serviceWorker' in navigator){
     <div id="msmTipLabel" style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:6px"></div>
   </div>
   <div id="msmTipRows"></div>
-  <div id="msmTipVpr" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:11px;font-family:var(--mono)"></div>
-  <div id="msmTipFire" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:11px;font-family:var(--mono)"></div>
+  <div id="msmTipVpr" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:12px;font-family:var(--mono)"></div>
+  <div id="msmTipFire" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:12px;font-family:var(--mono)"></div>
 </div>
 </body>
 </html>
