@@ -539,11 +539,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.22-msm</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.24-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.22-msm PWA';
+const VERSION='BtcLadder v1.2.24-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -996,7 +996,7 @@ function renderChart(cur,ma,oc,tl=[]){
     }
     /* vertical zone gradient with mask for true transparent right-fade */
     /* asymmetric double fade: fast in (left), slow out (right) */
-    const maskGrad='linear-gradient(to right,black 0%,black 20%,transparent 95%)';
+    const maskGrad='linear-gradient(to right,black 0%,transparent 100%)';
     canvas+=`<div style="position:absolute;left:${msmLeft}%;top:0;width:${msmW}%;height:100%;background:linear-gradient(to bottom,${vStops.join(',')});-webkit-mask:${maskGrad};mask:${maskGrad};pointer-events:none;z-index:0"></div>`;
     /* badge with minimum padding from left border to avoid URPD overlap */
     const curY=toY(cur);
