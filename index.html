@@ -69,7 +69,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .price-big .ps{font-family:var(--font);font-weight:800}
 .price-big .pk{display:inline-block;perspective:300px;vertical-align:bottom}
 .price-big .pk-inner{font-family:var(--font);font-weight:800;display:block;transform-style:preserve-3d;backface-visibility:hidden}
-.price-chg-wrap{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;flex-shrink:0}
+.price-chg-wrap{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
 .price-chg-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);line-height:1}
 .price-chg{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
 .price-chg.up{background:rgba(74,222,128,.12);color:var(--green)}
@@ -311,6 +311,20 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   /* ladder canvas 500px on mobile */
   #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:490px!important;max-height:490px!important}
 }
+
+/* ── MSM: Market State Model ── */
+.msm-badge{display:inline-flex;align-items:center;font-size:12px;font-weight:700;font-family:var(--mono);padding:3px 9px;border-radius:999px;letter-spacing:.06em;cursor:pointer;transition:opacity .15s}
+.msm-badge.NEU,.msm-state.NEU{background:var(--surface2);color:#94a3b8}
+.msm-badge.ACC,.msm-state.ACC{background:rgba(96,165,250,.12);color:#60a5fa}
+.msm-badge.CAP,.msm-state.CAP{background:rgba(37,99,235,.15);color:#2563eb}
+.msm-badge.PRE,.msm-state.PRE{background:rgba(217,119,6,.12);color:#d97706}
+.msm-badge.DIS,.msm-state.DIS{background:rgba(185,28,28,.12);color:#b91c1c}
+.msm-badge.LOAD,.msm-state.LOAD{background:rgba(148,163,184,.1);color:#64748b}
+.msm-state{font-size:14px;font-weight:800;font-family:var(--mono);padding:4px 12px;border-radius:4px;letter-spacing:.06em}
+.msm-tip-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)}
+.msm-tip-row:last-child{border-bottom:none}
+.msm-tip-lbl{color:var(--muted);font-size:11px}
+.msm-tip-val{color:var(--text);font-size:11px;text-align:right;max-width:160px}
 </style>
 </head>
 <body>
@@ -333,9 +347,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <div>
     <div class="hero-price">
       <span class="price-big" id="priceVal">—</span>
-      <div class="price-chg-wrap" id="priceChgWrap" style="display:none">
-        <span class="price-chg-lbl">24h</span>
-        <span class="price-chg" id="priceChg"></span>
+      <div style="display:flex;align-items:flex-end;gap:8px;min-height:24px">
+        <div class="price-chg-wrap" id="priceChgWrap" style="display:none">
+          <span class="price-chg-lbl">24h</span>
+          <span class="price-chg" id="priceChg"></span>
+        </div>
+        <span class="msm-badge LOAD" id="msmBadge" onclick="msmShowTooltip(event)" title="Market State — tap for details">—</span>
       </div>
     </div>
     <!-- priceSub removed - last update shown in header -->
@@ -523,11 +540,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.0.36</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.5-msm</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.0.36 PWA';
+const VERSION='BtcLadder v1.2.5-msm PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1480,6 +1497,7 @@ async function refreshAll(){
     renderAnimatedPrice(lastCurrent, window._prevPrice);
     window._prevPrice=lastCurrent;
     const _lut=document.getElementById('lastUpdateTime');if(_lut)_lut.textContent=new Date().toLocaleTimeString();
+    if(typeof msmUpdate==='function'&&lastCurrent)msmUpdate(lastCurrent);
     try{
       const tk=await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
       const chg=Number(tk?.priceChangePercent);
@@ -3087,6 +3105,7 @@ async function refreshPriceOnly(){
     renderAnimatedPrice(lastCurrent, window._prevPrice);
     window._prevPrice=lastCurrent;
     const _lut2=document.getElementById('lastUpdateTime');if(_lut2)_lut2.textContent=new Date().toLocaleTimeString();
+    if(typeof msmUpdate==='function'&&lastCurrent)msmUpdate(lastCurrent);
     try{
       const tk = await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
       const chg = Number(tk?.priceChangePercent);
@@ -3384,6 +3403,102 @@ let rt=null;
 if(window.ResizeObserver){new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>rerender(),90)}).observe($('chartInner'))}
 $('footerTxt').textContent=VERSION;
 refreshAll();
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MSM — Market State Model
+   ══════════════════════════════════════════════════════════════════════════ */
+const MSM_P={
+  CAP:{tmmPct:15,sthPct:15,soprVal:0.99},
+  ACC:{tmmPct:35,sthPct:35,soprVal:1.00},
+  PRE:{tmmPct:65,sthPct:65,soprVal:1.01},
+  DIS:{tmmPct:85,sthPct:85,soprVal:1.02},
+};
+const MSM_LABELS={CAP:'Capitulation — rare, deep stress',ACC:'Accumulation — STH under pressure',PRE:'Premium — price historically stretched',DIS:'Distribution — extreme euphoria',NEU:'Neutral — no signal active'};
+const MSM_COL={CAP:'#2563eb',ACC:'#60a5fa',PRE:'#d97706',DIS:'#b91c1c',NEU:'#94a3b8'};
+let _msmData=null,_msmLast=null;
+function _msmPct(val,arr){if(!arr||!arr.length)return 50;let b=0;for(const v of arr)if(v<=val)b++;return b/arr.length*100;}
+function _msmSig(tp,sp,sopr){
+  if(tp<=MSM_P.CAP.tmmPct&&sp<=MSM_P.CAP.sthPct&&sopr<=MSM_P.CAP.soprVal)return'CAP';
+  if(tp>=MSM_P.DIS.tmmPct&&sp>=MSM_P.DIS.sthPct&&sopr>=MSM_P.DIS.soprVal)return'DIS';
+  if(tp<=MSM_P.ACC.tmmPct&&sp<=MSM_P.ACC.sthPct&&sopr<MSM_P.ACC.soprVal)return'ACC';
+  if(tp>=MSM_P.PRE.tmmPct&&sp>=MSM_P.PRE.sthPct&&sopr>MSM_P.PRE.soprVal)return'PRE';
+  return'NEU';
+}
+function _msmVPR(price,d){
+  const sig=_msmSig(_msmPct(price/d.tmm,_msmData.tmmH),_msmPct(price/d.sthcb,_msmData.sthH),d.sopr);
+  if(sig==='NEU')return null;
+  const step=(price*0.80)/200;let lo=null,hi=null;
+  for(let i=0;i<=400;i++){const p=price*0.60+i*step;const s=_msmSig(_msmPct(p/d.tmm,_msmData.tmmH),_msmPct(p/d.sthcb,_msmData.sthH),d.sopr);if(s===sig){if(lo===null)lo=p;hi=p;}}
+  return lo!==null?{sig,lo,hi}:null;
+}
+function _msmFire(d){
+  const res={};
+  for(let m=1.5;m>=0.3;m-=0.005){const p=d.tmm*m;if(_msmPct(p/d.tmm,_msmData.tmmH)<=35&&_msmPct(p/d.sthcb,_msmData.sthH)<=35&&!res.ACC){res.ACC=p;break;}}
+  for(let m=1.0;m<=5.0;m+=0.005){const p=d.tmm*m;if(_msmPct(p/d.tmm,_msmData.tmmH)>=65&&_msmPct(p/d.sthcb,_msmData.sthH)>=65&&!res.PRE){res.PRE=p;break;}}
+  return res;
+}
+function msmUpdate(price){
+  if(!_msmData||!price)return;
+  const d=_msmData.latest;
+  const tp=_msmPct(price/d.tmm,_msmData.tmmH),sp=_msmPct(price/d.sthcb,_msmData.sthH);
+  const sig=_msmSig(tp,sp,d.sopr);
+  _msmLast={sig,tp,sp,sopr:d.sopr,price,d};
+  const b=document.getElementById('msmBadge');
+  if(b){b.textContent=sig;b.className='msm-badge '+sig;}
+}
+function msmShowTooltip(ev){
+  if(!_msmLast)return;
+  const {sig,tp,sp,sopr,price,d}=_msmLast;
+  const tip=document.getElementById('msmTooltip');if(!tip)return;
+  const st=document.getElementById('msmTipState');if(st){st.textContent=sig;st.className='msm-state '+sig;}
+  const lb=document.getElementById('msmTipLabel');if(lb)lb.textContent=MSM_LABELS[sig]||'';
+  function row(l,v){return`<div class="msm-tip-row"><span class="msm-tip-lbl">${l}</span><span class="msm-tip-val">${v}</span></div>`;}
+  function pctDesc(p){return p<=15?'deeply depressed':p<=35?'depressed':p<=65?'neutral':p<=85?'elevated':'deeply elevated';}
+  function soprDesc(s){return s<=0.97?'deep loss realization':s<=0.99?'loss realization':s<=1.01?'break-even':s<=1.03?'profit realization':'strong profit realization';}
+  const gates=[];
+  if(sopr<=0.99)gates.push('CAP');if(sopr<1.00)gates.push('ACC');
+  if(sopr>1.01)gates.push('PRE');if(sopr>=1.02)gates.push('DIS');
+  /* gate labels in their signal colors */
+  const gateColMap={CAP:'#2563eb',ACC:'#60a5fa',PRE:'#d97706',DIS:'#b91c1c'};
+  const gateStr=gates.length?gates.map(g=>`<span style="color:${gateColMap[g]}">${g}</span>`).join(', '):'none';
+  let rows='';
+  rows+=row('TMM',`${tp.toFixed(0)}th pct · ${pctDesc(tp)}`);
+  rows+=row('STHCB',`${sp.toFixed(0)}th pct · ${pctDesc(sp)}`);
+  rows+=row('SOPR',`${sopr.toFixed(4)} · ${soprDesc(sopr)}`);
+  rows+=`<div class="msm-tip-row"><span class="msm-tip-lbl">SOPR gate</span><span class="msm-tip-val">${gateStr}</span></div>`;
+  rows+=row('Data',d.date);
+  document.getElementById('msmTipRows').innerHTML=rows;
+  const vprEl=document.getElementById('msmTipVpr');
+  if(sig!=='NEU'){const vpr=_msmVPR(price,d);if(vpr&&vprEl){vprEl.style.display='block';vprEl.innerHTML=`<span style="color:${MSM_COL[sig]};font-weight:700">VPR (${sig}):</span> $${Math.round(vpr.lo).toLocaleString()} – $${Math.round(vpr.hi).toLocaleString()}<div style="margin-top:2px;color:#64748b;font-size:10px">Range where ${sig} is valid at current on-chain levels</div>`;}}
+  else if(vprEl)vprEl.style.display='none';
+  const fireEl=document.getElementById('msmTipFire');
+  if(fireEl){const fire=_msmFire(d);let h='<div style="color:#64748b;font-size:10px;margin-bottom:4px">Theoretical thresholds (SOPR gate ignored):</div>';
+    if(fire.ACC)h+=`<div style="margin-top:3px"><span style="color:#60a5fa">ACC</span> · BTC &lt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.ACC).toLocaleString()}</span></div>`;
+    if(fire.PRE)h+=`<div style="margin-top:3px"><span style="color:#d97706">PRE</span> · BTC &gt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.PRE).toLocaleString()}</span></div>`;
+    fireEl.innerHTML=h;}
+  const rect=ev.target.getBoundingClientRect();
+  tip.style.display='block';
+  const tw=tip.offsetWidth||280;
+  let left=rect.left;if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;
+  tip.style.left=Math.max(8,left)+'px';tip.style.top=(rect.bottom+8)+'px';
+  setTimeout(()=>document.addEventListener('click',function h(e){if(!tip.contains(e.target)&&e.target.id!=='msmBadge'){tip.style.display='none';document.removeEventListener('click',h);}},10));
+}
+async function msmFetchAndInit(){
+  const GENESIS=new Date('2009-01-03').getTime();
+  const BASE='https://bitview.space/api/series';
+  function cap(res){const data=res.data||[];const start=res.start||0;const todayOff=Math.floor((Date.now()-GENESIS)/86400000);const maxIdx=Math.min(data.length-1,todayOff-start);return{data:data.slice(0,maxIdx+1),lastDate:new Date(GENESIS+(start+maxIdx)*86400e3).toISOString().slice(0,10)};}
+  try{
+    const [rPrice,rTmm,rSth,rSopr]=await Promise.all(['price','true_market_mean','sth_realized_price','sth_sopr_24h'].map(s=>fetch(`${BASE}/${s}/day1?start=2017-01-01`).then(r=>r.json())));
+    const price=cap(rPrice),tmm=cap(rTmm),sth=cap(rSth),sopr=cap(rSopr);
+    const n=Math.min(price.data.length,tmm.data.length,sth.data.length,sopr.data.length);
+    const tmmH=[],sthH=[];
+    for(let i=0;i<n;i++){const p=price.data[i],t=tmm.data[i],s=sth.data[i];if(p>0&&t>0&&s>0){tmmH.push(p/t);sthH.push(p/s);}}
+    _msmData={tmmH,sthH,latest:{tmm:tmm.data[n-1],sthcb:sth.data[n-1],sopr:sopr.data[n-1],date:tmm.lastDate}};
+    if(lastCurrent)msmUpdate(lastCurrent);
+    else{const b=document.getElementById('msmBadge');if(b){b.textContent='NEU';b.className='msm-badge NEU';}}
+  }catch(e){const b=document.getElementById('msmBadge');if(b){b.textContent='ERR';b.className='msm-badge LOAD';}}
+}
+setTimeout(msmFetchAndInit,500);
 </script>
 <script>
 if('serviceWorker' in navigator){
@@ -3394,5 +3509,18 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+<div id="msmTooltip" style="display:none;position:fixed;z-index:999;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Market State</span>
+    <button onclick="document.getElementById('msmTooltip').style.display='none'" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
+  </div>
+  <div style="margin-bottom:10px;text-align:center">
+    <span class="msm-state LOAD" id="msmTipState">—</span>
+    <div id="msmTipLabel" style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:6px"></div>
+  </div>
+  <div id="msmTipRows"></div>
+  <div id="msmTipVpr" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:11px;font-family:var(--mono)"></div>
+  <div id="msmTipFire" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:11px;font-family:var(--mono)"></div>
+</div>
 </body>
 </html>
