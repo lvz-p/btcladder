@@ -316,7 +316,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 /* ── MSM: Market State Model ── */
 .msm-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:999px;letter-spacing:.06em;cursor:pointer;transition:opacity .15s}
 .msm-badge.NEU,.msm-state.NEU{background:var(--surface2);color:#64748b}
-.msm-badge.ACC,.msm-state.ACC{background:rgba(186,230,253,.13);color:#bae6fd}
+.msm-badge.ACC,.msm-state.ACC{background:rgba(100,149,237,.15);color:#6495ed}
 .msm-badge.CAP,.msm-state.CAP{background:rgba(67,56,202,.15);color:#4338ca}
 .msm-badge.PRE,.msm-state.PRE{background:rgba(217,119,6,.12);color:#d97706}
 .msm-badge.DIS,.msm-state.DIS{background:rgba(185,28,28,.12);color:#b91c1c}
@@ -373,7 +373,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button>
   <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
   <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
-  <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(186,230,253,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
+  <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
 </div>
 <div id="maExpand" style="display:none;margin-bottom:8px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
   <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
@@ -541,11 +541,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.1.14</div>
+<div class="footer" id="footerTxt">BtcLadder v1.1.15</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.14 PWA';
+const VERSION='BtcLadder v1.1.15 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -966,7 +966,7 @@ function renderChart(cur,ma,oc,tl=[]){
     const d=_msmData.latest;
     const zoneColors={
       CAP:[67,56,202],
-      ACC:[186,230,253],
+      ACC:[100,149,237],
       NEU:[80,93,111],
       PRE:[217,119,6],
       DIS:[185,28,28]
@@ -1015,7 +1015,7 @@ function renderChart(cur,ma,oc,tl=[]){
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
     const curZone=zoneAt(cur);
-    const zoneCol={CAP:'#4338ca',ACC:'#bae6fd',NEU:'#64748b',PRE:'#d97706',DIS:'#b91c1c'};
+    const zoneCol={CAP:'#4338ca',ACC:'#6495ed',NEU:'#64748b',PRE:'#d97706',DIS:'#b91c1c'};
     /* badge at 30% of strip width from strip start = msmLeft + msmW*0.30 */
     /* badge: left edge anchored at msmLeft+1%, extends rightward — never touches left border */
     const badgeLeft=(msmLeft+1).toFixed(1);
