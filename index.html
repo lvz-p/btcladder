@@ -316,8 +316,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 /* ── MSM: Market State Model ── */
 .msm-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:999px;letter-spacing:.06em;cursor:pointer;transition:opacity .15s}
 .msm-badge.NEU,.msm-state.NEU{background:var(--surface2);color:#94a3b8}
-.msm-badge.ACC,.msm-state.ACC{background:rgba(96,165,250,.12);color:#60a5fa}
-.msm-badge.CAP,.msm-state.CAP{background:rgba(37,99,235,.15);color:#2563eb}
+.msm-badge.ACC,.msm-state.ACC{background:rgba(147,197,253,.13);color:#93c5fd}
+.msm-badge.CAP,.msm-state.CAP{background:rgba(67,56,202,.15);color:#4338ca}
 .msm-badge.PRE,.msm-state.PRE{background:rgba(217,119,6,.12);color:#d97706}
 .msm-badge.DIS,.msm-state.DIS{background:rgba(185,28,28,.12);color:#b91c1c}
 .msm-badge.LOAD,.msm-state.LOAD{background:rgba(148,163,184,.1);color:#64748b}
@@ -373,7 +373,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button>
   <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
   <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
-  <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(96,165,250,0.7),rgba(37,99,235,0.8));flex-shrink:0"></div>State</button>
+  <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(147,197,253,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
 </div>
 <div id="maExpand" style="display:none;margin-bottom:8px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
   <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
@@ -541,11 +541,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.1.8</div>
+<div class="footer" id="footerTxt">BtcLadder v1.1.12</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.8 PWA';
+const VERSION='BtcLadder v1.1.12 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -965,8 +965,8 @@ function renderChart(cur,ma,oc,tl=[]){
     const msmW=18;    /* same as URPD */
     const d=_msmData.latest;
     const zoneColors={
-      CAP:[37,99,235],
-      ACC:[96,165,250],
+      CAP:[67,56,202],
+      ACC:[147,197,253],
       NEU:[100,116,139],
       PRE:[217,119,6],
       DIS:[185,28,28]
@@ -1012,7 +1012,7 @@ function renderChart(cur,ma,oc,tl=[]){
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
     const curZone=zoneAt(cur);
-    const zoneCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
+    const zoneCol={CAP:'#4338ca',ACC:'#93c5fd',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
     /* badge at 30% of strip width from strip start = msmLeft + msmW*0.30 */
     /* badge: left edge anchored at msmLeft+1%, extends rightward — never touches left border */
     const badgeLeft=(msmLeft+1).toFixed(1);
@@ -3523,9 +3523,25 @@ function _msmVPR(price,d){
   return lo!==null?{sig,lo,hi}:null;
 }
 function _msmFire(d){
+  /* compute full price ranges for all zones based on TMM+STHCB only */
+  const zones={CAP:{tmmT:15,sthT:15},ACC:{tmmT:35,sthT:35},PRE:{tmmT:65,sthT:65},DIS:{tmmT:85,sthT:85}};
   const res={};
-  for(let m=1.5;m>=0.3;m-=0.005){const p=d.tmm*m;if(_msmPct(p/d.tmm,_msmData.tmmH)<=35&&_msmPct(p/d.sthcb,_msmData.sthH)<=35&&!res.ACC){res.ACC=p;break;}}
-  for(let m=1.0;m<=5.0;m+=0.005){const p=d.tmm*m;if(_msmPct(p/d.tmm,_msmData.tmmH)>=65&&_msmPct(p/d.sthcb,_msmData.sthH)>=65&&!res.PRE){res.PRE=p;break;}}
+  const STEPS=800;
+  const lo=d.tmm*0.1,hi=d.tmm*6.0;
+  const step=(hi-lo)/STEPS;
+  /* for each zone find lo and hi price boundaries */
+  for(const [name,z] of Object.entries(zones)){
+    let zLo=null,zHi=null;
+    const above=name==='PRE'||name==='DIS';
+    for(let i=0;i<=STEPS;i++){
+      const p=lo+i*step;
+      const tp=_msmPct(p/d.tmm,_msmData.tmmH);
+      const sp=_msmPct(p/d.sthcb,_msmData.sthH);
+      const inZone=above?(tp>=z.tmmT&&sp>=z.sthT):(tp<=z.tmmT&&sp<=z.sthT);
+      if(inZone){if(zLo===null)zLo=p;zHi=p;}
+    }
+    if(zLo!==null)res[name]={lo:zLo,hi:zHi};
+  }
   return res;
 }
 function msmUpdate(price){
@@ -3566,13 +3582,33 @@ function msmShowTooltip(ev){
   rows+=row('Data',d.date);
   document.getElementById('msmTipRows').innerHTML=rows;
   const vprEl=document.getElementById('msmTipVpr');
-  if(sig!=='NEU'){const vpr=_msmVPR(price,d);if(vpr&&vprEl){vprEl.style.display='block';vprEl.innerHTML=`<span style="color:${MSM_COL[sig]};font-weight:700">VPR (${sig}):</span> $${Math.round(vpr.lo).toLocaleString()} – $${Math.round(vpr.hi).toLocaleString()}<div style="margin-top:2px;color:#64748b;font-size:10px">Range where ${sig} is valid at current on-chain levels</div>`;}}
-  else if(vprEl)vprEl.style.display='none';
+  if(vprEl)vprEl.style.display='none';
   const fireEl=document.getElementById('msmTipFire');
-  if(fireEl){const fire=_msmFire(d);let h='<div style="color:#64748b;font-size:11px;margin-bottom:4px">If signal fired (SOPR aside):</div>';
-    if(fire.ACC)h+=`<div style="margin-top:3px"><span style="color:#60a5fa">ACC</span> · BTC &lt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.ACC).toLocaleString()}</span></div>`;
-    if(fire.PRE)h+=`<div style="margin-top:3px"><span style="color:#d97706">PRE</span> · BTC &gt; <span style="color:var(--color-text-primary,#e2e8f0);font-weight:500">$${Math.round(fire.PRE).toLocaleString()}</span></div>`;
-    fireEl.innerHTML=h;}
+  if(fireEl){
+    const fire=_msmFire(d);
+    const zoneCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
+    const soprGates={CAP:sopr<=0.99,ACC:sopr<1.00,PRE:sopr>1.01,DIS:sopr>=1.02};
+    let h='<div style="color:#64748b;font-size:11px;margin-bottom:6px;letter-spacing:.03em">Zone thresholds · TMM+STHCB</div>';
+    /* exclusive boundaries: ACC starts where CAP ends, PRE ends where DIS starts */
+    const capHi=fire.CAP?fire.CAP.hi:null;
+    const disLo=fire.DIS?fire.DIS.lo:null;
+    const zoneRanges={
+      CAP: fire.CAP?`BTC < $${Math.round(fire.CAP.hi).toLocaleString()}`:null,
+      ACC: fire.ACC?(capHi?`$${Math.round(capHi).toLocaleString()} – $${Math.round(fire.ACC.hi).toLocaleString()}`:`BTC < $${Math.round(fire.ACC.hi).toLocaleString()}`):null,
+      PRE: fire.PRE?(disLo?`$${Math.round(fire.PRE.lo).toLocaleString()} – $${Math.round(disLo).toLocaleString()}`:`BTC > $${Math.round(fire.PRE.lo).toLocaleString()}`):null,
+      DIS: fire.DIS?`BTC > $${Math.round(fire.DIS.lo).toLocaleString()}`:null,
+    };
+    for(const name of ['CAP','ACC','PRE','DIS']){
+      const rangeStr=zoneRanges[name];if(!rangeStr)continue;
+      const active=sig===name;
+      const gateOpen=soprGates[name];
+      const col=zoneCol[name];
+      const activeTag=active?` <span style="color:${col};font-size:10px">● active</span>`:'';
+      const gateTag=!gateOpen?` <span style="color:#475569;font-size:10px">gate closed</span>`:'';
+      h+=`<div style="margin-top:4px;opacity:${gateOpen?'1':'0.45'}"><span style="color:${col};font-weight:700">${name}</span> <span style="color:#94a3b8">${rangeStr}</span>${activeTag}${gateTag}</div>`;
+    }
+    fireEl.innerHTML=h;
+  }
   tip.style.display='block';
   const tw=tip.offsetWidth||280;
   const th=tip.offsetHeight||200;
