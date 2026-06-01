@@ -326,6 +326,17 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .msm-tip-row:last-child{border-bottom:none}
 .msm-tip-lbl{color:var(--muted);font-size:12px;font-family:var(--mono)}
 .msm-tip-val{color:var(--text);font-size:12px;font-family:var(--mono);text-align:right}
+
+/* ── TAB NAVIGATION ── */
+:root{--tab-h:56px}
+body{padding-bottom:calc(var(--tab-h) + 8px)}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;height:var(--tab-h);background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:200;safe-area-inset-bottom:env(safe-area-inset-bottom)}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;color:var(--muted);transition:color .15s;font-size:10px;font-family:var(--font);letter-spacing:.03em;padding:0;min-width:0}
+.tab-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab-btn.active{color:var(--btc)}
+.tab-view{display:none}
+.tab-view.active{display:block}
+.footer{display:none} /* hide old footer — tab bar replaces it */
 </style>
 </head>
 <body>
@@ -344,6 +355,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </header>
 
+<div class="tab-view active" id="tabLadder">
 <div class="hero">
   <div>
     <div class="hero-price">
@@ -409,8 +421,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 
-<details class="section" id="tlSection">
-  <summary>Chart</summary>
+</div><!-- end tab-ladder -->
+
+<div class="tab-view" id="tabChart">
+<details class="section" id="tlSection" open>
+  <summary style="display:none">Chart</summary>
   <div class="tl-viewer">
     <div class="tl-ctrl-row">
       <button class="btn active" id="tlDailyBtn">Daily</button>
@@ -440,6 +455,9 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
+</div><!-- end tab-chart -->
+
+<div class="tab-view" id="tabSettings">
 <details class="section">
   <summary>Levels List</summary>
   <div class="section-body" style="margin-top:4px">
@@ -541,11 +559,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </details>
 
-<div class="footer" id="footerTxt">BtcLadder v1.1.15</div>
+</div><!-- end tab-settings -->
+
+<div class="footer" id="footerTxt">BtcLadder v1.2.0-nav</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.15 PWA';
+const VERSION='BtcLadder v1.2.0-nav PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3639,6 +3659,25 @@ async function msmFetchAndInit(){
   }catch(e){const b=document.getElementById('msmBadge');if(b){b.textContent='ERR';b.className='msm-badge LOAD';}}
 }
 setTimeout(msmFetchAndInit,500);
+
+/* ── TAB NAVIGATION ── */
+function switchTab(name){
+  const views={Ladder:'tabLadder',Chart:'tabChart',Settings:'tabSettings'};
+  const btns={Ladder:'tabBtnLadder',Chart:'tabBtnChart',Settings:'tabBtnSettings'};
+  Object.keys(views).forEach(k=>{
+    const v=document.getElementById(views[k]);
+    const b=document.getElementById(btns[k]);
+    if(v)v.classList.toggle('active',k===name);
+    if(b)b.classList.toggle('active',k===name);
+  });
+  /* trigger chart render when switching to chart tab */
+  if(name==='Chart'&&typeof tl_draw==='function'){
+    setTimeout(()=>{const tf=document.querySelector('#tlDailyBtn.active')?'1d':document.querySelector('#tlWeeklyBtn.active')?'1w':'1M';tl_runForTf(tf);},50);
+  }
+  /* rerender ladder when switching back */
+  if(name==='Ladder'&&typeof rerender==='function')setTimeout(rerender,50);
+}
+
 </script>
 <script>
 if('serviceWorker' in navigator){
@@ -3662,5 +3701,21 @@ if('serviceWorker' in navigator){
   <div id="msmTipVpr" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:12px;font-family:var(--mono)"></div>
   <div id="msmTipFire" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:12px;font-family:var(--mono)"></div>
 </div>
+
+<!-- TAB BAR -->
+<nav class="tab-bar" id="tabBar">
+  <button class="tab-btn" id="tabBtnChart" onclick="switchTab('Chart')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Chart
+  </button>
+  <button class="tab-btn active" id="tabBtnLadder" onclick="switchTab('Ladder')">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Ladder
+  </button>
+  <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('Settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
 </body>
 </html>
