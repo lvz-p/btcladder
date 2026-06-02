@@ -561,11 +561,11 @@ body{padding-bottom:calc(var(--tab-h) + 8px)}
 
 </div><!-- end tab-settings -->
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.0-nav</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.6-nav</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.0-nav PWA';
+const VERSION='BtcLadder v1.2.6-nav PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1630,7 +1630,9 @@ async function refreshAll(){
     if(ur?.status==='fulfilled')lastUrpd=ur.value;
     else lastUrpd=[];
     /* refresh viewer if already open */
-    if(document.getElementById('tlSection')?.open){tlViewerReady=true;tl_draw(tlViewerMode);}
+    tlViewerReady=true;
+    /* only draw if chart tab is currently active */
+    if(document.getElementById('tabChart')?.classList.contains('active'))tl_draw(tlViewerMode);
     setStatus('ok');
     rerender();
     /* compute news in background — doesn't block render */
@@ -1964,9 +1966,12 @@ function tl_draw(mode,fast=false){
   const svg=document.getElementById('tlSvg');
   const tip=document.getElementById('tlTip');
   if(!svg)return;
+  /* skip draw if chart tab is not active — prevents flicker from resize/refresh events */
+  const _chartTab=document.getElementById('tabChart');
+  if(_chartTab&&!_chartTab.classList.contains('active'))return;
   /* preserve crosshair visibility across redraws */
   const _chWasVisible=svg.querySelector('.tl-crosshair')?.style.display==='inline';
-  if(!fast)svg._tlTouchAttached=false; /* only reset on full draw */
+  svg._tlTouchAttached=false; /* always reset on draw so handlers reattach correctly */
   svg.innerHTML='';
 
   const lines=tl_cands[mode];
@@ -2000,7 +2005,13 @@ function tl_draw(mode,fast=false){
   const W=1100,H=520;
   /* measure widest y-axis label to set exact pad.l */
   const _svgEl=document.getElementById('tlSvg');
-  const _svgRenderedW=Math.max(300,_svgEl?_svgEl.getBoundingClientRect().width:900);
+  /* use forced width from ResizeObserver if available, else measure */
+  const _svgRect=_svgEl?_svgEl.getBoundingClientRect():{width:0};
+  const _svgRenderedW=window._tlForcedWidth||
+    (_svgRect.width>50?_svgRect.width:
+    (document.getElementById('tabChart')?.offsetWidth||
+     document.querySelector('.tl-chart-wrap')?.offsetWidth||
+     window.innerWidth||900)-2);
   /* compute price range to find widest label */
   const _testCs=tl_candles[mode]||[];
   const _testPrices=_testCs.length?[Math.min(..._testCs.slice(-200).map(c=>c.low)),Math.max(..._testCs.slice(-200).map(c=>c.high))]:[];
@@ -3672,10 +3683,27 @@ function switchTab(name){
   });
   /* trigger chart render when switching to chart tab */
   if(name==='Chart'&&typeof tl_draw==='function'){
-    setTimeout(()=>{const tf=document.querySelector('#tlDailyBtn.active')?'1d':document.querySelector('#tlWeeklyBtn.active')?'1w':'1M';tl_runForTf(tf);},50);
+    const svgEl=document.getElementById('tlSvg');
+    if(!svgEl)return;
+    /* use ResizeObserver — fires once when SVG has real dimensions */
+    let _rendered=false;
+    const _ro=new ResizeObserver(entries=>{
+      for(const e of entries){
+        const w=e.contentRect.width;
+        if(w>100&&!_rendered){
+          _rendered=true;
+          _ro.disconnect();
+          window._tlForcedWidth=w;
+          tl_draw(tlViewerMode);
+          window._tlForcedWidth=null;
+        }
+      }
+    });
+    _ro.observe(svgEl);
+    setTimeout(()=>{if(!_rendered){_ro.disconnect();tl_draw(tlViewerMode);}},2000);
   }
   /* rerender ladder when switching back */
-  if(name==='Ladder'&&typeof rerender==='function')setTimeout(rerender,50);
+  if(name==='Ladder'&&typeof rerender==='function')requestAnimationFrame(rerender);
 }
 
 </script>
@@ -3709,7 +3737,7 @@ if('serviceWorker' in navigator){
     Chart
   </button>
   <button class="tab-btn active" id="tabBtnLadder" onclick="switchTab('Ladder')">
-    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     Ladder
   </button>
   <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('Settings')">
