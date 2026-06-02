@@ -561,11 +561,11 @@ body{padding-bottom:calc(var(--tab-h) + 8px)}
 
 </div><!-- end tab-settings -->
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.6-nav</div>
+<div class="footer" id="footerTxt">BtcLadder v1.2.7-nav</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.6-nav PWA';
+const VERSION='BtcLadder v1.2.7-nav PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1071,8 +1071,12 @@ function renderChart(cur,ma,oc,tl=[]){
       /* fix: zone hover zone — same z-index as line hover zones, tooltip triggered on hover */
       canvas+=`<div class="hover-zone hz-zone" data-code="${code}" style="top:${topPct}%;height:${hPct}%"></div>`;
     } else {
-      canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${col};opacity:0.65"></div>`;
-      canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col}"></div>`;
+      const _ghost=l.ghost&&l.sourceType==='trendline';
+      const _lineOp=_ghost?'0.25':'0.65';
+      const _dotOp=_ghost?'0.25':'1';
+      const _dashStyle=_ghost?';background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px);background-color:transparent':'';
+      canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${_ghost?'transparent':col};${_ghost?'background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px)':''};opacity:${_lineOp}"></div>`;
+      canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col};opacity:${_dotOp}"></div>`;
       canvas+=`<div class="hover-zone" data-code="${code}" style="top:${yPct}%"></div>`;
     }
   });
@@ -1144,8 +1148,11 @@ function renderChart(cur,ma,oc,tl=[]){
       const col=levelColor(l);const bg=levelBg(l);
       const d=pct(l.price,cur);const dStr=pctStr(d);const dCls=pctCls(d);
       const isOC=l.sourceType==='onchain';
-      labelsHTML+=`<div class="lbl-item" style="top:${midPct}%" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
-        <span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${levelCode(l)}</span>
+      const _ghostLbl=l.ghost&&l.sourceType==='trendline';
+      const _ghostStyle=_ghostLbl?'opacity:0.45;':'';
+      const _ghostBadgeTxt=_ghostLbl?`⚠ ${levelCode(l)}`:levelCode(l);
+      labelsHTML+=`<div class="lbl-item" style="top:${midPct}%;${_ghostStyle}" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
+        <span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${_ghostBadgeTxt}</span>
         <span class="lbl-price">${fmt(l.price)}</span>
         <span class="lbl-pct ${dCls}">${dStr}</span>
       </div>`;
@@ -1706,22 +1713,37 @@ function tl_makeLine(a,b,log){
 }
 /* selectedPrice — verbatim */
 function tl_selectedPrice(c,type,basis){if(basis==='wick')return type==='support'?c.low:c.high;return c.close;}
-/* validateLine — verbatim */
+/* validateLine — verbatim, with close-based last-candle ghost support */
 function tl_validateLine(cs,line,type,a,b,tolPct,basis,log){
   let minClear=Infinity,touches=0;
   const tolLog=Math.log(1+tolPct/100);
+  const lastIdx=cs.length-1;
   for(let i=a.i;i<cs.length;i++){
     const lpY=line.projectY(i);
+    /* for close-based lines, last (open) candle uses wick for breach check only */
+    const isLastCandle=(i===lastIdx);
     const pp=tl_selectedPrice(cs[i],type,basis);
     const py=tl_Y(pp,log);
     const diff=type==='support'?py-lpY:lpY-py;
     const diffPct=(Math.exp(diff)-1)*100;
     if(diffPct<minClear)minClear=diffPct;
     if(Math.abs(diffPct)<=1.5)touches++;
-    if(diff<-tolLog)return{ok:false,idx:i,date:cs[i].t,breachPct:diffPct,
-      reason:i<b.i?'between anchors':(i===b.i?'anchor 2 mismatch':'after anchor 2'),touches,minClear};
+    if(diff<-tolLog){
+      /* close-based breach on last candle = ghost state, not full invalidation */
+      if(isLastCandle&&basis==='close'){
+        /* check if wick also breaches — true ghost vs wick-only */
+        const wickPp=tl_selectedPrice(cs[i],type,'wick');
+        const wickPy=tl_Y(wickPp,log);
+        const wickDiff=type==='support'?wickPy-lpY:lpY-wickPy;
+        return{ok:false,ghost:true,idx:i,date:cs[i].t,breachPct:diffPct,
+          wickBreach:wickDiff<-tolLog,
+          reason:'last candle close breach — unconfirmed',touches,minClear};
+      }
+      return{ok:false,ghost:false,idx:i,date:cs[i].t,breachPct:diffPct,
+        reason:i<b.i?'between anchors':(i===b.i?'anchor 2 mismatch':'after anchor 2'),touches,minClear};
+    }
   }
-  return{ok:true,touches,minClear};
+  return{ok:true,ghost:false,touches,minClear};
 }
 /* relevance — verbatim */
 function tl_relevance(type,a,b,now,btc,tf,lastIdx){
@@ -1766,8 +1788,9 @@ function tl_generate(points,type,cs,log,minSpace,maxN,tol,basis,tf,anchorBasis){
       if(!Number.isFinite(now)||now<=0)continue;
       if(!tl_relevance(type,a,b,now,btc,tf,last)){rej.push({type,a,b,now,reason:'relevance',date:null,breachPct:null});continue;}
       const val=tl_validateLine(cs,line,type,a,b,tol,basis,log);
-      if(!val.ok){rej.push({type,a,b,now,reason:val.reason,date:val.date,breachPct:val.breachPct});continue;}
-      const obj={type,a,b,line,now,dist:pct(now,btc),val,anchorBasis:anchorBasis||basis,tag:type==='support'?'ATS':'ATR'};
+      if(!val.ok&&!val.ghost){rej.push({type,a,b,now,reason:val.reason,date:val.date,breachPct:val.breachPct});continue;}
+      /* ghost = close-based breach on last open candle — keep but mark */
+      const obj={type,a,b,line,now,dist:pct(now,btc),val,anchorBasis:anchorBasis||basis,tag:type==='support'?'ATS':'ATR',ghost:val.ghost||false};
       obj.score=tl_score(obj,cs,tf);
       out.push(obj);
     }
@@ -1901,6 +1924,7 @@ async function getTrendlines(){
     tlType:c.type,  /* 'support' | 'resistance' */
     label:c.viewerTag,short:c.viewerTag,
     price:c.now,score:c.score,
+    ghost:c.ghost||false,  /* close-based breach on open candle */
     _tlLine:c       /* full line object for viewer */
   }));
   lastTlDiag=diag;
