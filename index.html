@@ -210,6 +210,8 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 .section summary:hover{background:rgba(255,255,255,.02)}
 .section summary::-webkit-details-marker{display:none}
 .section summary::before{content:'▸';font-size:10px;color:var(--muted2);width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;flex-shrink:0;transition:all .12s}
+#tlSection>summary::before{display:none}
+#tlSection>summary{justify-content:center;padding:10px 18px}
 details[open] summary::before{content:'▾';color:var(--btc);background:var(--btc-dim);border-color:rgba(247,147,26,.3)}
 .section-body{padding:0 18px 16px}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
@@ -326,17 +328,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .msm-tip-row:last-child{border-bottom:none}
 .msm-tip-lbl{color:var(--muted);font-size:12px;font-family:var(--mono)}
 .msm-tip-val{color:var(--text);font-size:12px;font-family:var(--mono);text-align:right}
-
-/* ── TAB NAVIGATION ── */
-:root{--tab-h:56px}
-body{padding-bottom:calc(var(--tab-h) + 8px)}
-.tab-bar{position:fixed;bottom:0;left:0;right:0;height:var(--tab-h);background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:200;safe-area-inset-bottom:env(safe-area-inset-bottom)}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;color:var(--muted);transition:color .15s;font-size:10px;font-family:var(--font);letter-spacing:.03em;padding:0;min-width:0}
-.tab-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.tab-btn.active{color:var(--btc)}
-.tab-view{display:none}
-.tab-view.active{display:block}
-.footer{display:none} /* hide old footer — tab bar replaces it */
 </style>
 </head>
 <body>
@@ -350,12 +341,12 @@ body{padding-bottom:calc(var(--tab-h) + 8px)}
     <span id="lastUpdateTime" style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:4px"></span>
   </div>
   <div class="hdr-actions">
+    <button id="infoBtn" onclick="showInfoModal()" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:50%;border:1px solid var(--border2);width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:serif;flex-shrink:0" title="Guide & Diagnostics">?</button>
     <button class="btn primary" id="refreshBtn" title="Refresh" style="padding:0;width:22px;height:22px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%">↻</button>
     <button class="btn" id="autoBtn" style="height:22px;padding:0 8px;font-size:10px;display:inline-flex;align-items:center"><div class="fill-6h"></div><div class="fill-1m"></div><span class="btn-label">Auto: off</span></button>
   </div>
 </header>
 
-<div class="tab-view active" id="tabLadder">
 <div class="hero">
   <div>
     <div class="hero-price">
@@ -421,11 +412,8 @@ body{padding-bottom:calc(var(--tab-h) + 8px)}
 </div>
 
 
-</div><!-- end tab-ladder -->
-
-<div class="tab-view" id="tabChart">
-<details class="section" id="tlSection" open>
-  <summary style="display:none">Chart</summary>
+<details class="section" id="tlSection" ontoggle="document.getElementById('chartToggleBtn').textContent=this.open?'▲':'Chart ▼'">
+  <summary id="chartToggleBtn" style="font-size:12px;font-family:var(--mono);color:var(--muted);list-style:none;cursor:pointer;padding:8px 0;text-align:center">Chart ▼</summary>
   <div class="tl-viewer">
     <div class="tl-ctrl-row">
       <button class="btn active" id="tlDailyBtn">Daily</button>
@@ -455,21 +443,9 @@ body{padding-bottom:calc(var(--tab-h) + 8px)}
   </div>
 </details>
 
-</div><!-- end tab-chart -->
 
-<div class="tab-view" id="tabSettings">
-<details class="section">
-  <summary>Levels List</summary>
-  <div class="section-body" style="margin-top:4px">
-    <div id="tableFilterInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
-    <div id="maTable"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
-  </div>
-</details>
 
-<details class="section">
-  <summary>User guide</summary>
-  <div class="section-body" style="margin-top:4px">
-    <div class="guide-body">
+<div id="guideContent" style="display:none">
       <details class="gsec"><summary>How to read the chart</summary>
         <div class="gtxt">
           <p>The vertical axis is a true price axis — vertical position corresponds directly to price. The orange BTC line is your current price anchor. Levels above are resistances; below are supports.</p>
@@ -539,33 +515,21 @@ body{padding-bottom:calc(var(--tab-h) + 8px)}
           <p><strong style="color:var(--text)">Double-click</strong> resets to the active range preset. The ↺ Reset zoom button also appears when zoomed.</p>
         </div>
       </details>
+</div>
+
     </div>
   </div>
 </details>
 
 
 
-<details class="section">
-  <summary>Diagnostics</summary>
-  <div class="section-body" style="margin-top:4px">
-    <div style="margin-bottom:8px">
-      <button onclick="navigator.clipboard.writeText($('diagBody').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy diagnostics',2000)}).catch(()=>this.textContent='Failed')"
-        style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono)">
-        Copy diagnostics
-      </button>
-    </div>
-    <div id="diagBody"><div style="padding:16px;color:var(--muted);font-size:13px">Loading…</div></div>
 
-  </div>
-</details>
 
-</div><!-- end tab-settings -->
 
-<div class="footer" id="footerTxt">BtcLadder v1.2.7-nav</div>
 </div>
 
 <script>
-const VERSION='BtcLadder v1.2.7-nav PWA';
+const VERSION='BtcLadder v1.1.25 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1072,11 +1036,8 @@ function renderChart(cur,ma,oc,tl=[]){
       canvas+=`<div class="hover-zone hz-zone" data-code="${code}" style="top:${topPct}%;height:${hPct}%"></div>`;
     } else {
       const _ghost=l.ghost&&l.sourceType==='trendline';
-      const _lineOp=_ghost?'0.25':'0.65';
-      const _dotOp=_ghost?'0.25':'1';
-      const _dashStyle=_ghost?';background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px);background-color:transparent':'';
-      canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${_ghost?'transparent':col};${_ghost?'background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px)':''};opacity:${_lineOp}"></div>`;
-      canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col};opacity:${_dotOp}"></div>`;
+      canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${_ghost?'transparent':col};${_ghost?'background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px)':''};opacity:${_ghost?'0.25':'0.65'}"></div>`;
+      canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col};opacity:${_ghost?'0.25':'1'}"></div>`;
       canvas+=`<div class="hover-zone" data-code="${code}" style="top:${yPct}%"></div>`;
     }
   });
@@ -1149,10 +1110,8 @@ function renderChart(cur,ma,oc,tl=[]){
       const d=pct(l.price,cur);const dStr=pctStr(d);const dCls=pctCls(d);
       const isOC=l.sourceType==='onchain';
       const _ghostLbl=l.ghost&&l.sourceType==='trendline';
-      const _ghostStyle=_ghostLbl?'opacity:0.45;':'';
-      const _ghostBadgeTxt=_ghostLbl?`⚠ ${levelCode(l)}`:levelCode(l);
-      labelsHTML+=`<div class="lbl-item" style="top:${midPct}%;${_ghostStyle}" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
-        <span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${_ghostBadgeTxt}</span>
+      labelsHTML+=`<div class="lbl-item" style="top:${midPct}%;${_ghostLbl?'opacity:0.45;':''}" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
+        <span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${_ghostLbl?'⚠ '+levelCode(l):levelCode(l)}</span>
         <span class="lbl-price">${fmt(l.price)}</span>
         <span class="lbl-pct ${dCls}">${dStr}</span>
       </div>`;
@@ -1528,7 +1487,8 @@ function levelFullName(l){
 }
 function renderTable(cur,ma,oc,tl=[]){
   const rows=getLevels(cur,ma,oc,tl).sort((a,b)=>b.price-a.price);
-  if(!rows.length){$('maTable').innerHTML='<div style="padding:12px;color:var(--muted);font-size:13px">No levels match filters.</div>';return}
+  const _mt=$('maTable');if(!_mt)return;
+  if(!rows.length){_mt.innerHTML='<div style="padding:12px;color:var(--muted);font-size:13px">No levels match filters.</div>';return}
   /* find which levels are in analytical zones for table highlighting */
   const zoneMembers=new Set();
   meanShiftZones(rows.filter(l=>l.type!=='current'),cur).filter(z=>z.type==='zone')
@@ -1552,9 +1512,9 @@ function renderTable(cur,ma,oc,tl=[]){
   }).join('');
   /* filter info bar */
   const activeFilters=Object.entries(catFilters).filter(([,v])=>v!==false).map(([k])=>k==='onchain'?'On-chain':k==='TL'?'Trends':k==='D'?'Daily':k==='W'?'Weekly':k==='M'?'Monthly':k);
-  const fi=$('tableFilterInfo');
+  const fi=$('tableFilterInfo');if(!fi)return;
   if(fi)fi.innerHTML=`<span style="color:var(--muted);font-size:12px;font-family:var(--mono)">Showing: ${activeFilters.join(' · ')} · ${proxFilter==='all'?'All distances':`±${proxFilter}%`} · Zones: ${autoZone?'on':'off'}</span><button onclick="document.querySelector('.filter-bar').scrollIntoView({behavior:'smooth',block:'center'})" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono);margin-left:8px">↑ Filters</button>`;
-  $('maTable').innerHTML=`<table class="tbl"><thead><tr><th>Tag</th><th>Level</th><th>Price</th><th>Distance</th></tr></thead><tbody>${body}</tbody></table>`;
+  if($('maTable'))$('maTable').innerHTML=`<table class="tbl"><thead><tr><th>Tag</th><th>Level</th><th>Price</th><th>Distance</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 function renderSummary(cur,levels){
   const sup=levels.filter(l=>l.price<cur&&l.type!=='current').sort((a,b)=>b.price-a.price)[0];
@@ -1589,7 +1549,8 @@ function renderDiag(){
     ?{name:'URPD',ok:true,msg:`${lastUrpd.length} bins · strongest bin: ${fmt(bestBin.lo)}–${fmt(bestBin.hi)}`}
     :{name:'URPD',ok:false,msg:'No data loaded'};
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
-  $('diagBody').innerHTML=`<div style="font-size:11px;color:var(--muted2);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
+  const _db=$('diagBody');if(!_db)return;
+  _db.innerHTML=`<div style="font-size:11px;color:var(--muted2);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
   </tbody></table>`;
@@ -1637,9 +1598,7 @@ async function refreshAll(){
     if(ur?.status==='fulfilled')lastUrpd=ur.value;
     else lastUrpd=[];
     /* refresh viewer if already open */
-    tlViewerReady=true;
-    /* only draw if chart tab is currently active */
-    if(document.getElementById('tabChart')?.classList.contains('active'))tl_draw(tlViewerMode);
+    if(document.getElementById('tlSection')?.open){tlViewerReady=true;tl_draw(tlViewerMode);}
     setStatus('ok');
     rerender();
     /* compute news in background — doesn't block render */
@@ -1720,7 +1679,6 @@ function tl_validateLine(cs,line,type,a,b,tolPct,basis,log){
   const lastIdx=cs.length-1;
   for(let i=a.i;i<cs.length;i++){
     const lpY=line.projectY(i);
-    /* for close-based lines, last (open) candle uses wick for breach check only */
     const isLastCandle=(i===lastIdx);
     const pp=tl_selectedPrice(cs[i],type,basis);
     const py=tl_Y(pp,log);
@@ -1729,9 +1687,7 @@ function tl_validateLine(cs,line,type,a,b,tolPct,basis,log){
     if(diffPct<minClear)minClear=diffPct;
     if(Math.abs(diffPct)<=1.5)touches++;
     if(diff<-tolLog){
-      /* close-based breach on last candle = ghost state, not full invalidation */
       if(isLastCandle&&basis==='close'){
-        /* check if wick also breaches — true ghost vs wick-only */
         const wickPp=tl_selectedPrice(cs[i],type,'wick');
         const wickPy=tl_Y(wickPp,log);
         const wickDiff=type==='support'?wickPy-lpY:lpY-wickPy;
@@ -1789,7 +1745,6 @@ function tl_generate(points,type,cs,log,minSpace,maxN,tol,basis,tf,anchorBasis){
       if(!tl_relevance(type,a,b,now,btc,tf,last)){rej.push({type,a,b,now,reason:'relevance',date:null,breachPct:null});continue;}
       const val=tl_validateLine(cs,line,type,a,b,tol,basis,log);
       if(!val.ok&&!val.ghost){rej.push({type,a,b,now,reason:val.reason,date:val.date,breachPct:val.breachPct});continue;}
-      /* ghost = close-based breach on last open candle — keep but mark */
       const obj={type,a,b,line,now,dist:pct(now,btc),val,anchorBasis:anchorBasis||basis,tag:type==='support'?'ATS':'ATR',ghost:val.ghost||false};
       obj.score=tl_score(obj,cs,tf);
       out.push(obj);
@@ -1924,7 +1879,7 @@ async function getTrendlines(){
     tlType:c.type,  /* 'support' | 'resistance' */
     label:c.viewerTag,short:c.viewerTag,
     price:c.now,score:c.score,
-    ghost:c.ghost||false,  /* close-based breach on open candle */
+    ghost:c.ghost||false,
     _tlLine:c       /* full line object for viewer */
   }));
   lastTlDiag=diag;
@@ -1990,12 +1945,9 @@ function tl_draw(mode,fast=false){
   const svg=document.getElementById('tlSvg');
   const tip=document.getElementById('tlTip');
   if(!svg)return;
-  /* skip draw if chart tab is not active — prevents flicker from resize/refresh events */
-  const _chartTab=document.getElementById('tabChart');
-  if(_chartTab&&!_chartTab.classList.contains('active'))return;
   /* preserve crosshair visibility across redraws */
   const _chWasVisible=svg.querySelector('.tl-crosshair')?.style.display==='inline';
-  svg._tlTouchAttached=false; /* always reset on draw so handlers reattach correctly */
+  if(!fast)svg._tlTouchAttached=false; /* only reset on full draw */
   svg.innerHTML='';
 
   const lines=tl_cands[mode];
@@ -2029,13 +1981,7 @@ function tl_draw(mode,fast=false){
   const W=1100,H=520;
   /* measure widest y-axis label to set exact pad.l */
   const _svgEl=document.getElementById('tlSvg');
-  /* use forced width from ResizeObserver if available, else measure */
-  const _svgRect=_svgEl?_svgEl.getBoundingClientRect():{width:0};
-  const _svgRenderedW=window._tlForcedWidth||
-    (_svgRect.width>50?_svgRect.width:
-    (document.getElementById('tabChart')?.offsetWidth||
-     document.querySelector('.tl-chart-wrap')?.offsetWidth||
-     window.innerWidth||900)-2);
+  const _svgRenderedW=Math.max(300,_svgEl?_svgEl.getBoundingClientRect().width:900);
   /* compute price range to find widest label */
   const _testCs=tl_candles[mode]||[];
   const _testPrices=_testCs.length?[Math.min(..._testCs.slice(-200).map(c=>c.low)),Math.max(..._testCs.slice(-200).map(c=>c.high))]:[];
@@ -3550,7 +3496,7 @@ setTimeout(()=>{
 },100);
 let rt=null;
 if(window.ResizeObserver){new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>rerender(),90)}).observe($('chartInner'))}
-$('footerTxt').textContent=VERSION;
+if($('footerTxt'))$('footerTxt').textContent=VERSION;
 refreshAll();
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -3695,40 +3641,53 @@ async function msmFetchAndInit(){
 }
 setTimeout(msmFetchAndInit,500);
 
-/* ── TAB NAVIGATION ── */
-function switchTab(name){
-  const views={Ladder:'tabLadder',Chart:'tabChart',Settings:'tabSettings'};
-  const btns={Ladder:'tabBtnLadder',Chart:'tabBtnChart',Settings:'tabBtnSettings'};
-  Object.keys(views).forEach(k=>{
-    const v=document.getElementById(views[k]);
-    const b=document.getElementById(btns[k]);
-    if(v)v.classList.toggle('active',k===name);
-    if(b)b.classList.toggle('active',k===name);
-  });
-  /* trigger chart render when switching to chart tab */
-  if(name==='Chart'&&typeof tl_draw==='function'){
-    const svgEl=document.getElementById('tlSvg');
-    if(!svgEl)return;
-    /* use ResizeObserver — fires once when SVG has real dimensions */
-    let _rendered=false;
-    const _ro=new ResizeObserver(entries=>{
-      for(const e of entries){
-        const w=e.contentRect.width;
-        if(w>100&&!_rendered){
-          _rendered=true;
-          _ro.disconnect();
-          window._tlForcedWidth=w;
-          tl_draw(tlViewerMode);
-          window._tlForcedWidth=null;
-        }
-      }
-    });
-    _ro.observe(svgEl);
-    setTimeout(()=>{if(!_rendered){_ro.disconnect();tl_draw(tlViewerMode);}},2000);
+function showInfoModal(){
+  /* populate guide content from existing gsec sections */
+  const guideEl=document.getElementById('infoContentGuide');
+  if(guideEl&&!guideEl.innerHTML.trim()){
+    const guideContainer=document.getElementById('guideContent');
+    guideEl.innerHTML=guideContainer?guideContainer.innerHTML:'<p style="color:var(--muted);font-size:13px">No guide content found.</p>';
   }
-  /* rerender ladder when switching back */
-  if(name==='Ladder'&&typeof rerender==='function')requestAnimationFrame(rerender);
+  /* populate diag on first open */
+  const diagEl=document.getElementById('infoContentDiag');
+  if(diagEl&&!diagEl.innerHTML.trim())_renderDiagToEl(diagEl);
+  document.getElementById('infoModal').style.display='block';
 }
+function switchInfoTab(tab){
+  const isGuide=tab==='guide';
+  document.getElementById('infoContentGuide').style.display=isGuide?'block':'none';
+  document.getElementById('infoContentDiag').style.display=isGuide?'none':'block';
+  document.getElementById('infoTabGuide').style.background=isGuide?'var(--btc)':'transparent';
+  document.getElementById('infoTabGuide').style.color=isGuide?'#000':'var(--muted)';
+  document.getElementById('infoTabGuide').style.fontWeight=isGuide?'700':'400';
+  document.getElementById('infoTabDiag').style.background=isGuide?'transparent':'var(--btc)';
+  document.getElementById('infoTabDiag').style.color=isGuide?'var(--muted)':'#000';
+  document.getElementById('infoTabDiag').style.fontWeight=isGuide?'400':'700';
+  if(!isGuide){
+    const diagEl=document.getElementById('infoContentDiag');
+    if(diagEl)_renderDiagToEl(diagEl);
+  }
+}
+function _renderDiagToEl(el){
+  const tlSummary=['1d','1w','1M'].map(tf=>{
+    const lines=tl_cands[tf]||[];const candles=tl_candles[tf]||[];
+    return{name:`Trendlines ${tf}`,ok:lines.length>0,msg:`${lines.length} lines · ${candles.length} candles`};
+  });
+  const bestBin=lastUrpd.length?lastUrpd.reduce((a,b)=>b.norm>a.norm?b:a,lastUrpd[0]):null;
+  const urpdRow=bestBin
+    ?{name:'URPD',ok:true,msg:`${lastUrpd.length} bins · strongest bin: ${fmt(bestBin.lo)}–${fmt(bestBin.hi)}`}
+    :{name:'URPD',ok:false,msg:'No data loaded'};
+  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
+  if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
+  el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
+  <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+/* close modal on backdrop click */
+document.getElementById('infoModal')?.addEventListener('click',function(e){
+  if(e.target===this)this.style.display='none';
+});
 
 </script>
 <script>
@@ -3754,20 +3713,19 @@ if('serviceWorker' in navigator){
   <div id="msmTipFire" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);font-size:12px;font-family:var(--mono)"></div>
 </div>
 
-<!-- TAB BAR -->
-<nav class="tab-bar" id="tabBar">
-  <button class="tab-btn" id="tabBtnChart" onclick="switchTab('Chart')">
-    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Chart
-  </button>
-  <button class="tab-btn active" id="tabBtnLadder" onclick="switchTab('Ladder')">
-    <svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    Ladder
-  </button>
-  <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('Settings')">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Settings
-  </button>
-</nav>
+<!-- Info Modal -->
+<div id="infoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;overflow:auto">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);max-width:600px;margin:40px auto;padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border2)">
+      <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden">
+        <button id="infoTabGuide" onclick="switchInfoTab('guide')" style="border:none;padding:6px 16px;font-size:12px;font-family:var(--mono);cursor:pointer;background:var(--btc);color:#000;font-weight:700">Guide</button>
+        <button id="infoTabDiag" onclick="switchInfoTab('diag')" style="border:none;padding:6px 16px;font-size:12px;font-family:var(--mono);cursor:pointer;background:transparent;color:var(--muted)">Diagnostics</button>
+      </div>
+      <button onclick="document.getElementById('infoModal').style.display='none'" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:0">×</button>
+    </div>
+    <div id="infoContentGuide" style="padding:18px;max-height:70vh;overflow-y:auto"></div>
+    <div id="infoContentDiag" style="padding:18px;max-height:70vh;overflow-y:auto;display:none"></div>
+  </div>
+</div>
 </body>
 </html>
