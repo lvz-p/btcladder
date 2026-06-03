@@ -563,7 +563,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.43 PWA';
+const VERSION='BtcLadder v1.1.44 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3781,18 +3781,17 @@ function switchView(){
 }
 
 
-/* ── Dynamic card height: measure above-card elements ── */
+/* ── Dynamic card height: use card's actual top position ── */
 function updateCardHeight(){
-  const hdr=document.querySelector('.hdr');
-  const hero=document.getElementById('heroSection');
-  const hdrH=hdr?hdr.offsetHeight:50;
-  const heroH=hero?hero.offsetHeight:100;
-  /* body: padding-top 24px + padding-bottom 60px */
-  /* hdr: margin-bottom 12px */
-  /* hero: margin-bottom 14px */
-  /* card: margin-bottom 16px */
-  const fixed=24+60+12+14+16; /* body:24t+60b, hdr:12mb, hero:14mb, card:16mb */
-  const aboveH=hdrH+heroH+fixed;
+  /* find the active card and measure its top offset from viewport */
+  const activeCard=document.getElementById('chartShell').style.display!=='none'
+    ?document.getElementById('chartShell')
+    :document.getElementById('tlSection');
+  if(!activeCard)return;
+  const cardTop=activeCard.getBoundingClientRect().top+window.scrollY;
+  const bodyPadBot=60;
+  const cardMarginBot=16;
+  const aboveH=Math.round(cardTop+bodyPadBot+cardMarginBot);
   document.documentElement.style.setProperty('--above-h', aboveH+'px');
 }
 /* run after DOM fully rendered — multiple times to catch late renders */
