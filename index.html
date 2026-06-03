@@ -365,7 +365,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="hero-price">
       <span class="price-big" id="priceVal">—</span>
       <div style="display:flex;align-items:flex-end;gap:8px;min-height:24px">
-        <div class="price-chg-wrap" id="priceChgWrap" style="display:none">
+        <div class="price-chg-wrap" id="priceChgWrap" style="visibility:hidden">
           <span class="price-chg-lbl">24h</span>
           <span class="price-chg" id="priceChg"></span>
         </div>
@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.52d PWA';
+const VERSION='BtcLadder v1.1.57 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1625,7 +1625,7 @@ async function refreshAll(){
       if(Number.isFinite(chg)){
         $('priceChg').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
         $('priceChg').className='price-chg '+(chg>=0?'up':'dn');
-        $('priceChgWrap').style.display='';
+        $('priceChgWrap').style.visibility='visible';
       }
     }catch(_){}
     setStatus('loading');
@@ -1643,6 +1643,8 @@ async function refreshAll(){
     if(document.getElementById('tlSection')?.style.display!=='none')tl_draw(tlViewerMode);
     setStatus('ok');
     rerender();
+    /* remeasure after all data loaded and rendered */
+    setTimeout(()=>{if(typeof updateCardHeight==='function')updateCardHeight();},200);
     /* compute news in background — doesn't block render */
     window._tlOCData=null; /* invalidate OC cache on refresh */
     _tlOCFetching=false; /* reset fetch flag */
@@ -3241,7 +3243,7 @@ async function refreshPriceOnly(){
       if(Number.isFinite(chg)){
         $('priceChg').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
         $('priceChg').className='price-chg '+(chg>=0?'up':'dn');
-        $('priceChgWrap').style.display='';
+        $('priceChgWrap').style.visibility='visible';
       }
     }catch(_){}
     /* update nearest support/resistance */
@@ -3715,23 +3717,7 @@ function _renderDiagToEl(el){
     :{name:'URPD',ok:false,msg:'No data loaded'};
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
-  const _dbg=(()=>{
-    const _hdr=document.querySelector('.hdr');
-    const _hero=document.getElementById('heroSection');
-    const _lc=document.getElementById('chartShell');
-    const _cc=document.getElementById('tlSection');
-    const _hdrH=Math.round(_hdr?.getBoundingClientRect().height||0);
-    const _heroH=Math.round(_hero?.getBoundingClientRect().height||0);
-    const _above=24+_hdrH+12+_heroH+14;
-    const _padBot=window.innerWidth>=641?8:60;
-    const _avail=Math.floor(window.innerHeight-_above-_padBot-16);
-    const _minH=window.innerWidth>=641?646:536;
-    let _ccH=0;
-    if(_cc){const _was=_cc.style.display==='none';if(_was){_cc.style.visibility='hidden';_cc.style.display='block';}_ccH=_cc.scrollHeight;if(_was){_cc.style.display='none';_cc.style.visibility='';}}
-    return `vh:${window.innerHeight} hdr:${_hdrH} hero:${_heroH} avail:${_avail} minH:${_minH} ladderH:${_lc?.style.height||'?'} chartContentH:${_ccH} chartH:${_cc?.style.height||'?'} mob:${window.innerWidth<641}`;
-  })();
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
-  <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px;word-break:break-all">📐 ${_dbg}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
   </tbody></table>`;
@@ -3750,6 +3736,8 @@ function switchView(){
   const ladderCard=document.getElementById('chartShell');
   const chartCard=document.getElementById('tlSection');
   const icon=document.getElementById('viewSwitchIcon');
+  /* save scroll position — restore after switch to prevent browser auto-scroll */
+  const savedScroll=window.scrollY;
   if(_activeView==='ladder'){
     ladderCard.style.opacity='0';
     ladderCard.style.transition='opacity .18s';
@@ -3762,6 +3750,7 @@ function switchView(){
       requestAnimationFrame(()=>requestAnimationFrame(()=>{chartCard.style.opacity='1';}));
       if(icon)icon.innerHTML=_svgLadder;
       _activeView='chart';
+      window.scrollTo(0,savedScroll);
       /* render chart */
       const svgEl=document.getElementById('tlSvg');
       if(svgEl){
@@ -3786,6 +3775,7 @@ function switchView(){
       requestAnimationFrame(()=>requestAnimationFrame(()=>{ladderCard.style.opacity='1';}));
       if(icon)icon.innerHTML=_svgChart;
       _activeView='ladder';
+      window.scrollTo(0,savedScroll);
       if(typeof rerender==='function')requestAnimationFrame(rerender);
     },180);
   }
@@ -3823,11 +3813,21 @@ function updateCardHeight(){
     chartContentH=chartCard.scrollHeight;
     if(wasHidden){chartCard.style.display='none';chartCard.style.visibility='';}
   }
-  /* each card gets max(available, its own content minimum) */
-  const ladderH=Math.max(available,minH);
-  const chartH=Math.max(available,chartContentH);
+  /* when content exceeds available, both cards use the larger value so borders align */
+  const sharedMinH=Math.max(minH,chartContentH);
+  const ladderH=Math.max(available,sharedMinH);
+  const chartH=Math.max(available,sharedMinH);
   ladderCard.style.height=ladderH+'px';
   if(chartCard)chartCard.style.height=chartH+'px';
+  /* trigger rerender so canvas H recalculates — guarded to prevent loop */
+  if(!window._updatingCardH){
+    window._updatingCardH=true;
+    clearTimeout(window._cardRerenderTimer);
+    window._cardRerenderTimer=setTimeout(()=>{
+      if(typeof rerender==='function'&&typeof lastCurrent!=='undefined'&&lastCurrent)rerender();
+      window._updatingCardH=false;
+    },100);
+  }
 }
 /* run after DOM fully rendered — multiple times to catch late renders */
 window.addEventListener('load',updateCardHeight);
