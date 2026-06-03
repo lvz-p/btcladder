@@ -328,6 +328,15 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .msm-tip-row:last-child{border-bottom:none}
 .msm-tip-lbl{color:var(--muted);font-size:12px;font-family:var(--mono)}
 .msm-tip-val{color:var(--text);font-size:12px;font-family:var(--mono);text-align:right}
+
+/* ── View Switcher ── */
+.view-switch{display:flex;justify-content:center;margin:10px 0}
+.view-switch-btn{display:flex;align-items:center;gap:7px;border:1px solid var(--border2);border-radius:999px;padding:7px 20px;font-size:13px;font-weight:700;font-family:var(--mono);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s}
+.view-switch-btn:hover{background:var(--surface2);color:var(--text)}
+.view-switch-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+/* card transition */
+.view-card{transition:opacity .18s ease}
+.view-card.hiding{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -347,7 +356,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </header>
 
-<div class="hero">
+<div class="hero" id="heroSection">
   <div>
     <div class="hero-price">
       <span class="price-big" id="priceVal">—</span>
@@ -360,26 +369,26 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <!-- priceSub removed - last update shown in header -->
   </div>
-  <div class="hero-stats">
-    <div id="nextLevelsLine" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:6px 0;white-space:nowrap">
-      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
-        <span style="color:var(--red)">↓</span>
-        <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-        <span id="supportPrice" style="color:var(--red)">—</span>
-        <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
-      </span>
-      <span style="color:var(--border2)">·</span>
-      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
-        <span style="color:var(--green)">↑</span>
-        <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-        <span id="resistPrice" style="color:var(--green)">—</span>
-        <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
-      </span>
-    </div>
-  </div>
+
 </div>
 
 <div class="chart-shell" id="chartShell">
+  <!-- Next lower/higher inside ladder card -->
+  <div style="padding:5px 12px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:12px;flex-wrap:nowrap;white-space:nowrap">
+    <span style="font-size:12px;font-family:var(--mono)">
+      <span style="color:var(--red)">↓</span>
+      <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+      <span id="supportPrice" style="color:var(--red)">—</span>
+      <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+    </span>
+    <span style="color:var(--border2)">·</span>
+    <span style="font-size:12px;font-family:var(--mono)">
+      <span style="color:var(--green)">↑</span>
+      <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+      <span id="resistPrice" style="color:var(--green)">—</span>
+      <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+    </span>
+  </div>
   <!-- Toggle bar inside ladder card -->
   <div style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface2)">
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
@@ -418,6 +427,14 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </div>
 
+<!-- View switch button -->
+<div class="view-switch" id="viewSwitch">
+  <button class="view-switch-btn" id="viewSwitchBtn" onclick="switchView()">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span id="viewSwitchLabel">Chart</span>
+  </button>
+</div>
+
 <div class="tooltip" id="tooltip">
   <div class="tt-head" id="ttHead"></div>
   <div class="tt-range" id="ttRange" style="display:none"></div>
@@ -426,8 +443,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 
-<details class="section" id="tlSection" ontoggle="document.getElementById('chartToggleBtn').textContent=this.open?'▲':'Chart ▼'">
-  <summary id="chartToggleBtn" style="font-size:12px;font-family:var(--mono);color:var(--muted);list-style:none;cursor:pointer;padding:8px 0;text-align:center">Chart ▼</summary>
+<div class="section view-card" id="tlSection" style="display:none">
   <div class="tl-viewer">
     <div class="tl-ctrl-row">
       <button class="btn active" id="tlDailyBtn">Daily</button>
@@ -455,7 +471,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <div class="tl-legend-group" id="tlLegOCGroup"><span class="tl-legend-group-hdr" id="tlLegOCLabel">On-chain</span><div class="tl-legend-group-btns" id="tlOCLegend"></div></div>
     </div>
   </div>
-</details>
+</div>
 
 
 
@@ -543,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.30 PWA';
+const VERSION='BtcLadder v1.1.31-opt3 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1616,7 +1632,8 @@ async function refreshAll(){
     if(ur?.status==='fulfilled')lastUrpd=ur.value;
     else lastUrpd=[];
     /* refresh viewer if already open */
-    if(document.getElementById('tlSection')?.open){tlViewerReady=true;tl_draw(tlViewerMode);}
+    tlViewerReady=true;
+    if(document.getElementById('tlSection')?.style.display!=='none')tl_draw(tlViewerMode);
     setStatus('ok');
     rerender();
     /* compute news in background — doesn't block render */
@@ -3024,15 +3041,7 @@ async function tl_fetchOCData(){
 
 
 let tlViewerReady=false;
-document.getElementById('tlSection').addEventListener('toggle',()=>{
-  const sec=document.getElementById('tlSection');
-  if(sec.open&&!tlViewerReady&&Object.keys(tl_cands).length){
-    tlViewerReady=true;tl_draw('1d');
-  }
-  if(sec.open){
-    setTimeout(tl_fetchOCData,200); /* fetch on-chain in background */
-  }
-});
+/* tlSection is now a plain div — toggle handled by switchView() */
 ['Daily','Weekly','Monthly'].forEach(label=>{
   const id='tl'+label+'Btn';
   const el=document.getElementById(id);
@@ -3706,6 +3715,65 @@ function _renderDiagToEl(el){
 document.getElementById('infoModal')?.addEventListener('click',function(e){
   if(e.target===this)this.style.display='none';
 });
+
+
+/* ── View Switcher ── */
+let _activeView='ladder'; /* 'ladder' | 'chart' */
+function switchView(){
+  const ladderCard=document.getElementById('chartShell');
+  const chartCard=document.getElementById('tlSection');
+  const btn=document.getElementById('viewSwitchBtn');
+  const lbl=document.getElementById('viewSwitchLabel');
+  const hero=document.getElementById('heroSection');
+  if(_activeView==='ladder'){
+    /* switch to chart */
+    ladderCard.classList.add('hiding');
+    setTimeout(()=>{
+      ladderCard.style.display='none';
+      ladderCard.classList.remove('hiding');
+      /* Option 4: hide hero */
+      chartCard.style.display='block';
+      chartCard.style.opacity='0';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        chartCard.style.transition='opacity .18s ease';
+        chartCard.style.opacity='1';
+      }));
+      lbl.textContent='Ladder';
+      btn.querySelector('svg').innerHTML='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>';
+      _activeView='chart';
+      /* render chart */
+      if(!tlViewerReady&&Object.keys(tl_cands).length){tlViewerReady=true;}
+      const svgEl=document.getElementById('tlSvg');
+      if(svgEl){
+        let _r=false;
+        const _ro=new ResizeObserver(entries=>{
+          for(const e of entries){if(e.contentRect.width>100&&!_r){_r=true;_ro.disconnect();window._tlForcedWidth=e.contentRect.width;tl_draw(tlViewerMode);window._tlForcedWidth=null;}}
+        });
+        _ro.observe(svgEl);
+        setTimeout(()=>{if(!_r){_ro.disconnect();tl_draw(tlViewerMode);}},2000);
+      }
+      setTimeout(tl_fetchOCData,200);
+    },180);
+  } else {
+    /* switch to ladder */
+    chartCard.classList.add('hiding');
+    setTimeout(()=>{
+      chartCard.style.display='none';
+      chartCard.classList.remove('hiding');
+      /* Option 4: show hero */
+      ladderCard.style.display='block';
+      ladderCard.style.opacity='0';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        ladderCard.style.transition='opacity .18s ease';
+        ladderCard.style.opacity='1';
+      }));
+      lbl.textContent='Chart';
+      btn.querySelector('svg').innerHTML='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>';
+      _activeView='ladder';
+      if(typeof rerender==='function')requestAnimationFrame(rerender);
+    },180);
+  }
+}
 
 </script>
 <script>
