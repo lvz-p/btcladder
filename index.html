@@ -335,8 +335,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .view-switch-icon{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:3px;border:1px solid var(--border2);border-radius:8px;padding:5px 8px;background:var(--surface2);cursor:pointer;color:var(--muted);transition:all .15s}
 .view-switch-icon:hover{color:var(--text);background:var(--surface)}
 .view-switch-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* hide low/high on mobile */
-@media(max-width:640px){#nextLevelsLine{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -394,7 +393,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 <div class="chart-shell" id="chartShell">
   <!-- Toggle bar inside ladder card -->
-  <div style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface2)">
+  <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
       <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
       <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
@@ -555,7 +554,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.31 PWA';
+const VERSION='BtcLadder v1.1.32 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
