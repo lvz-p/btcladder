@@ -369,26 +369,26 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <!-- priceSub removed - last update shown in header -->
   </div>
-  <div class="hero-stats">
-    <div id="nextLevelsLine" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:6px 0;white-space:nowrap">
-      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
-        <span style="color:var(--red)">↓</span>
-        <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-        <span id="supportPrice" style="color:var(--red)">—</span>
-        <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
-      </span>
-      <span style="color:var(--border2)">·</span>
-      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
-        <span style="color:var(--green)">↑</span>
-        <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-        <span id="resistPrice" style="color:var(--green)">—</span>
-        <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
-      </span>
-    </div>
-  </div>
+
 </div>
 
 <div class="chart-shell" id="chartShell">
+  <!-- Next lower/higher inside ladder card -->
+  <div style="padding:5px 12px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:12px;flex-wrap:nowrap;white-space:nowrap">
+    <span style="font-size:12px;font-family:var(--mono)">
+      <span style="color:var(--red)">↓</span>
+      <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+      <span id="supportPrice" style="color:var(--red)">—</span>
+      <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+    </span>
+    <span style="color:var(--border2)">·</span>
+    <span style="font-size:12px;font-family:var(--mono)">
+      <span style="color:var(--green)">↑</span>
+      <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+      <span id="resistPrice" style="color:var(--green)">—</span>
+      <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+    </span>
+  </div>
   <!-- Toggle bar inside ladder card -->
   <div style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface2)">
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.31-opt4 PWA';
+const VERSION='BtcLadder v1.1.31-opt3 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3732,7 +3732,6 @@ function switchView(){
       ladderCard.style.display='none';
       ladderCard.classList.remove('hiding');
       /* Option 4: hide hero */
-      if(hero)hero.style.display='none';
       chartCard.style.display='block';
       chartCard.style.opacity='0';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -3764,7 +3763,6 @@ function switchView(){
       chartCard.style.display='none';
       chartCard.classList.remove('hiding');
       /* Option 4: show hero */
-      if(hero)hero.style.display='';
       ladderCard.style.display='block';
       ladderCard.style.opacity='0';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
