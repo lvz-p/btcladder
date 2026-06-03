@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.50d PWA';
+const VERSION='BtcLadder v1.1.52 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3715,20 +3715,7 @@ function _renderDiagToEl(el){
     :{name:'URPD',ok:false,msg:'No data loaded'};
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
-  const _dbg=(()=>{
-    const _hdr=document.querySelector('.hdr');
-    const _hero=document.getElementById('heroSection');
-    const _lc=document.getElementById('chartShell');
-    const _cc=document.getElementById('tlSection');
-    const _hdrH=Math.round(_hdr?.getBoundingClientRect().height||0);
-    const _heroH=Math.round(_hero?.getBoundingClientRect().height||0);
-    const _above=24+_hdrH+12+_heroH+14;
-    const _padBot=window.innerWidth>=641?8:60;
-    const _avail=window.innerHeight-_above-_padBot-16;
-    return `vh:${window.innerHeight} hdr:${_hdrH} hero:${_heroH} above:${_above} avail:${_avail} ladderH:${_lc?.style.height||'?'} chartH:${_cc?.style.height||'?'} mob:${window.innerWidth<641}`;
-  })();
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
-  <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px">📐 ${_dbg}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
   </tbody></table>`;
@@ -3810,14 +3797,21 @@ function updateCardHeight(){
   const bodyPadBotActual=window.innerWidth>=641?8:bodyPadBot;
   const above=bodyPadTop+hdrH+hdrMargin+heroH+heroMargin;
   const available=Math.floor(window.innerHeight-above-bodyPadBotActual-cardMarginBot);
-  /* measure chart natural content height */
-  if(chartCard){chartCard.style.height='';chartCard.style.minHeight='';}
+  /* measure chart natural content height — briefly show if hidden */
   ladderCard.style.height='';
-  const chartContentH=chartCard?chartCard.scrollHeight:0;
-  /* shared height: both cards always identical */
-  const sharedH=Math.max(available,minH,chartContentH);
-  ladderCard.style.height=sharedH+'px';
-  if(chartCard)chartCard.style.height=sharedH+'px';
+  let chartContentH=0;
+  if(chartCard){
+    chartCard.style.height='';chartCard.style.minHeight='';
+    const wasHidden=chartCard.style.display==='none';
+    if(wasHidden){chartCard.style.visibility='hidden';chartCard.style.display='block';}
+    chartContentH=chartCard.scrollHeight;
+    if(wasHidden){chartCard.style.display='none';chartCard.style.visibility='';}
+  }
+  /* each card gets max(available, its own content minimum) */
+  const ladderH=Math.max(available,minH);
+  const chartH=Math.max(available,chartContentH);
+  ladderCard.style.height=ladderH+'px';
+  if(chartCard)chartCard.style.height=chartH+'px';
 }
 /* run after DOM fully rendered — multiple times to catch late renders */
 window.addEventListener('load',updateCardHeight);
