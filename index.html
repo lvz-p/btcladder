@@ -281,6 +281,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-x-lbl{position:absolute;top:50%;font-size:11px;font-family:var(--mono);color:#94a3b8;transform:translate(-50%,-50%);white-space:nowrap;line-height:1;text-align:center}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
+@media(min-width:641px){#tlSvg{height:496px!important}}
 @media(max-width:640px){
   body{padding:8px 12px 40px}
   /* header: compact, no wrap, less bottom margin */
@@ -312,7 +313,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   /* chart */
   .chart-inner{grid-template-columns:36px 1fr 222px}
   /* ladder canvas 500px on mobile */
-  #canvasCol,#axisPriceCol,#labelsCol,#chartInner{height:490px!important;max-height:490px!important}
+  /* canvas height now dynamic — set by renderChart */
 }
 
 /* ── MSM: Market State Model ── */
@@ -336,6 +337,14 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .view-switch-icon:hover{color:var(--text);background:var(--surface)}
 .view-switch-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+
+/* ── Dynamic card heights — all screens ── */
+.chart-shell{height:calc(100vh - var(--above-h, 280px));min-height:536px}
+.section.view-card{height:calc(100vh - var(--above-h, 280px));overflow:hidden;min-height:536px}
+@media(min-width:641px){
+  .chart-shell{min-height:646px}
+  .section.view-card{min-height:646px}
+}
 </style>
 </head>
 <body>
@@ -443,7 +452,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </select>
     </div>
     <div class="tl-chart-wrap" style="position:relative;touch-action:none">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:390px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:390px;cursor:default;pointer-events:all;touch-action:none;display:block;width:100%"></svg>
       <div class="tl-y-axis" id="tlYAxis"></div>
       <div class="tl-x-axis" id="tlXAxis"></div>
 
@@ -554,7 +563,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.32 PWA';
+const VERSION='BtcLadder v1.1.40 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -901,7 +910,14 @@ function renderChart(cur,ma,oc,tl=[]){
   const lo=zoomLo!==null?zoomLo:rawLo-pad;
   const hi=zoomHi!==null?zoomHi:rawHi+pad;
   const range=hi-lo;
-  const H=600; /* fixed canvas height — price axis rescales to fit any zoom/pan/distance mode */
+  /* dynamic canvas height — fills card minus toggle bar */
+  const _shell=document.getElementById('chartShell');
+  const _toggleBar=_shell?.querySelector('[style*="border-bottom"]');
+  const _shellH=_shell?_shell.offsetHeight:600;
+  const _toggleH=_toggleBar?_toggleBar.offsetHeight:46;
+  /* minimum = original fixed canvas size per screen */
+  const _minH=window.innerWidth>=641?600:490;
+  const H=Math.max(_minH,_shellH-_toggleH-2);
   const toY=p=>((hi-p)/range*H);
   const btcY=toY(cur);
   const btcYpct=(btcY/H*100).toFixed(2);
@@ -1772,8 +1788,10 @@ function tl_generate(points,type,cs,log,minSpace,maxN,tol,basis,tf,anchorBasis){
       const line=tl_makeLine(a,b,log);
       const now=line.project(last);
       if(!Number.isFinite(now)||now<=0)continue;
-      if(!tl_relevance(type,a,b,now,btc,tf,last)){rej.push({type,a,b,now,reason:'relevance',date:null,breachPct:null});continue;}
+      /* check validation first to detect ghost before relevance filter */
       const val=tl_validateLine(cs,line,type,a,b,tol,basis,log);
+      /* ghost lines bypass relevance — self-resolving within current candle period */
+      if(!val.ghost&&!tl_relevance(type,a,b,now,btc,tf,last)){rej.push({type,a,b,now,reason:'relevance',date:null,breachPct:null});continue;}
       if(!val.ok&&!val.ghost){rej.push({type,a,b,now,reason:val.reason,date:val.date,breachPct:val.breachPct});continue;}
       const obj={type,a,b,line,now,dist:pct(now,btc),val,anchorBasis:anchorBasis||basis,tag:type==='support'?'ATS':'ATR',ghost:val.ghost||false};
       obj.score=tl_score(obj,cs,tf);
@@ -3760,6 +3778,27 @@ function switchView(){
     },180);
   }
 }
+
+
+/* ── Dynamic card height: measure above-card elements ── */
+function updateCardHeight(){
+  const hdr=document.querySelector('.hdr');
+  const hero=document.getElementById('heroSection');
+  const hdrH=hdr?hdr.offsetHeight:50;
+  const heroH=hero?hero.offsetHeight:100;
+  /* body: padding-top 24px + padding-bottom 60px */
+  /* hdr: margin-bottom 12px */
+  /* hero: margin-bottom 14px */
+  /* card: margin-bottom 16px */
+  const fixed=24+60+12+14+16; /* body:24t+60b, hdr:12mb, hero:14mb, card:16mb */
+  const aboveH=hdrH+heroH+fixed;
+  document.documentElement.style.setProperty('--above-h', aboveH+'px');
+}
+/* run after DOM fully rendered */
+window.addEventListener('load',updateCardHeight);
+setTimeout(updateCardHeight,100);
+setTimeout(updateCardHeight,100);
+window.addEventListener('resize',()=>{clearTimeout(window._aboveHTimer);window._aboveHTimer=setTimeout(updateCardHeight,100);});
 
 </script>
 <script>
