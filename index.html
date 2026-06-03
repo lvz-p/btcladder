@@ -330,13 +330,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .msm-tip-val{color:var(--text);font-size:12px;font-family:var(--mono);text-align:right}
 
 /* ── View Switcher ── */
-.view-switch{margin:6px 0}
-.view-switch-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;border:1px solid var(--border2);border-radius:var(--r-lg);padding:6px 16px;font-size:12px;font-weight:700;font-family:var(--mono);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;box-sizing:border-box}
-.view-switch-btn:hover{background:var(--surface2);color:var(--text)}
-.view-switch-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-/* card transition */
 .view-card{transition:opacity .18s ease}
 .view-card.hiding{opacity:0;pointer-events:none}
+.view-switch-icon{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:3px;border:1px solid var(--border2);border-radius:8px;padding:5px 8px;background:var(--surface2);cursor:pointer;color:var(--muted);transition:all .15s}
+.view-switch-icon:hover{color:var(--text);background:var(--surface)}
+.view-switch-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* hide low/high on mobile */
+@media(max-width:640px){#nextLevelsLine{display:none!important}}
 </style>
 </head>
 <body>
@@ -356,7 +356,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </header>
 
-<div class="hero" id="heroSection">
+<div class="hero" id="heroSection" style="position:relative">
   <div>
     <div class="hero-price">
       <span class="price-big" id="priceVal">—</span>
@@ -369,26 +369,30 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <!-- priceSub removed - last update shown in header -->
   </div>
-
+  <div class="hero-stats">
+    <div id="nextLevelsLine" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:6px 0;white-space:nowrap">
+      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
+        <span style="color:var(--red)">↓</span>
+        <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+        <span id="supportPrice" style="color:var(--red)">—</span>
+        <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+      </span>
+      <span style="color:var(--border2)">·</span>
+      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
+        <span style="color:var(--green)">↑</span>
+        <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+        <span id="resistPrice" style="color:var(--green)">—</span>
+        <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+      </span>
+    </div>
+  </div>
+  <button class="view-switch-icon" id="viewSwitchBtn" onclick="switchView()" title="Switch view">
+    <svg id="viewSwitchIcon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <svg viewBox="0 0 24 24" style="width:10px;height:10px"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
 </div>
 
 <div class="chart-shell" id="chartShell">
-  <!-- Next lower/higher inside ladder card -->
-  <div style="padding:5px 12px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:12px;flex-wrap:nowrap;white-space:nowrap">
-    <span style="font-size:12px;font-family:var(--mono)">
-      <span style="color:var(--red)">↓</span>
-      <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-      <span id="supportPrice" style="color:var(--red)">—</span>
-      <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
-    </span>
-    <span style="color:var(--border2)">·</span>
-    <span style="font-size:12px;font-family:var(--mono)">
-      <span style="color:var(--green)">↑</span>
-      <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-      <span id="resistPrice" style="color:var(--green)">—</span>
-      <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
-    </span>
-  </div>
   <!-- Toggle bar inside ladder card -->
   <div style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface2)">
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
@@ -455,14 +459,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
   </div>
 </div>
-<!-- View switch button -->
-<div class="view-switch" id="viewSwitch">
-  <button class="view-switch-btn" id="viewSwitchBtn" onclick="switchView()">
-    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    <span id="viewSwitchLabel">Chart</span>
-  </button>
-</div>
-
 
 <div class="tooltip" id="tooltip">
   <div class="tt-head" id="ttHead"></div>
@@ -559,7 +555,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.31-opt3 PWA';
+const VERSION='BtcLadder v1.1.31 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3041,7 +3037,7 @@ async function tl_fetchOCData(){
 
 
 let tlViewerReady=false;
-/* tlSection is now a plain div — toggle handled by switchView() */
+/* tlSection is now a plain div */
 ['Daily','Weekly','Monthly'].forEach(label=>{
   const id='tl'+label+'Btn';
   const el=document.getElementById(id);
@@ -3718,33 +3714,26 @@ document.getElementById('infoModal')?.addEventListener('click',function(e){
 
 
 /* ── View Switcher ── */
-let _activeView='ladder'; /* 'ladder' | 'chart' */
+let _activeView='ladder';
+const _svgChart='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>';
+const _svgLadder='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>';
 function switchView(){
   const ladderCard=document.getElementById('chartShell');
   const chartCard=document.getElementById('tlSection');
-  const btn=document.getElementById('viewSwitchBtn');
-  const lbl=document.getElementById('viewSwitchLabel');
-  const hero=document.getElementById('heroSection');
+  const icon=document.getElementById('viewSwitchIcon');
   if(_activeView==='ladder'){
-    /* switch to chart */
-    ladderCard.classList.add('hiding');
+    ladderCard.style.opacity='0';
+    ladderCard.style.transition='opacity .18s';
     setTimeout(()=>{
       ladderCard.style.display='none';
-      ladderCard.classList.remove('hiding');
-      /* Option 4: hide hero */
+      ladderCard.style.opacity='1';
       chartCard.style.display='block';
       chartCard.style.opacity='0';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        chartCard.style.transition='opacity .18s ease';
-        chartCard.style.opacity='1';
-      }));
-      lbl.textContent='Ladder';
-      btn.querySelector('svg').innerHTML='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>';
-      /* move switch button after chart card */
-      chartCard.parentNode.insertBefore(document.getElementById('viewSwitch'),chartCard.nextSibling);
+      chartCard.style.transition='opacity .18s';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{chartCard.style.opacity='1';}));
+      if(icon)icon.innerHTML=_svgLadder;
       _activeView='chart';
       /* render chart */
-      if(!tlViewerReady&&Object.keys(tl_cands).length){tlViewerReady=true;}
       const svgEl=document.getElementById('tlSvg');
       if(svgEl){
         let _r=false;
@@ -3757,22 +3746,16 @@ function switchView(){
       setTimeout(tl_fetchOCData,200);
     },180);
   } else {
-    /* switch to ladder */
-    chartCard.classList.add('hiding');
+    chartCard.style.opacity='0';
+    chartCard.style.transition='opacity .18s';
     setTimeout(()=>{
       chartCard.style.display='none';
-      chartCard.classList.remove('hiding');
-      /* Option 4: show hero */
+      chartCard.style.opacity='1';
       ladderCard.style.display='block';
       ladderCard.style.opacity='0';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        ladderCard.style.transition='opacity .18s ease';
-        ladderCard.style.opacity='1';
-      }));
-      lbl.textContent='Chart';
-      btn.querySelector('svg').innerHTML='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>';
-      /* move switch button after ladder card */
-      ladderCard.parentNode.insertBefore(document.getElementById('viewSwitch'),ladderCard.nextSibling);
+      ladderCard.style.transition='opacity .18s';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ladderCard.style.opacity='1';}));
+      if(icon)icon.innerHTML=_svgChart;
       _activeView='ladder';
       if(typeof rerender==='function')requestAnimationFrame(rerender);
     },180);
