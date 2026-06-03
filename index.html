@@ -37,6 +37,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-synthesis:none;-webkit-font-smoothing:antialiased}
 body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:100vh;padding:24px 20px 60px}
+@media(min-width:641px){body{padding-bottom:8px}}
 .wrap{max-width:960px;margin:0 auto}
 
 /* HEADER — fix: only title + status dot, no timestamp line */
@@ -338,13 +339,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .view-switch-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 
-/* ── Dynamic card heights — all screens ── */
-.chart-shell{height:calc(100vh - var(--above-h, 280px));min-height:536px}
-.section.view-card{min-height:max(536px, calc(100vh - var(--above-h, 280px)));overflow:hidden}
-@media(min-width:641px){
-  .chart-shell{min-height:646px}
-  .section.view-card{height:calc(100vh - var(--above-h, 280px));min-height:646px}
-}
+/* ── Card heights set by JS ── */
+.section.view-card{overflow:hidden}
 </style>
 </head>
 <body>
@@ -563,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.44 PWA';
+const VERSION='BtcLadder v1.1.50 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1602,7 +1598,6 @@ function renderDiag(){
 }
 function rerender(){
   if(!lastCurrent)return;
-  if(typeof updateCardHeight==='function')updateCardHeight();
   renderChart(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderTable(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
@@ -3781,18 +3776,35 @@ function switchView(){
 }
 
 
-/* ── Dynamic card height: use card's actual top position ── */
+/* ── Dynamic card height: set directly via JS ── */
 function updateCardHeight(){
-  /* find the active card and measure its top offset from viewport */
-  const activeCard=document.getElementById('chartShell').style.display!=='none'
-    ?document.getElementById('chartShell')
-    :document.getElementById('tlSection');
-  if(!activeCard)return;
-  const cardTop=activeCard.getBoundingClientRect().top+window.scrollY;
+  const hdr=document.querySelector('.hdr');
+  const hero=document.getElementById('heroSection');
+  const ladderCard=document.getElementById('chartShell');
+  const chartCard=document.getElementById('tlSection');
+  if(!hdr||!hero||!ladderCard)return;
+  const isMobile=window.innerWidth<641;
+  const minH=isMobile?536:646;
+  /* temporarily remove height constraints to measure natural positions */
+  ladderCard.style.height='';
+  const hdrH=hdr.getBoundingClientRect().height;
+  const hdrMargin=12;
+  const heroH=hero.getBoundingClientRect().height;
+  const heroMargin=14;
+  const bodyPadTop=24;
   const bodyPadBot=60;
   const cardMarginBot=16;
-  const aboveH=Math.round(cardTop+bodyPadBot+cardMarginBot);
-  document.documentElement.style.setProperty('--above-h', aboveH+'px');
+  const bodyPadBotActual=window.innerWidth>=641?8:bodyPadBot;
+  const above=bodyPadTop+hdrH+hdrMargin+heroH+heroMargin;
+  const available=Math.floor(window.innerHeight-above-bodyPadBotActual-cardMarginBot);
+  /* measure chart natural content height */
+  if(chartCard){chartCard.style.height='';chartCard.style.minHeight='';}
+  ladderCard.style.height='';
+  const chartContentH=chartCard?chartCard.scrollHeight:0;
+  /* shared height: both cards always identical */
+  const sharedH=Math.max(available,minH,chartContentH);
+  ladderCard.style.height=sharedH+'px';
+  if(chartCard)chartCard.style.height=sharedH+'px';
 }
 /* run after DOM fully rendered — multiple times to catch late renders */
 window.addEventListener('load',updateCardHeight);
