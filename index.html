@@ -294,7 +294,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   .price-big{font-size:clamp(32px,9vw,48px);letter-spacing:-0.03em}
   .price-sub{font-size:11px;margin-top:4px}
   /* support/resistance side by side, compact */
-  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+  .hero-stats{width:100%}
   .stat-card{min-width:0;padding:6px 10px}
   .stat-card .lbl{font-size:10px}
   .stat-card .val{font-size:12px}
@@ -361,8 +361,21 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <!-- priceSub removed - last update shown in header -->
   </div>
   <div class="hero-stats">
-    <div class="stat-card"><div class="lbl" style="color:var(--red)">Next lower</div><div class="val s" id="supportVal"><span id="supportName" style="font-size:13px;font-weight:700"></span> <span id="supportPrice">—</span></div></div>
-    <div class="stat-card"><div class="lbl" style="color:var(--green)">Next higher</div><div class="val r" id="resistVal"><span id="resistName" style="font-size:13px;font-weight:700"></span> <span id="resistPrice">—</span></div></div>
+    <div id="nextLevelsLine" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:6px 0;white-space:nowrap">
+      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
+        <span style="color:var(--red)">↓</span>
+        <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+        <span id="supportPrice" style="color:var(--red)">—</span>
+        <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+      </span>
+      <span style="color:var(--border2)">·</span>
+      <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
+        <span style="color:var(--green)">↑</span>
+        <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+        <span id="resistPrice" style="color:var(--green)">—</span>
+        <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+      </span>
+    </div>
   </div>
 </div>
 
@@ -529,7 +542,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.25 PWA';
+const VERSION='BtcLadder v1.1.27 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1520,20 +1533,24 @@ function renderSummary(cur,levels){
   const sup=levels.filter(l=>l.price<cur&&l.type!=='current').sort((a,b)=>b.price-a.price)[0];
   const res=levels.filter(l=>l.price>cur&&l.type!=='current').sort((a,b)=>a.price-b.price)[0];
   if(sup){
-    const sn=$('supportName'),sp=$('supportPrice');
+    const sn=$('supportName'),sp=$('supportPrice'),sd=$('supportDist');
     if(sn){sn.textContent=levelCode(sup);sn.style.color=levelColor(sup);}
-    if(sp){sp.textContent=fmt(sup.price);sp.style.color='var(--red)';}
+    if(sp)sp.textContent=fmt(sup.price);
+    if(sd)sd.textContent=pctStr(pct(sup.price,cur));
   } else {
-    const sp=$('supportPrice');if(sp){sp.textContent='—';sp.style.color='var(--red)';}
+    const sp=$('supportPrice');if(sp)sp.textContent='—';
     const sn=$('supportName');if(sn)sn.textContent='';
+    const sd=$('supportDist');if(sd)sd.textContent='';
   }
   if(res){
-    const rn=$('resistName'),rp=$('resistPrice');
+    const rn=$('resistName'),rp=$('resistPrice'),rd=$('resistDist');
     if(rn){rn.textContent=levelCode(res);rn.style.color=levelColor(res);}
-    if(rp){rp.textContent=fmt(res.price);rp.style.color='var(--green)';}
+    if(rp)rp.textContent=fmt(res.price);
+    if(rd)rd.textContent=pctStr(pct(res.price,cur));
   } else {
-    const rp=$('resistPrice');if(rp){rp.textContent='—';rp.style.color='var(--green)';}
+    const rp=$('resistPrice');if(rp)rp.textContent='—';
     const rn=$('resistName');if(rn)rn.textContent='';
+    const rd=$('resistDist');if(rd)rd.textContent='';
   }
 }
 function renderDiag(){
