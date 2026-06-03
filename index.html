@@ -98,15 +98,15 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 /* LEGEND */
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .leg{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted)}
-.leg-pip{width:22px;height:2px;border-radius:1px;flex-shrink:0}
+.leg-pip{width:16px;height:2px;border-radius:1px;flex-shrink:0}
 .leg-pip.D{background:var(--col-D)}.leg-pip.W{background:var(--col-W)}
 .leg-pip.M{background:var(--col-M)}.leg-pip.OC{background:var(--col-OC)}
 /* fix: zone legend back to neutral white dashed style */
-.leg-zone{width:22px;height:11px;border-radius:3px;background:rgba(255,255,255,.13);border:.5px dashed rgba(255,255,255,.4);flex-shrink:0}
+.leg-zone{width:16px;height:8px;border-radius:2px;background:rgba(255,255,255,.13);border:.5px dashed rgba(255,255,255,.4);flex-shrink:0}
 .leg-dot-btc{width:10px;height:10px;border-radius:50%;background:var(--btc);flex-shrink:0}
 /* legend toggle button on/off states */
 button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;cursor:pointer;font-family:var(--font);font-size:10px;background:var(--surface)}
-button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700}
+button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700;min-height:22px;box-sizing:border-box}
 #maExpandBtn{font-size:13px;padding:2px 8px}
 .ma-t2{font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:.05em;cursor:pointer;text-transform:uppercase;transition:all .12s;user-select:none}
 .rng-t2{font-size:11px;font-family:var(--mono);font-weight:700;cursor:pointer;transition:all .12s;user-select:none;color:var(--muted);opacity:.45}
@@ -379,31 +379,32 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   </div>
 </div>
 
-<!-- Single row: Range chevron + all toggles -->
-<div class="legend" style="margin-bottom:4px;flex-wrap:wrap;gap:6px">
-  <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
-  <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-    <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
-  </span>
-  <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
-  <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button>
-  <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
-  <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
-  <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
-</div>
-<div id="maExpand" style="display:none;margin-bottom:8px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
-  <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
-  <span class="ma-t2 on" data-cat="W" style="color:var(--col-W)">WEEKLY</span>
-  <span class="ma-t2 on" data-cat="M" style="color:var(--col-M)">MONTHLY</span>
-</div>
-<div id="rangeExpand" style="display:none;margin-bottom:8px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center;font-size:11px;font-family:var(--font)">
-  <span class="rng-t2" id="rp5" data-prox="5">±5%</span>
-  <span class="rng-t2 on" id="rp10" data-prox="10">±10%</span>
-  <span class="rng-t2" id="rp25" data-prox="25">±25%</span>
-  <span class="rng-t2" id="rpall" data-prox="all">ALL</span>
-</div>
-
 <div class="chart-shell" id="chartShell">
+  <!-- Toggle bar inside ladder card -->
+  <div style="padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface2)">
+    <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
+      <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
+      <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
+        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
+      </span>
+      <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
+      <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button>
+      <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
+      <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
+      <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
+    </div>
+    <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
+      <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
+      <span class="ma-t2 on" data-cat="W" style="color:var(--col-W)">WEEKLY</span>
+      <span class="ma-t2 on" data-cat="M" style="color:var(--col-M)">MONTHLY</span>
+    </div>
+    <div id="rangeExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center;font-size:11px;font-family:var(--font)">
+      <span class="rng-t2" id="rp5" data-prox="5">±5%</span>
+      <span class="rng-t2 on" id="rp10" data-prox="10">±10%</span>
+      <span class="rng-t2" id="rp25" data-prox="25">±25%</span>
+      <span class="rng-t2" id="rpall" data-prox="all">ALL</span>
+    </div>
+  </div>
   <div id="zoomReset" class="zoom-reset" onclick="resetZoom()" style="display:none">↺ Reset zoom</div>
   <div class="chart-inner" id="chartInner">
     <div class="axis-price-col" id="axisPriceCol"></div>
@@ -542,7 +543,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.27 PWA';
+const VERSION='BtcLadder v1.1.30 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
