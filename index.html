@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.44 PWA';
+const VERSION='BtcLadder v1.1.45 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2485,7 +2485,7 @@ function tl_renderOCLegend(configs){
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
     /* show line style in dot */
-    b.innerHTML=`<span style="display:inline-block;width:20px;height:2px;background:${oc.col};margin-right:4px;vertical-align:middle;${oc.dash?'border-top:2px dashed '+oc.col+';background:none':''}"></span>${oc.label}`;
+    b.innerHTML=`<span style="display:inline-block;width:16px;height:2px;background:${oc.col};margin-right:2px;vertical-align:middle;${oc.dash?'border-top:2px dashed '+oc.col+';background:none':''}"></span>${oc.label}`;
     b.onclick=()=>{tl_ocVisible[oc.key]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
   });
