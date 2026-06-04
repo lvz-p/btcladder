@@ -340,7 +340,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 
 /* ── Card heights set by JS ── */
-.section.view-card{overflow:visible}
+.section.view-card{overflow:hidden}
 </style>
 </head>
 <body>
@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.58 PWA';
+const VERSION='BtcLadder v1.1.59 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3803,18 +3803,11 @@ function updateCardHeight(){
   const bodyPadBotActual=window.innerWidth>=641?8:bodyPadBot;
   const above=bodyPadTop+hdrH+hdrMargin+heroH+heroMargin;
   const available=Math.floor(window.innerHeight-above-bodyPadBotActual-cardMarginBot);
-  /* measure chart natural content height — briefly show if hidden */
   ladderCard.style.height='';
-  let chartContentH=0;
-  if(chartCard){
-    chartCard.style.height='';chartCard.style.minHeight='';
-    const wasHidden=chartCard.style.display==='none';
-    if(wasHidden){chartCard.style.visibility='hidden';chartCard.style.display='block';}
-    chartContentH=chartCard.scrollHeight;
-    if(wasHidden){chartCard.style.display='none';chartCard.style.visibility='';}
-  }
-  /* when content exceeds available, both cards use the larger value so borders align */
-  const sharedMinH=Math.max(minH,chartContentH);
+  /* use hardcoded chart content min to avoid measurement timing issues */
+  /* mobile: controls(40)+svg(390)+legend(~110)=540; desktop: controls(40)+svg(496)+legend(~110)=646 */
+  const chartContentMin=isMobile?556:660;
+  const sharedMinH=Math.max(minH,chartContentMin);
   const ladderH=Math.max(available,sharedMinH);
   const chartH=Math.max(available,sharedMinH);
   ladderCard.style.height=ladderH+'px';
