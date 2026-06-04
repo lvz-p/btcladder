@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.41 PWA';
+const VERSION='BtcLadder v1.1.41d PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3732,7 +3732,19 @@ function _renderDiagToEl(el){
     const _chartH=Math.round(parseFloat(_card?.style.height)||0);
     return `vh:${window.innerHeight} cardH:${_cardH} | ladderCard:${_ladderH} toggleH:${_toggleH} canvasH:${_canvasH} | chartCard:${_chartH} ctrl:${_ctrlH} leg:${_legendH} svgH:${_svgH}`;
   })();
+  const _dbg2=(()=>{
+    const _shell=document.getElementById('chartShell');
+    const _card=document.getElementById('tlSection');
+    const _sh=Math.round(document.body.scrollHeight);
+    const _vh=window.innerHeight;
+    const _lH=Math.round(parseFloat(_shell?.style.height)||0);
+    const _cH=Math.round(parseFloat(_card?.style.height)||0);
+    const _toggle=document.getElementById('ladderToggleBar');
+    const _tH=Math.round(_toggle?.getBoundingClientRect().height||0);
+    return `vh:${_vh} scrollH:${_sh} overflow:${_sh-_vh} | ladderCard:${_lH} toggleH:${_tH} | chartCard:${_cH}`;
+  })();
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
+  <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px;word-break:break-all">📐 ${_dbg2}</div>
   <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px;word-break:break-all">📐 ${_dbg}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
