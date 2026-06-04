@@ -206,6 +206,7 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 .labels-col-touch{touch-action:pan-y} /* let browser scroll */
 .empty-chart{display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:13px;border:1px dashed var(--border2);border-radius:var(--r);margin:12px}
 .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:12px}
+.section.view-card{margin-top:0} /* no margin-top when used as full-screen view card */
 .section summary{display:flex;align-items:center;gap:10px;padding:13px 18px;cursor:pointer;list-style:none;font-size:14px;font-weight:700;color:var(--text);transition:background .12s}
 .section summary:hover{background:rgba(255,255,255,.02)}
 .section summary::-webkit-details-marker{display:none}
@@ -558,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.40 PWA';
+const VERSION='BtcLadder v1.1.41 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
