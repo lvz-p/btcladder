@@ -397,7 +397,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 <div class="chart-shell" id="chartShell">
   <!-- Toggle bar inside ladder card -->
-  <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+  <div id="ladderToggleBar" style="padding:8px 12px;border-bottom:1px solid var(--border)">
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
       <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
       <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
@@ -558,7 +558,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.38 PWA';
+const VERSION='BtcLadder v1.1.40 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3828,7 +3828,7 @@ function sizeLadderCard(){
   const shell=document.getElementById('chartShell');
   if(!shell)return;
   const cardH=getCardHeight();
-  const toggleBar=shell.querySelector('#rangeBtn')?.closest('[style*="border-bottom"]');
+  const toggleBar=document.getElementById('ladderToggleBar');
   const toggleH=toggleBar?toggleBar.getBoundingClientRect().height:46;
   const canvasH=Math.max(MIN_CANVAS,cardH-toggleH);
   const actualCardH=toggleH+canvasH;
@@ -3893,8 +3893,8 @@ if('serviceWorker' in navigator){
       <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden">
         <button id="infoTabGuide" onclick="switchInfoTab('guide')" style="border:none;padding:6px 16px;font-size:12px;font-family:var(--mono);cursor:pointer;background:var(--btc);color:#000;font-weight:700">Guide</button>
         <button id="infoTabDiag" onclick="switchInfoTab('diag')" style="border:none;padding:6px 16px;font-size:12px;font-family:var(--mono);cursor:pointer;background:transparent;color:var(--muted)">Diagnostics</button>
-      <span id="modalVersion" style="font-size:11px;font-family:var(--mono);color:var(--muted)"></span>
       </div>
+      <span id="modalVersion" style="font-size:11px;font-family:var(--mono);color:var(--muted)"></span>
       <button onclick="document.getElementById('infoModal').style.display='none'" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:0">×</button>
     </div>
     <div id="infoContentGuide" style="padding:18px;max-height:70vh;overflow-y:auto"></div>
