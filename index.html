@@ -264,7 +264,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-legend-group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);cursor:pointer;user-select:none;flex-shrink:0;width:90px;padding-top:2px}
 .tl-legend-group-label.all-off{text-decoration:line-through;opacity:.4}
 .tl-legend-group-hdr{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);flex-shrink:0;width:76px;cursor:pointer;user-select:none;padding-top:2px}
-.tl-legend-group-btns{flex:1;display:flex;flex-wrap:wrap;gap:5px;row-gap:5px}
+.tl-legend-group-btns{flex:1;display:flex;flex-wrap:wrap;gap:3px;row-gap:4px}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
 .tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:visible;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.42 PWA';
+const VERSION='BtcLadder v1.1.43 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
