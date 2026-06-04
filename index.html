@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.57 PWA';
+const VERSION='BtcLadder v1.1.57d PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3717,7 +3717,23 @@ function _renderDiagToEl(el){
     :{name:'URPD',ok:false,msg:'No data loaded'};
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
+  const _dbg=(()=>{
+    const _hdr=document.querySelector('.hdr');
+    const _hero=document.getElementById('heroSection');
+    const _lc=document.getElementById('chartShell');
+    const _cc=document.getElementById('tlSection');
+    const _hdrH=Math.round(_hdr?.getBoundingClientRect().height||0);
+    const _heroH=Math.round(_hero?.getBoundingClientRect().height||0);
+    const _above=24+_hdrH+12+_heroH+14;
+    const _padBot=window.innerWidth>=641?8:60;
+    const _avail=Math.floor(window.innerHeight-_above-_padBot-16);
+    const _minH=window.innerWidth>=641?646:536;
+    let _ccH=0;
+    if(_cc){const _was=_cc.style.display==='none';if(_was){_cc.style.visibility='hidden';_cc.style.display='block';}_ccH=_cc.scrollHeight;if(_was){_cc.style.display='none';_cc.style.visibility='';}}
+    return `vh:${window.innerHeight} hdr:${_hdrH} hero:${_heroH} avail:${_avail} minH:${_minH} ladderH:${_lc?.style.height||'?'} chartContentH:${_ccH} chartH:${_cc?.style.height||'?'} mob:${window.innerWidth<641}`;
+  })();
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
+  <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px;word-break:break-all">📐 ${_dbg}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
   </tbody></table>`;
