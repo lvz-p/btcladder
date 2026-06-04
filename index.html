@@ -262,7 +262,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-legend-group:last-child{border-bottom:none}
 .tl-legend-group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);cursor:pointer;user-select:none;flex-shrink:0;width:90px;padding-top:2px}
 .tl-legend-group-label.all-off{text-decoration:line-through;opacity:.4}
-.tl-legend-group-hdr{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);flex-shrink:0;width:90px;cursor:pointer;user-select:none;padding-top:2px}
+.tl-legend-group-hdr{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);flex-shrink:0;width:76px;cursor:pointer;user-select:none;padding-top:2px}
 .tl-legend-group-btns{flex:1;display:flex;flex-wrap:wrap;gap:5px;row-gap:5px}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tl-status{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
@@ -456,7 +456,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
     <div id="tlTip" class="tlTip"></div>
     <div id="tlLegendWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:0;padding:0 18px">
-      <div class="tl-legend-group" id="tlLegTLGroup"><span class="tl-legend-group-hdr" id="tlLegTLLabel">Trendlines</span><div class="tl-legend-group-btns" id="tlLegend"></div></div>
+      <div class="tl-legend-group" id="tlLegTLGroup"><span class="tl-legend-group-hdr" id="tlLegTLLabel">Trends</span><div class="tl-legend-group-btns" id="tlLegend"></div></div>
       <div class="tl-legend-group" id="tlLegMAGroup"><span class="tl-legend-group-hdr" id="tlLegMALabel">MAs</span><div class="tl-legend-group-btns" id="tlMALegend"></div></div>
       <div class="tl-legend-group" id="tlLegOCGroup"><span class="tl-legend-group-hdr" id="tlLegOCLabel">On-chain</span><div class="tl-legend-group-btns" id="tlOCLegend"></div></div>
     </div>
@@ -558,7 +558,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.34d PWA';
+const VERSION='BtcLadder v1.1.38 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2415,6 +2415,7 @@ function tl_draw(mode,fast=false){
   tl_renderLegend(lines);
   tl_renderMALegend(mode,MA_CONFIG[mode]||[]);
   tl_renderOCLegend(OC_CONFIG);
+  /* size chart after legend — only matters on first render when pre-sizing couldn't run */
   requestAnimationFrame(()=>{if(typeof sizeChartCard==='function')sizeChartCard();});
 }
 
@@ -3673,6 +3674,8 @@ async function msmFetchAndInit(){
 setTimeout(msmFetchAndInit,500);
 
 function showInfoModal(){
+  const mv=document.getElementById('modalVersion');
+  if(mv)mv.textContent=VERSION;
   /* populate guide content from existing gsec sections */
   const guideEl=document.getElementById('infoContentGuide');
   if(guideEl&&!guideEl.innerHTML.trim()){
@@ -3748,6 +3751,7 @@ function switchView(){
   const ladderCard=document.getElementById('chartShell');
   const chartCard=document.getElementById('tlSection');
   const icon=document.getElementById('viewSwitchIcon');
+  const savedScroll=window.scrollY;
   if(_activeView==='ladder'){
     ladderCard.style.opacity='0';
     ladderCard.style.transition='opacity .18s';
@@ -3755,20 +3759,25 @@ function switchView(){
       ladderCard.style.display='none';
       ladderCard.style.opacity='1';
       chartCard.style.display='block';
+      window.scrollTo({top:savedScroll,behavior:'instant'});
       chartCard.style.opacity='0';
       chartCard.style.transition='opacity .18s';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{chartCard.style.opacity='1';}));
       if(icon)icon.innerHTML=_svgLadder;
       _activeView='chart';
+      /* size chart card first if legend already rendered, then draw */
+      if(typeof sizeChartCard==='function')sizeChartCard();
       /* render chart */
       const svgEl=document.getElementById('tlSvg');
       if(svgEl){
+        /* hide SVG until sized and drawn to prevent jump */
+        svgEl.style.visibility='hidden';
         let _r=false;
         const _ro=new ResizeObserver(entries=>{
-          for(const e of entries){if(e.contentRect.width>100&&!_r){_r=true;_ro.disconnect();window._tlForcedWidth=e.contentRect.width;tl_draw(tlViewerMode);window._tlForcedWidth=null;}}
+          for(const e of entries){if(e.contentRect.width>100&&!_r){_r=true;_ro.disconnect();window._tlForcedWidth=e.contentRect.width;tl_draw(tlViewerMode);window._tlForcedWidth=null;requestAnimationFrame(()=>{svgEl.style.visibility='visible';});}}
         });
         _ro.observe(svgEl);
-        setTimeout(()=>{if(!_r){_ro.disconnect();tl_draw(tlViewerMode);}},2000);
+        setTimeout(()=>{if(!_r){_ro.disconnect();tl_draw(tlViewerMode);svgEl.style.visibility='visible';}},2000);
       }
       setTimeout(tl_fetchOCData,200);
     },180);
@@ -3779,6 +3788,7 @@ function switchView(){
       chartCard.style.display='none';
       chartCard.style.opacity='1';
       ladderCard.style.display='block';
+      window.scrollTo({top:savedScroll,behavior:'instant'});
       ladderCard.style.opacity='0';
       ladderCard.style.transition='opacity .18s';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{ladderCard.style.opacity='1';}));
@@ -3807,7 +3817,7 @@ function getCardHeight(){
   const heroH=hero.getBoundingClientRect().height;
   const isMob=window.innerWidth<641;
   const padTop=isMob?8:24;
-  const padBot=isMob?20:30;
+  const padBot=isMob?25:35; /* +5px buffer for subpixel overflow */
   const hdrMarginBot=isMob?8:12;
   const heroMarginBot=isMob?10:14;
   const cardMarginBot=16;
@@ -3883,6 +3893,7 @@ if('serviceWorker' in navigator){
       <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden">
         <button id="infoTabGuide" onclick="switchInfoTab('guide')" style="border:none;padding:6px 16px;font-size:12px;font-family:var(--mono);cursor:pointer;background:var(--btc);color:#000;font-weight:700">Guide</button>
         <button id="infoTabDiag" onclick="switchInfoTab('diag')" style="border:none;padding:6px 16px;font-size:12px;font-family:var(--mono);cursor:pointer;background:transparent;color:var(--muted)">Diagnostics</button>
+      <span id="modalVersion" style="font-size:11px;font-family:var(--mono);color:var(--muted)"></span>
       </div>
       <button onclick="document.getElementById('infoModal').style.display='none'" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:0">×</button>
     </div>
