@@ -37,7 +37,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-synthesis:none;-webkit-font-smoothing:antialiased}
 body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:100vh;padding:24px 20px 60px}
-@media(min-width:641px){body{padding-bottom:8px}}
 .wrap{max-width:960px;margin:0 auto}
 
 /* HEADER — fix: only title + status dot, no timestamp line */
@@ -282,7 +281,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-x-lbl{position:absolute;top:50%;font-size:11px;font-family:var(--mono);color:#94a3b8;transform:translate(-50%,-50%);white-space:nowrap;line-height:1;text-align:center}
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
-@media(min-width:641px){#tlSvg{height:496px!important}}
 @media(max-width:640px){
   body{padding:8px 12px 40px}
   /* header: compact, no wrap, less bottom margin */
@@ -314,7 +312,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   /* chart */
   .chart-inner{grid-template-columns:36px 1fr 222px}
   /* ladder canvas 500px on mobile */
-  /* canvas height now dynamic — set by renderChart */
+  /* canvas height set by JS */
 }
 
 /* ── MSM: Market State Model ── */
@@ -339,7 +337,8 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .view-switch-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 
-/* ── Card heights set by JS ── */
+/* ── Dynamic sizing ── */
+.chart-shell{overflow:hidden}
 .section.view-card{overflow:hidden}
 </style>
 </head>
@@ -365,7 +364,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="hero-price">
       <span class="price-big" id="priceVal">—</span>
       <div style="display:flex;align-items:flex-end;gap:8px;min-height:24px">
-        <div class="price-chg-wrap" id="priceChgWrap" style="visibility:hidden">
+        <div class="price-chg-wrap" id="priceChgWrap" style="display:none">
           <span class="price-chg-lbl">24h</span>
           <span class="price-chg" id="priceChg"></span>
         </div>
@@ -448,7 +447,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </select>
     </div>
     <div class="tl-chart-wrap" style="position:relative;touch-action:none">
-      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:390px;cursor:default;pointer-events:all;touch-action:none;display:block;width:100%"></svg>
+      <svg id="tlSvg" viewBox="0 0 1100 520" preserveAspectRatio="none" style="height:390px;cursor:default;pointer-events:all;touch-action:none;display:block"></svg>
       <div class="tl-y-axis" id="tlYAxis"></div>
       <div class="tl-x-axis" id="tlXAxis"></div>
 
@@ -559,7 +558,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.59 PWA';
+const VERSION='BtcLadder v1.1.34d PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -906,14 +905,8 @@ function renderChart(cur,ma,oc,tl=[]){
   const lo=zoomLo!==null?zoomLo:rawLo-pad;
   const hi=zoomHi!==null?zoomHi:rawHi+pad;
   const range=hi-lo;
-  /* dynamic canvas height — fills card minus toggle bar */
-  const _shell=document.getElementById('chartShell');
-  const _toggleBar=_shell?.querySelector('[style*="border-bottom"]');
-  const _shellH=_shell?_shell.offsetHeight:600;
-  const _toggleH=_toggleBar?_toggleBar.offsetHeight:46;
-  /* minimum = original fixed canvas size per screen */
-  const _minH=window.innerWidth>=641?600:490;
-  const H=Math.max(_minH,_shellH-_toggleH-2);
+  const _ci=document.getElementById('chartInner');
+  const H=Math.max(350,_ci?(_ci.offsetHeight||350):350);
   const toY=p=>((hi-p)/range*H);
   const btcY=toY(cur);
   const btcYpct=(btcY/H*100).toFixed(2);
@@ -1598,6 +1591,7 @@ function renderDiag(){
 }
 function rerender(){
   if(!lastCurrent)return;
+  if(typeof sizeLadderCard==="function")sizeLadderCard();
   renderChart(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderTable(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
@@ -1625,7 +1619,7 @@ async function refreshAll(){
       if(Number.isFinite(chg)){
         $('priceChg').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
         $('priceChg').className='price-chg '+(chg>=0?'up':'dn');
-        $('priceChgWrap').style.visibility='visible';
+        $('priceChgWrap').style.display='';
       }
     }catch(_){}
     setStatus('loading');
@@ -1643,8 +1637,6 @@ async function refreshAll(){
     if(document.getElementById('tlSection')?.style.display!=='none')tl_draw(tlViewerMode);
     setStatus('ok');
     rerender();
-    /* remeasure after all data loaded and rendered */
-    setTimeout(()=>{if(typeof updateCardHeight==='function')updateCardHeight();},200);
     /* compute news in background — doesn't block render */
     window._tlOCData=null; /* invalidate OC cache on refresh */
     _tlOCFetching=false; /* reset fetch flag */
@@ -2423,6 +2415,7 @@ function tl_draw(mode,fast=false){
   tl_renderLegend(lines);
   tl_renderMALegend(mode,MA_CONFIG[mode]||[]);
   tl_renderOCLegend(OC_CONFIG);
+  requestAnimationFrame(()=>{if(typeof sizeChartCard==='function')sizeChartCard();});
 }
 
 /* MA and OC visibility state */
@@ -3243,7 +3236,7 @@ async function refreshPriceOnly(){
       if(Number.isFinite(chg)){
         $('priceChg').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
         $('priceChg').className='price-chg '+(chg>=0?'up':'dn');
-        $('priceChgWrap').style.visibility='visible';
+        $('priceChgWrap').style.display='';
       }
     }catch(_){}
     /* update nearest support/resistance */
@@ -3717,7 +3710,26 @@ function _renderDiagToEl(el){
     :{name:'URPD',ok:false,msg:'No data loaded'};
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
+  const _dbg=(()=>{
+    const _shell=document.getElementById('chartShell');
+    const _card=document.getElementById('tlSection');
+    const _legendWrap=document.getElementById('tlLegendWrap');
+    const _ctrlRow=_card?.querySelector('.tl-ctrl-row');
+    const _svg=document.getElementById('tlSvg');
+    const _ci=document.getElementById('chartInner');
+    const _cardH=typeof getCardHeight==='function'?getCardHeight():0;
+    const _toggleBar=_shell?.querySelector('#rangeBtn')?.closest('[style*="border-bottom"]');
+    const _toggleH=Math.round(_toggleBar?.getBoundingClientRect().height||0);
+    const _canvasH=Math.round(parseFloat(_ci?.style.height)||0);
+    const _ladderH=Math.round(parseFloat(_shell?.style.height)||0);
+    const _ctrlH=Math.round(_ctrlRow?.getBoundingClientRect().height||0);
+    const _legendH=Math.round(_legendWrap?.getBoundingClientRect().height||0);
+    const _svgH=Math.round(parseFloat(_svg?.style.height)||0);
+    const _chartH=Math.round(parseFloat(_card?.style.height)||0);
+    return `vh:${window.innerHeight} cardH:${_cardH} | ladderCard:${_ladderH} toggleH:${_toggleH} canvasH:${_canvasH} | chartCard:${_chartH} ctrl:${_ctrlH} leg:${_legendH} svgH:${_svgH}`;
+  })();
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
+  <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px;word-break:break-all">📐 ${_dbg}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
   </tbody></table>`;
@@ -3736,8 +3748,6 @@ function switchView(){
   const ladderCard=document.getElementById('chartShell');
   const chartCard=document.getElementById('tlSection');
   const icon=document.getElementById('viewSwitchIcon');
-  /* save scroll position — restore after switch to prevent browser auto-scroll */
-  const savedScroll=window.scrollY;
   if(_activeView==='ladder'){
     ladderCard.style.opacity='0';
     ladderCard.style.transition='opacity .18s';
@@ -3750,7 +3760,6 @@ function switchView(){
       requestAnimationFrame(()=>requestAnimationFrame(()=>{chartCard.style.opacity='1';}));
       if(icon)icon.innerHTML=_svgLadder;
       _activeView='chart';
-      window.scrollTo(0,savedScroll);
       /* render chart */
       const svgEl=document.getElementById('tlSvg');
       if(svgEl){
@@ -3775,59 +3784,73 @@ function switchView(){
       requestAnimationFrame(()=>requestAnimationFrame(()=>{ladderCard.style.opacity='1';}));
       if(icon)icon.innerHTML=_svgChart;
       _activeView='ladder';
-      window.scrollTo(0,savedScroll);
       if(typeof rerender==='function')requestAnimationFrame(rerender);
     },180);
   }
 }
 
 
-/* ── Dynamic card height: set directly via JS ── */
-function updateCardHeight(){
+/* ══ DYNAMIC CARD SIZING ══
+   Both cards: height = available space between hero and bottom padding
+   Ladder: canvas = card - toggleBar (min 464px); card grows if needed
+   Chart:  svg = card - controls - legend (min 350px); card grows if needed
+   Both cards grow independently — browser scrolls if needed
+*/
+const MIN_CANVAS=464;
+const MIN_SVG=350;
+
+function getCardHeight(){
   const hdr=document.querySelector('.hdr');
   const hero=document.getElementById('heroSection');
-  const ladderCard=document.getElementById('chartShell');
-  const chartCard=document.getElementById('tlSection');
-  if(!hdr||!hero||!ladderCard)return;
-  const isMobile=window.innerWidth<641;
-  const minH=isMobile?536:646;
-  /* temporarily remove height constraints to measure natural positions */
-  ladderCard.style.height='';
+  if(!hdr||!hero)return 600;
   const hdrH=hdr.getBoundingClientRect().height;
-  const hdrMargin=12;
   const heroH=hero.getBoundingClientRect().height;
-  const heroMargin=14;
-  const bodyPadTop=24;
-  const bodyPadBot=60;
+  const isMob=window.innerWidth<641;
+  const padTop=isMob?8:24;
+  const padBot=isMob?20:30;
+  const hdrMarginBot=isMob?8:12;
+  const heroMarginBot=isMob?10:14;
   const cardMarginBot=16;
-  const bodyPadBotActual=window.innerWidth>=641?8:bodyPadBot;
-  const above=bodyPadTop+hdrH+hdrMargin+heroH+heroMargin;
-  const available=Math.floor(window.innerHeight-above-bodyPadBotActual-cardMarginBot);
-  ladderCard.style.height='';
-  /* use hardcoded chart content min to avoid measurement timing issues */
-  /* mobile: controls(40)+svg(390)+legend(~110)=540; desktop: controls(40)+svg(496)+legend(~110)=646 */
-  const chartContentMin=isMobile?556:660;
-  const sharedMinH=Math.max(minH,chartContentMin);
-  const ladderH=Math.max(available,sharedMinH);
-  const chartH=Math.max(available,sharedMinH);
-  ladderCard.style.height=ladderH+'px';
-  if(chartCard)chartCard.style.height=chartH+'px';
-  /* trigger rerender so canvas H recalculates — guarded to prevent loop */
-  if(!window._updatingCardH){
-    window._updatingCardH=true;
-    clearTimeout(window._cardRerenderTimer);
-    window._cardRerenderTimer=setTimeout(()=>{
-      if(typeof rerender==='function'&&typeof lastCurrent!=='undefined'&&lastCurrent)rerender();
-      window._updatingCardH=false;
-    },100);
-  }
+  return Math.floor(window.innerHeight-padTop-hdrH-hdrMarginBot-heroH-heroMarginBot-padBot-cardMarginBot);
 }
-/* run after DOM fully rendered — multiple times to catch late renders */
-window.addEventListener('load',updateCardHeight);
-setTimeout(updateCardHeight,100);
-setTimeout(updateCardHeight,500);
-setTimeout(updateCardHeight,1500);
-window.addEventListener('resize',()=>{clearTimeout(window._aboveHTimer);window._aboveHTimer=setTimeout(updateCardHeight,100);});
+
+function sizeLadderCard(){
+  const shell=document.getElementById('chartShell');
+  if(!shell)return;
+  const cardH=getCardHeight();
+  const toggleBar=shell.querySelector('#rangeBtn')?.closest('[style*="border-bottom"]');
+  const toggleH=toggleBar?toggleBar.getBoundingClientRect().height:46;
+  const canvasH=Math.max(MIN_CANVAS,cardH-toggleH);
+  const actualCardH=toggleH+canvasH;
+  shell.style.height=actualCardH+'px';
+  const ci=document.getElementById('chartInner');
+  if(ci)ci.style.height=canvasH+'px';
+  ['canvasCol','axisPriceCol','labelsCol'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.height=canvasH+'px';
+  });
+}
+
+function sizeChartCard(){
+  const card=document.getElementById('tlSection');
+  if(!card)return;
+  const legendWrap=document.getElementById('tlLegendWrap');
+  if(!legendWrap||!legendWrap.children.length)return;
+  const cardH=getCardHeight();
+  const ctrlRow=card.querySelector('.tl-ctrl-row');
+  const ctrlH=ctrlRow?ctrlRow.getBoundingClientRect().height:40;
+  const legendH=legendWrap.getBoundingClientRect().height;
+  const fixed=ctrlH+10+legendH+24; /* ctrlH + legendMarginTop(10) + legendH + viewerPad(24) */
+  const svgH=Math.max(MIN_SVG,cardH-fixed);
+  const actualCardH=fixed+svgH;
+  card.style.height=actualCardH+'px';
+  const svg=document.getElementById('tlSvg');
+  if(svg)svg.style.height=svgH+'px';
+}
+
+function sizeCards(){sizeLadderCard();sizeChartCard();}
+
+window.addEventListener('load',()=>{setTimeout(sizeLadderCard,50);setTimeout(sizeLadderCard,300);setTimeout(sizeCards,1000);});
+window.addEventListener('resize',()=>{clearTimeout(window._sizeTimer);window._sizeTimer=setTimeout(sizeCards,80);});
 
 </script>
 <script>
