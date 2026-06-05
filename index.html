@@ -106,7 +106,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .leg-dot-btc{width:10px;height:10px;border-radius:50%;background:var(--btc);flex-shrink:0}
 /* legend toggle button on/off states */
 button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;cursor:pointer;font-family:var(--font);font-size:10px;background:var(--surface)}
-button.leg.tog.tier1{font-size:12px;padding:4px 11px;font-weight:700;min-height:22px;box-sizing:border-box}
+button.leg.tog.tier1{font-size:12px;padding:4px 10px;font-weight:700;min-height:22px;box-sizing:border-box}
 #maExpandBtn{font-size:13px;padding:2px 8px}
 .ma-t2{font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:.05em;cursor:pointer;text-transform:uppercase;transition:all .12s;user-select:none}
 .rng-t2{font-size:11px;font-family:var(--mono);font-weight:700;cursor:pointer;transition:all .12s;user-select:none;color:var(--muted);opacity:.45}
@@ -347,30 +347,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   .btn{font-size:11px;padding:4px 10px}
 }
 @media(max-width:640px){
-  /* hide pips in ladder toggle pills on mobile */
-  .leg-pip{display:none}
-  /* .leg-zone visible on mobile — zone button keeps its icon */
-  /* hide URPD bars icon — keep text, muted color */
-  #urpdBtn>div{display:none!important}
-  #urpdBtn{color:var(--muted)!important}
-  /* hide State gradient bar icon */
-  #msmBtn>div{display:none!important}
-  /* MA pill — gradient text */
-  #maBtn{background:transparent}
-  #maBtn .leg-pip{display:none}
-  /* Trends pill — diagonal split background */
-  [data-cat="TL"]{background:linear-gradient(135deg,rgba(74,222,128,0.3) 0%,rgba(74,222,128,0.3) 45%,rgba(248,113,113,0.3) 55%,rgba(248,113,113,0.3) 100%) !important;border-color:transparent !important}
-  [data-cat="TL"] .leg-pip{display:none}
-  /* On-chain pill — amber text */
-  [data-cat="onchain"] .leg-pip{display:none}
-}
-@media(max-width:640px){
-  .ma-label{color:var(--muted);-webkit-text-fill-color:var(--muted)}
-}
-@media(max-width:640px){
-  [data-cat="onchain"]{color:#f59e0b !important}
-}
-@media(max-width:640px){
   .tl-leg-btn{font-size:11px}
   .btn{font-size:11px}
 }</style>
@@ -434,13 +410,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
       <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
       <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div><span class="ma-label">MA</span></button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
+        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 10px 4px 10px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
       </span>
       <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
       <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button>
       <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
       <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
-      <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div><span class="state-label">State</span></button>
+      <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
     </div>
     <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
       <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
@@ -591,7 +567,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.51 PWA';
+const VERSION='BtcLadder v1.1.52 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1070,8 +1046,7 @@ function renderChart(cur,ma,oc,tl=[]){
     const _bfs=_isMob?'10px':'11px';
     const _bpad=_isMob?'1px 4px':'2px 6px';
     canvas+=`<div id="msmBadge" onclick="msmShowTooltip(event)" ontouchend="event.preventDefault();event.stopPropagation();msmShowTooltip(event);" style="position:absolute;left:${badgeLeft}%;top:${curYpct}%;transform:translateY(-50%);z-index:10;background:rgba(12,15,25,0.92);color:${zoneCol[curZone]};font-size:${_bfs};font-weight:700;font-family:var(--mono);padding:${_bpad};border-radius:3px;cursor:pointer;pointer-events:all;letter-spacing:.05em;white-space:nowrap">${curZone}</div>`;
-    /* update State pill text color on mobile */
-    if(_isMob){requestAnimationFrame(()=>{const sl=document.querySelector('#msmBtn .state-label');if(sl){sl.style.color=zoneCol[curZone];sl.style.webkitTextFillColor=zoneCol[curZone];}});}
+
   }
 
   /* tip store — keyed by code string */
