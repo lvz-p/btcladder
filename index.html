@@ -349,7 +349,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 @media(max-width:640px){
   /* hide pips in ladder toggle pills on mobile */
   .leg-pip{display:none}
-  .leg-zone{display:none}
+  /* .leg-zone visible on mobile — zone button keeps its icon */
   /* hide URPD bars icon — keep text, muted color */
   #urpdBtn>div{display:none!important}
   #urpdBtn{color:var(--muted)!important}
@@ -359,13 +359,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   #maBtn{background:transparent}
   #maBtn .leg-pip{display:none}
   /* Trends pill — diagonal split background */
-  [data-cat="TL"]{background:linear-gradient(135deg,rgba(74,222,128,0.25) 0%,rgba(248,113,113,0.25) 100%) !important;border-color:transparent !important}
+  [data-cat="TL"]{background:linear-gradient(135deg,rgba(74,222,128,0.3) 0%,rgba(74,222,128,0.3) 45%,rgba(248,113,113,0.3) 55%,rgba(248,113,113,0.3) 100%) !important;border-color:transparent !important}
   [data-cat="TL"] .leg-pip{display:none}
   /* On-chain pill — amber text */
   [data-cat="onchain"] .leg-pip{display:none}
 }
 @media(max-width:640px){
-  .ma-label{background:linear-gradient(90deg,var(--col-D) 0%,var(--col-W) 50%,var(--col-M) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .ma-label{color:var(--muted);-webkit-text-fill-color:var(--muted)}
 }
 @media(max-width:640px){
   [data-cat="onchain"]{color:#f59e0b !important}
@@ -591,7 +591,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.50 PWA';
+const VERSION='BtcLadder v1.1.51 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3748,26 +3748,7 @@ function _renderDiagToEl(el){
     :{name:'URPD',ok:false,msg:'No data loaded'};
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,urpdRow];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
-  const _dbg=(()=>{
-    const _shell=document.getElementById('chartShell');
-    const _card=document.getElementById('tlSection');
-    const _legendWrap=document.getElementById('tlLegendWrap');
-    const _ctrlRow=_card?.querySelector('.tl-ctrl-row');
-    const _svg=document.getElementById('tlSvg');
-    const _ci=document.getElementById('chartInner');
-    const _cardH=typeof getCardHeight==='function'?getCardHeight():0;
-    const _toggleBar=_shell?.querySelector('#rangeBtn')?.closest('[style*="border-bottom"]');
-    const _toggleH=Math.round(_toggleBar?.getBoundingClientRect().height||0);
-    const _canvasH=Math.round(parseFloat(_ci?.style.height)||0);
-    const _ladderH=Math.round(parseFloat(_shell?.style.height)||0);
-    const _ctrlH=Math.round(_ctrlRow?.getBoundingClientRect().height||0);
-    const _legendH=Math.round(_legendWrap?.getBoundingClientRect().height||0);
-    const _svgH=Math.round(parseFloat(_svg?.style.height)||0);
-    const _chartH=Math.round(parseFloat(_card?.style.height)||0);
-    return `vh:${window.innerHeight} cardH:${_cardH} | ladderCard:${_ladderH} toggleH:${_toggleH} canvasH:${_canvasH} | chartCard:${_chartH} ctrl:${_ctrlH} leg:${_legendH} svgH:${_svgH}`;
-  })();
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
-  <div style="font-size:11px;color:#fbbf24;font-family:var(--mono);margin-bottom:8px;padding:6px;background:rgba(251,191,36,.1);border-radius:4px;word-break:break-all">📐 ${_dbg}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td style="color:var(--text)">${r.name}</td><td class="${r.ok?'ok':'bad'}">${r.ok?'OK':'Fail'}</td><td>${String(r.msg||'').replace(/[<>]/g,'')}</td></tr>`).join('')}
   </tbody></table>`;
@@ -3841,8 +3822,8 @@ function switchView(){
    Chart:  svg = card - controls - legend (min 350px); card grows if needed
    Both cards grow independently — browser scrolls if needed
 */
-const MIN_CANVAS=464;
-const MIN_SVG=350;
+const MIN_CANVAS=465;
+const MIN_SVG=342;
 
 function getCardHeight(){
   const hdr=document.querySelector('.hdr');
@@ -3864,7 +3845,10 @@ function sizeLadderCard(){
   if(!shell)return;
   const cardH=getCardHeight();
   const toggleBar=document.getElementById('ladderToggleBar');
-  const toggleH=toggleBar?toggleBar.getBoundingClientRect().height:46;
+  const measured=toggleBar?toggleBar.getBoundingClientRect().height:0;
+  /* cache first valid measurement — getBoundingClientRect returns 0 when parent is hidden */
+  if(measured>0)window._cachedToggleH=measured;
+  const toggleH=window._cachedToggleH||46;
   const canvasH=Math.max(MIN_CANVAS,cardH-toggleH);
   const actualCardH=toggleH+canvasH;
   shell.style.height=actualCardH+'px';
@@ -3882,9 +3866,13 @@ function sizeChartCard(){
   if(!legendWrap||!legendWrap.children.length)return;
   const cardH=getCardHeight();
   const ctrlRow=card.querySelector('.tl-ctrl-row');
-  const ctrlH=ctrlRow?ctrlRow.getBoundingClientRect().height:40;
-  const legendH=legendWrap.getBoundingClientRect().height;
-  const fixed=ctrlH+10+legendH+24; /* ctrlH + legendMarginTop(10) + legendH + viewerPad(24) */
+  const measuredCtrl=ctrlRow?ctrlRow.getBoundingClientRect().height:0;
+  const measuredLeg=legendWrap.getBoundingClientRect().height;
+  if(measuredCtrl>0)window._cachedCtrlH=measuredCtrl;
+  if(measuredLeg>0)window._cachedLegH=measuredLeg;
+  const ctrlH=window._cachedCtrlH||24;
+  const legendH=window._cachedLegH||107;
+  const fixed=ctrlH+10+legendH+24;
   const svgH=Math.max(MIN_SVG,cardH-fixed);
   const actualCardH=fixed+svgH;
   card.style.height=actualCardH+'px';
