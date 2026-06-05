@@ -341,7 +341,40 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 /* ── Dynamic sizing ── */
 .chart-shell{overflow:hidden}
 .section.view-card{overflow:hidden}
-</style>
+
+@media(min-width:641px){
+  .tl-leg-btn{font-size:11px;padding:3px 8px}
+  .btn{font-size:11px;padding:4px 10px}
+}
+@media(max-width:640px){
+  /* hide pips in ladder toggle pills on mobile */
+  .leg-pip{display:none}
+  .leg-zone{display:none}
+  /* hide URPD bars icon — keep text */
+  #urpdBtn>div{display:none}
+  /* hide State gradient bar icon */
+  #msmBtn>div{display:none}
+  /* MA pill — gradient text */
+  #maBtn{background:transparent}
+  #maBtn .leg-pip{display:none}
+  /* Trends pill — diagonal split background */
+  [data-cat="TL"]{background:linear-gradient(135deg,rgba(74,222,128,0.25) 0%,rgba(248,113,113,0.25) 100%) !important;border-color:transparent !important}
+  [data-cat="TL"] .leg-pip{display:none}
+  /* On-chain pill — amber text */
+  [data-cat="onchain"] .leg-pip{display:none}
+}
+@media(max-width:640px){
+  .ma-label{background:linear-gradient(90deg,var(--col-D) 0%,var(--col-W) 50%,var(--col-M) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+}
+@media(max-width:640px){
+  [data-cat="onchain"]{color:#f59e0b !important}
+}
+@media(max-width:640px){
+  #msmBtn .state-label{background:linear-gradient(90deg,rgba(185,28,28,0.9) 0%,rgba(217,119,6,0.8) 25%,rgba(100,116,139,0.7) 50%,rgba(100,149,237,0.8) 75%,rgba(67,56,202,0.9) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+}
+@media(max-width:640px){
+  #msmBtn .state-label{background:linear-gradient(90deg,rgba(185,28,28,0.9) 0%,rgba(217,119,6,0.8) 25%,rgba(100,116,139,0.7) 50%,rgba(100,149,237,0.8) 75%,rgba(67,56,202,0.9) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+}</style>
 </head>
 <body>
 <div class="wrap">
@@ -402,13 +435,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
       <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
       <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
+        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 11px 4px 11px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div><span class="ma-label">MA</span></button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
       </span>
       <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
       <button class="leg tog tier1 on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button>
       <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
       <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
-      <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
+      <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div><span class="state-label">State</span></button>
     </div>
     <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
       <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
@@ -559,7 +592,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.47 PWA';
+const VERSION='BtcLadder v1.1.48 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2070,8 +2103,8 @@ function tl_draw(mode,fast=false){
   const OC_CONFIG=[
     {key:'RP',   label:'RP',    col:'#fbbf24', dash:null,       width:2},
     {key:'TMM',  label:'TMM',   col:'#f59e0b', dash:'6,3',      width:1.5},
-    {key:'STHCB',label:'STHCB', col:'#fcd34d', dash:'2,3',      width:1.5},
-    {key:'LTHCB',label:'LTHCB', col:'#d97706', dash:'8,3,2,3',  width:1.5},
+    {key:'STHCB',label:window.innerWidth<641?'STH':'STHCB', col:'#fcd34d', dash:'2,3',      width:1.5},
+    {key:'LTHCB',label:window.innerWidth<641?'LTH':'LTHCB', col:'#d97706', dash:'8,3,2,3',  width:1.5},
   ];
 
   /* ── y scale: fit visible candles + MA values + trendlines ── */
