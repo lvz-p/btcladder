@@ -283,7 +283,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tlTip{position:fixed;pointer-events:none;background:var(--surface);color:var(--text);border:.5px solid var(--border2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--mono);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:9999;display:none}
 .footer{text-align:center;font-size:12px;color:var(--muted2);margin-top:20px;font-family:var(--mono)}
 @media(max-width:640px){
-  body{padding:8px 10px 25px}
+  body{padding:8px 10px 20px}
   /* header: compact, no wrap, less bottom margin */
   .hdr{flex-wrap:nowrap;align-items:center;margin-bottom:8px}
   .hdr-title{white-space:nowrap;font-size:14px}
@@ -559,7 +559,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.46 PWA';
+const VERSION='BtcLadder v1.1.47 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3818,7 +3818,7 @@ function getCardHeight(){
   const heroH=hero.getBoundingClientRect().height;
   const isMob=window.innerWidth<641;
   const padTop=isMob?8:24;
-  const padBot=isMob?25:35; /* +5px buffer for subpixel overflow */
+  const padBot=isMob?20:35; /* +5px buffer for subpixel overflow */
   const hdrMarginBot=isMob?8:12;
   const heroMarginBot=isMob?10:14;
   const cardMarginBot=16;
