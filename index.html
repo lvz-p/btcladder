@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.55 PWA';
+const VERSION='BtcLadder v1.1.64 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -929,7 +929,10 @@ function renderChart(cur,ma,oc,tl=[]){
   const mag=Math.pow(10,Math.floor(Math.log10(rawStep)));
   const niceStep=Math.ceil(rawStep/mag)*mag;
   const tickStart=Math.ceil(lo/niceStep)*niceStep;
-  const ticks=[];for(let v=tickStart;v<=hi+niceStep*0.01;v+=niceStep)ticks.push(v);
+  const ticks=[];for(let v=tickStart;v<=hi+niceStep*0.01;v+=niceStep){
+    if(v<=lo&&v<=0)continue; /* skip 0 tick at canvas bottom edge */
+    ticks.push(v);
+  }
   const fmtTick=v=>{
     if(v>=1e6) return (v/1e6).toFixed(v%1e5===0?0:2)+'M';
     if(niceStep>=1000) return Math.round(v/1000)+'k';
@@ -1094,6 +1097,7 @@ function renderChart(cur,ma,oc,tl=[]){
   /* BTC */
   canvas+=`<div class="btc-dot-glow" style="top:${btcYpct}%"></div>`;
   canvas+=`<div class="btc-line" style="top:${btcYpct}%"></div>`;
+  /* meteor trail rendered as SVG overlay — see renderMeteorTrail() called after canvas set */
   canvas+=`<div class="btc-dot" style="top:${btcYpct}%"></div>`;
   tipMap.set('BTC',{code:'BTC',label:'',price:cur,d:0,col:COL.BTC,bg:COL_BG.BTC,isBtc:true});
   canvas+=`<div class="hover-zone" data-code="BTC" style="top:${btcYpct}%"></div>`;
@@ -1104,6 +1108,8 @@ function renderChart(cur,ma,oc,tl=[]){
   $('axisPriceCol').style.height=colH;
   $('canvasCol').style.position='relative';$('canvasCol').style.height=colH;$('canvasCol').style.overflow='hidden';
   $('canvasCol').innerHTML=canvas;
+  $('canvasCol').dataset.lo=lo;
+  $('canvasCol').dataset.hi=hi;
   if(window._showEmptyMsg){
     $('canvasCol').innerHTML+=`<div style="pointer-events:none;position:absolute;top:12px;left:0;right:0;text-align:center;z-index:5;font-size:12px;font-family:var(--mono);color:var(--muted);letter-spacing:.04em">Enable signals above to see price levels</div>`;
     window._showEmptyMsg=false;
@@ -1617,6 +1623,7 @@ function rerender(){
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
   requestAnimationFrame(updateAxisWidth);
+  requestAnimationFrame(renderMeteorTrail);
   /* TL Viewer OC status shown by tl_fetchOCData directly */
 }
 
@@ -1635,6 +1642,7 @@ async function refreshAll(){
   try{
     const pr=await getPrice();
     lastCurrent=pr.price;lastPriceRows=pr.rows;
+    trailAddPrice(pr.price);
     renderAnimatedPrice(lastCurrent, window._prevPrice);
     window._prevPrice=lastCurrent;
     const _lut=document.getElementById('lastUpdateTime');if(_lut)_lut.textContent=new Date().toLocaleTimeString();
@@ -1664,6 +1672,8 @@ async function refreshAll(){
     setStatus('ok');
     rerender();
     if(_rb)_rb.classList.remove('spinning');
+    /* preload trail on first load only */
+    if(_priceTrail.length<=1)trailPreload(); /* <=1 because refreshAll already added current price */
     /* compute news in background — doesn't block render */
     window._tlOCData=null; /* invalidate OC cache on refresh */
     _tlOCFetching=false; /* reset fetch flag */
@@ -3255,6 +3265,7 @@ async function refreshPriceOnly(){
     const pr = await getPrice();
     const prev = lastCurrent;
     lastCurrent = pr.price;
+    trailAddPrice(pr.price); /* add to trail */
     renderAnimatedPrice(lastCurrent, window._prevPrice);
     window._prevPrice=lastCurrent;
     const _lut2=document.getElementById('lastUpdateTime');if(_lut2)_lut2.textContent=new Date().toLocaleTimeString();
@@ -3902,6 +3913,75 @@ function updateAxisWidth(){
     const newW=Math.ceil(maxW)+10; /* 10px margin */
     document.getElementById('chartInner')?.style.setProperty('--axis-w',newW+'px');
   }
+}
+
+
+/* ── Price Trail ── */
+const TRAIL_MAX=30;        /* max readings to keep */
+const TRAIL_WINDOW=30*60*1000; /* 30 minutes in ms */
+let _priceTrail=[];        /* [{price, ts}] oldest first */
+
+function trailAddPrice(price,ts){
+  const t=ts||Date.now();
+  /* avoid duplicates for same minute */
+  if(_priceTrail.length&&Math.abs(_priceTrail[_priceTrail.length-1].ts-t)<30000)return;
+  _priceTrail.push({price,ts:t});
+  const cutoff=Date.now()-TRAIL_WINDOW;
+  _priceTrail=_priceTrail.filter(p=>p.ts>=cutoff).slice(-TRAIL_MAX);
+}
+
+async function trailPreload(){
+  try{
+    const url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30';
+    const data=await fetchJson(url);
+    if(!Array.isArray(data))return;
+    const now=Date.now();
+    const cutoff=now-TRAIL_WINDOW;
+    data.forEach(c=>{
+      const ts=c[0]; /* openTime in ms */
+      const close=parseFloat(c[4]);
+      if(ts>=cutoff&&close>0)trailAddPrice(close,ts);
+    });
+    if(typeof rerender==='function'&&lastCurrent)rerender();
+  }catch(e){console.warn('trail preload failed:',e);}
+}
+
+
+/* ── Price Trail Dots ── */
+function renderMeteorTrail(){
+  const col=$('canvasCol');
+  if(!col||_priceTrail.length<2)return;
+  /* remove old trail SVG if exists */
+  const old=col.querySelector('#meteorTrail');
+  if(old)old.remove();
+  const W=col.offsetWidth;
+  const H=col.offsetHeight;
+  if(!W||!H)return;
+  const now=Date.now();
+  const _lo=parseFloat(col.dataset.lo)||0;
+  const _hi=parseFloat(col.dataset.hi)||1;
+  if(_hi<=_lo)return;
+  const maxOffsetPx=W*0.35;
+  const dotX=W-9; /* align with orange dot center */
+  const toXpx=ts=>dotX-Math.min(1,(now-ts)/TRAIL_WINDOW)*maxOffsetPx;
+  const toYpct=price=>((1-(price-_lo)/(_hi-_lo))*100).toFixed(2);
+  /* exclude last point — orange dot represents it */
+  const trailPts=_priceTrail.slice(0,-1);
+  const container=document.createElement('div');
+  container.id='meteorTrail';
+  container.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:5';
+  trailPts.forEach(p=>{
+    const x=toXpx(p.ts);
+    if(x<0||x>=dotX)return;
+    const ageFrac=Math.min(1,(now-p.ts)/TRAIL_WINDOW);
+    const opacity=(Math.pow(1-ageFrac,1.8)*0.7).toFixed(3);
+    if(parseFloat(opacity)<0.03)return;
+    const yPct=toYpct(p.price);
+    const dot=document.createElement('div');
+    dot.style.cssText=`position:absolute;left:${x.toFixed(1)}px;top:${yPct}%;width:3px;height:3px;border-radius:50%;background:#f7931a;opacity:${opacity};transform:translate(-50%,-50%)`;
+    container.appendChild(dot);
+  });
+  col.appendChild(container);
 }
 
 </script>
