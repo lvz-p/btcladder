@@ -143,7 +143,7 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 .lvl-dot{position:absolute;right:2px;width:8px;height:8px;border-radius:50%;transform:translateY(-50%);z-index:3;pointer-events:none;border:1.5px solid var(--surface)}
 .btc-line{position:absolute;left:0;right:0;height:2px;background:var(--btc);z-index:5;pointer-events:none}
 .btc-dot{position:absolute;right:2px;width:14px;height:14px;border-radius:50%;background:var(--btc);border:2px solid var(--bg);transform:translateY(-50%);z-index:6;pointer-events:none}
-.btc-dot-glow{position:absolute;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--btc-glow);transform:translateY(-50%);z-index:4;pointer-events:none}
+.btc-dot-glow{position:absolute;right:-3px;width:22px;height:22px;border-radius:50%;background:var(--btc-glow);transform:translateY(-50%);z-index:4;pointer-events:none}
 /* fix: zone hover zone same z-index as line hover zones */
 .hover-zone{position:absolute;left:0;right:0;height:28px;transform:translateY(-50%);cursor:crosshair;z-index:8}
 @media(pointer:coarse){.hover-zone,.hover-zone.hz-zone,.canvas-col *{pointer-events:none}
@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.64 PWA';
+const VERSION='BtcLadder v1.1.70 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1623,7 +1623,7 @@ function rerender(){
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
   requestAnimationFrame(updateAxisWidth);
-  requestAnimationFrame(renderMeteorTrail);
+  if(_stripData.length>=2)requestAnimationFrame(renderMeteorTrail);
   /* TL Viewer OC status shown by tl_fetchOCData directly */
 }
 
@@ -1672,8 +1672,9 @@ async function refreshAll(){
     setStatus('ok');
     rerender();
     if(_rb)_rb.classList.remove('spinning');
-    /* preload trail on first load only */
-    if(_priceTrail.length<=1)trailPreload(); /* <=1 because refreshAll already added current price */
+    /* preload trail on first load, refresh strip on subsequent refreshes */
+    if(_priceTrail.length<=1)trailPreload();
+    else{fetchStripData().then(()=>{if(lastCurrent)renderMeteorTrail();});} /* <=1 because refreshAll already added current price */
     /* compute news in background — doesn't block render */
     window._tlOCData=null; /* invalidate OC cache on refresh */
     _tlOCFetching=false; /* reset fetch flag */
@@ -3917,9 +3918,11 @@ function updateAxisWidth(){
 
 
 /* ── Price Trail ── */
-const TRAIL_MAX=30;        /* max readings to keep */
-const TRAIL_WINDOW=30*60*1000; /* 30 minutes in ms */
-let _priceTrail=[];        /* [{price, ts}] oldest first */
+const TRAIL_MAX=30;
+const TRAIL_WINDOW=30*60*1000;
+let _priceTrail=[];
+/* 24h strip data */
+let _stripData=[]; /* [{close, ts}] from 10m candles */
 
 function trailAddPrice(price,ts){
   const t=ts||Date.now();
@@ -3932,54 +3935,83 @@ function trailAddPrice(price,ts){
 
 async function trailPreload(){
   try{
-    const url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30';
-    const data=await fetchJson(url);
-    if(!Array.isArray(data))return;
-    const now=Date.now();
-    const cutoff=now-TRAIL_WINDOW;
-    data.forEach(c=>{
-      const ts=c[0]; /* openTime in ms */
-      const close=parseFloat(c[4]);
-      if(ts>=cutoff&&close>0)trailAddPrice(close,ts);
-    });
+    /* fetch last 30 1m candles for dot trail */
+    const url1m='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30';
+    const data1m=await fetchJson(url1m);
+    if(Array.isArray(data1m)){
+      const now=Date.now();
+      const cutoff=now-TRAIL_WINDOW;
+      data1m.forEach(c=>{const ts=c[0];const close=parseFloat(c[4]);if(ts>=cutoff&&close>0)trailAddPrice(close,ts);});
+    }
+    /* fetch 24h 10m candles for strip */
+    await fetchStripData();
     if(typeof rerender==='function'&&lastCurrent)rerender();
+    /* render strip now that data is loaded */
+    if(typeof renderMeteorTrail==='function')renderMeteorTrail();
   }catch(e){console.warn('trail preload failed:',e);}
 }
 
+async function fetchStripData(){
+  try{
+    const url='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=96';
+    const data=await fetchJson(url);
+    if(!Array.isArray(data))return;
+    _stripData=data.map(c=>({close:parseFloat(c[4]),ts:c[0]})).filter(c=>c.close>0);
+  }catch(e){console.warn('strip fetch failed:',e);}
+}
 
-/* ── Price Trail Dots ── */
+
+/* ── 24h Price Strip Heatmap ── */
 function renderMeteorTrail(){
   const col=$('canvasCol');
-  if(!col||_priceTrail.length<2)return;
-  /* remove old trail SVG if exists */
+  if(!col||_stripData.length<2)return;
   const old=col.querySelector('#meteorTrail');
   if(old)old.remove();
   const W=col.offsetWidth;
   const H=col.offsetHeight;
   if(!W||!H)return;
-  const now=Date.now();
-  const _lo=parseFloat(col.dataset.lo)||0;
-  const _hi=parseFloat(col.dataset.hi)||1;
+  /* use strip data's own price range for binning — not the visible window */
+  const stripPrices=_stripData.map(p=>p.close);
+  const stripLo=Math.min(...stripPrices)*0.999;
+  const stripHi=Math.max(...stripPrices)*1.001;
+  if(stripHi<=stripLo)return;
+  /* but render positions use visible lo/hi */
+  const _lo=parseFloat(col.dataset.lo)||stripLo;
+  const _hi=parseFloat(col.dataset.hi)||stripHi;
   if(_hi<=_lo)return;
-  const maxOffsetPx=W*0.35;
-  const dotX=W-9; /* align with orange dot center */
-  const toXpx=ts=>dotX-Math.min(1,(now-ts)/TRAIL_WINDOW)*maxOffsetPx;
-  const toYpct=price=>((1-(price-_lo)/(_hi-_lo))*100).toFixed(2);
-  /* exclude last point — orange dot represents it */
-  const trailPts=_priceTrail.slice(0,-1);
+
+  /* bin 10m closes into vertical slots */
+  const BINS=200;
+  const heat=new Float32Array(BINS);
+  const now=Date.now();
+  const window24h=24*60*60*1000;
+  _stripData.forEach(p=>{
+    const ageFrac=Math.min(1,(now-p.ts)/window24h);
+    const weight=Math.pow(1-ageFrac,0.5);
+    /* bin using strip's own range */
+    const bin=Math.floor((1-(p.close-stripLo)/(stripHi-stripLo))*BINS);
+    if(bin>=0&&bin<BINS){
+      heat[bin]+=weight;
+      if(bin>0)heat[bin-1]+=weight*0.35;
+      if(bin<BINS-1)heat[bin+1]+=weight*0.35;
+    }
+  });
+  const maxHeat=Math.max(...heat,0.001);
+  const binH=H/BINS;
+
   const container=document.createElement('div');
   container.id='meteorTrail';
-  container.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:5';
-  trailPts.forEach(p=>{
-    const x=toXpx(p.ts);
-    if(x<0||x>=dotX)return;
-    const ageFrac=Math.min(1,(now-p.ts)/TRAIL_WINDOW);
-    const opacity=(Math.pow(1-ageFrac,1.8)*0.7).toFixed(3);
-    if(parseFloat(opacity)<0.03)return;
-    const yPct=toYpct(p.price);
-    const dot=document.createElement('div');
-    dot.style.cssText=`position:absolute;left:${x.toFixed(1)}px;top:${yPct}%;width:3px;height:3px;border-radius:50%;background:#f7931a;opacity:${opacity};transform:translate(-50%,-50%)`;
-    container.appendChild(dot);
+  container.style.cssText='position:absolute;top:0;right:6px;width:4px;bottom:0;pointer-events:none;z-index:4';
+  heat.forEach((h,i)=>{
+    if(h<0.01)return;
+    const opacity=Math.min(0.55,(h/maxHeat)*0.55).toFixed(3);
+    /* convert bin back to price, then to screen Y using visible range */
+    const price=stripLo+(1-i/BINS)*(stripHi-stripLo);
+    const yPct=((1-(price-_lo)/(_hi-_lo))*100).toFixed(2);
+    if(parseFloat(yPct)<0||parseFloat(yPct)>100)return; /* skip off-screen */
+    const strip=document.createElement('div');
+    strip.style.cssText=`position:absolute;top:${yPct}%;right:0;width:4px;height:${(binH+1).toFixed(1)}px;background:#f7931a;opacity:${opacity};border-radius:2px`;
+    container.appendChild(strip);
   });
   col.appendChild(container);
 }
