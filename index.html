@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.85 PWA';
+const VERSION='BtcLadder v1.1.86 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3974,45 +3974,13 @@ function renderMeteorTrail(){
   canvas.width=W;canvas.height=H;
   canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
   const ctx=canvas.getContext('2d');
-
-  const x0=pts[0].x, x1=pts[pts.length-1].x;
-
-  /* glow layer — wide, soft */
-  const gradGlow=ctx.createLinearGradient(x0,0,x1,0);
-  gradGlow.addColorStop(0,'rgba(247,147,26,0)');
-  gradGlow.addColorStop(0.5,'rgba(247,147,26,0.05)');
-  gradGlow.addColorStop(0.75,'rgba(247,147,26,0.12)');
-  gradGlow.addColorStop(0.9,'rgba(247,147,26,0.20)');
-  gradGlow.addColorStop(1,'rgba(247,147,26,0.25)');
-  ctx.strokeStyle=gradGlow;
-  ctx.lineWidth=6;
+  ctx.strokeStyle='rgba(247,147,26,0.35)';
+  ctx.lineWidth=1;
   ctx.lineCap='round';
   ctx.lineJoin='round';
   ctx.beginPath();
   ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length-1;i++){
-    const mx=(pts[i].x+pts[i+1].x)/2;
-    const my=(pts[i].y+pts[i+1].y)/2;
-    ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
-  }
-  ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
-  ctx.stroke();
-
-  /* core layer — thin, bright */
-  const gradCore=ctx.createLinearGradient(x0,0,x1,0);
-  gradCore.addColorStop(0,'rgba(247,147,26,0)');
-  gradCore.addColorStop(0.5,'rgba(247,147,26,0.05)');
-  gradCore.addColorStop(0.75,'rgba(247,147,26,0.20)');
-  gradCore.addColorStop(0.9,'rgba(247,147,26,0.50)');
-  gradCore.addColorStop(1,'rgba(247,147,26,0.80)');
-  ctx.strokeStyle=gradCore;
-  ctx.lineWidth=1.5;
-
-  /* single continuous bezier path — stroked once, uniform color */
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x,pts[0].y);
-  for(let i=1;i<pts.length-1;i++){
-    /* smooth via midpoints between consecutive data points */
     const mx=(pts[i].x+pts[i+1].x)/2;
     const my=(pts[i].y+pts[i+1].y)/2;
     ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
