@@ -129,7 +129,7 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 
 /* CHART */
 .chart-shell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;position:relative}
-.chart-inner{display:grid;grid-template-columns:44px 1fr 260px;align-items:stretch;position:relative}
+.chart-inner{display:grid;grid-template-columns:var(--axis-w,44px) 1fr 260px;align-items:stretch;position:relative}
 .axis-price-col{padding:0;position:relative;flex-shrink:0;border-right:1px solid var(--border)}
 .tick-lbl{position:absolute;right:8px;font-size:12px;color:var(--muted2);font-family:var(--mono);transform:translateY(-50%);white-space:nowrap;line-height:1}
 .canvas-col{position:relative;overflow:hidden}
@@ -311,7 +311,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   .tog{font-size:10px;padding:2px 8px}
   .lbl-sm{font-size:10px}
   /* chart */
-  .chart-inner{grid-template-columns:36px 1fr 222px}
+  .chart-inner{grid-template-columns:var(--axis-w,36px) 1fr 222px}
   /* ladder canvas 500px on mobile */
   /* canvas height set by JS */
 }
@@ -349,7 +349,10 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 @media(max-width:640px){
   .tl-leg-btn{font-size:11px}
   .btn{font-size:11px}
-}</style>
+}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+#refreshBtn.spinning{animation:spin .7s linear infinite}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -567,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.52 PWA';
+const VERSION='BtcLadder v1.1.55 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -911,7 +914,7 @@ function renderChart(cur,ma,oc,tl=[]){
   const rawLo=Math.min(...allPx),rawHi=Math.max(...allPx);
   const pad=(rawHi-rawLo)*0.05||cur*0.02;
   /* use custom zoom range if set, else use preset range */
-  const lo=zoomLo!==null?zoomLo:rawLo-pad;
+  const lo=zoomLo!==null?Math.max(0,zoomLo):Math.max(0,rawLo-pad);
   const hi=zoomHi!==null?zoomHi:rawHi+pad;
   const range=hi-lo;
   const _ci=document.getElementById('chartInner');
@@ -927,9 +930,15 @@ function renderChart(cur,ma,oc,tl=[]){
   const niceStep=Math.ceil(rawStep/mag)*mag;
   const tickStart=Math.ceil(lo/niceStep)*niceStep;
   const ticks=[];for(let v=tickStart;v<=hi+niceStep*0.01;v+=niceStep)ticks.push(v);
+  const fmtTick=v=>{
+    if(v>=1e6) return (v/1e6).toFixed(v%1e5===0?0:2)+'M';
+    if(niceStep>=1000) return Math.round(v/1000)+'k';
+    if(niceStep>=100) return (v/1000).toFixed(1)+'k';
+    return Math.round(v).toLocaleString();
+  };
   $('axisPriceCol').style.position='relative';
   $('axisPriceCol').innerHTML=ticks.map(v=>
-    `<div class="tick-lbl" style="top:${(toY(v)/H*100).toFixed(2)}%">${v>=1e6?(v/1e6).toFixed(2)+'M':(v/1000).toFixed(0)+'k'}</div>`
+    `<div class="tick-lbl" style="top:${(toY(v)/H*100).toFixed(2)}%">${fmtTick(v)}</div>`
   ).join('');
 
   /* ── CANVAS ── */
@@ -1287,7 +1296,7 @@ function renderChart(cur,ma,oc,tl=[]){
         y=Math.max(8,Math.min(window.innerHeight-h-8,y));
         tt.style.left=x+'px';tt.style.top=y+'px';
       },{passive:false});
-      document.addEventListener('touchend',()=>{dragActive=false;},{passive:true});
+      document.addEventListener('touchend',()=>{dragActive=false;requestAnimationFrame(updateAxisWidth);},{passive:true});
     })();
   }
 
@@ -1336,6 +1345,7 @@ function renderChart(cur,ma,oc,tl=[]){
     if(!isPanning)return;
     if(window._recentTouch)return; /* ignore synthetic mouseup from touch */
     isPanning=false;canvas.style.cursor='';
+    requestAnimationFrame(updateAxisWidth);
   });
 
   canvas.addEventListener('dblclick',()=>resetZoom());
@@ -1606,6 +1616,7 @@ function rerender(){
   renderTable(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
+  requestAnimationFrame(updateAxisWidth);
   /* TL Viewer OC status shown by tl_fetchOCData directly */
 }
 
@@ -1614,8 +1625,13 @@ function setStatus(state){$('sdot').className='sdot '+state}
 
 async function refreshAll(){
   setStatus('loading');
-  $('canvasCol').innerHTML=`<div class="loading-state"><div class="skel"></div><div class="skel" style="opacity:.7"></div><div class="skel" style="opacity:.45"></div><div class="skel" style="opacity:.25"></div></div>`;
-  $('labelsCol').innerHTML='';$('axisPriceCol').innerHTML='';
+  const _rb=document.getElementById('refreshBtn');
+  if(_rb)_rb.classList.add('spinning');
+  /* only show skeleton on first load — subsequent refreshes render in place */
+  if(!lastCurrent){
+    $('canvasCol').innerHTML=`<div class="loading-state"><div class="skel"></div><div class="skel" style="opacity:.7"></div><div class="skel" style="opacity:.45"></div><div class="skel" style="opacity:.25"></div></div>`;
+    $('labelsCol').innerHTML='';$('axisPriceCol').innerHTML='';
+  }
   try{
     const pr=await getPrice();
     lastCurrent=pr.price;lastPriceRows=pr.rows;
@@ -1647,12 +1663,14 @@ async function refreshAll(){
     if(document.getElementById('tlSection')?.style.display!=='none')tl_draw(tlViewerMode);
     setStatus('ok');
     rerender();
+    if(_rb)_rb.classList.remove('spinning');
     /* compute news in background — doesn't block render */
     window._tlOCData=null; /* invalidate OC cache on refresh */
     _tlOCFetching=false; /* reset fetch flag */
     setTimeout(tl_fetchOCData,300); /* pre-fetch OC data - shared by viewer and news */
   }catch(e){
     setStatus('bad');
+    if(_rb)_rb.classList.remove('spinning');
     $('canvasCol').innerHTML=`<div class="empty-chart">${String(e.message||e).replace(/[<>]/g,'')}</div>`;
   }
 }
@@ -3859,6 +3877,32 @@ function sizeCards(){sizeLadderCard();sizeChartCard();}
 
 window.addEventListener('load',()=>{setTimeout(sizeLadderCard,50);setTimeout(sizeLadderCard,300);setTimeout(sizeCards,1000);});
 window.addEventListener('resize',()=>{clearTimeout(window._sizeTimer);window._sizeTimer=setTimeout(sizeCards,80);});
+
+
+/* ── Refresh on tab resume after 5+ minutes hidden ── */
+let _hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){_hiddenAt=Date.now();}
+  else if(_hiddenAt&&Date.now()-_hiddenAt>5*60*1000){
+    _hiddenAt=0;
+    if(typeof refreshAll==='function')refreshAll();
+  } else {_hiddenAt=0;}
+});
+
+
+/* ── Dynamic y-axis width ── */
+function updateAxisWidth(){
+  const axisCol=document.getElementById('axisPriceCol');
+  if(!axisCol)return;
+  const labels=axisCol.querySelectorAll('.tick-lbl');
+  if(!labels.length)return;
+  let maxW=0;
+  labels.forEach(l=>{const w=l.getBoundingClientRect().width;if(w>maxW)maxW=w;});
+  if(maxW>0){
+    const newW=Math.ceil(maxW)+10; /* 10px margin */
+    document.getElementById('chartInner')?.style.setProperty('--axis-w',newW+'px');
+  }
+}
 
 </script>
 <script>
