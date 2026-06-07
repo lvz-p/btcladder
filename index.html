@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.86 PWA';
+const VERSION='BtcLadder v1.1.93 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -1049,7 +1049,7 @@ function renderChart(cur,ma,oc,tl=[]){
     /* badge with minimum padding from left border to avoid URPD overlap */
     const curY=toY(cur);
     const curYpct=(curY/H*100).toFixed(2);
-    const curZone=zoneAt(cur);
+    const curZone=_msmSig(_msmPct(cur/d.tmm,_msmData.tmmH),_msmPct(cur/d.sthcb,_msmData.sthH),d.sopr);
     const zoneCol={CAP:'#4338ca',ACC:'#6495ed',NEU:'#64748b',PRE:'#d97706',DIS:'#b91c1c'};
     /* badge at 30% of strip width from strip start = msmLeft + msmW*0.30 */
     /* badge: left edge anchored at msmLeft+1%, extends rightward — never touches left border */
@@ -3674,12 +3674,15 @@ function msmShowTooltip(ev){
     };
     for(const name of ['CAP','ACC','PRE','DIS']){
       const rangeStr=zoneRanges[name];if(!rangeStr)continue;
-      const active=sig===name;
+      const isCurrentState=sig===name;
       const gateOpen=soprGates[name];
       const col=zoneCol[name];
-      const activeTag=active?` <span style="color:${col};font-size:10px">● active</span>`:'';
-      const gateTag=!gateOpen?` <span style="color:#475569;font-size:10px">gate closed</span>`:'';
-      h+=`<div style="margin-top:4px;opacity:${gateOpen?'1':'0.45'}"><span style="color:${col};font-weight:700">${name}</span> <span style="color:#94a3b8">${rangeStr}</span>${activeTag}${gateTag}</div>`;
+      const rangeStyle=isCurrentState?`color:#e2e8f0`:`color:#94a3b8`;
+      const statusTag=gateOpen
+        ?` <span style="color:${isCurrentState?col:'#475569'};font-size:10px">● gate active</span>`
+        :` <span style="color:#475569;font-size:10px">gate closed</span>`;
+      const nameStyle=isCurrentState?`color:${col};font-weight:700`:`color:#94a3b8;font-weight:400`;
+      h+=`<div style="margin-top:4px"><span style="${nameStyle}">${name}</span> <span style="${rangeStyle}">${rangeStr}</span>${statusTag}</div>`;
     }
     fireEl.innerHTML=h;
   }
@@ -3916,15 +3919,15 @@ function updateAxisWidth(){
 
 
 /* ── Price Trail ── */
-const TRAIL_MAX=240;
-const TRAIL_WINDOW=4*60*60*1000; /* 4 hours */
+const TRAIL_MAX=96;
+const TRAIL_WINDOW=24*60*60*1000; /* 24 hours */
 let _priceTrail=[];
 
 
 function trailAddPrice(price,ts){
   const t=ts||Date.now();
   /* avoid duplicates for same minute */
-  if(_priceTrail.length&&Math.abs(_priceTrail[_priceTrail.length-1].ts-t)<30000)return;
+  if(_priceTrail.length&&Math.abs(_priceTrail[_priceTrail.length-1].ts-t)<300000)return; /* 5min dedup for 15min candles */
   _priceTrail.push({price,ts:t});
   const cutoff=Date.now()-TRAIL_WINDOW;
   _priceTrail=_priceTrail.filter(p=>p.ts>=cutoff).slice(-TRAIL_MAX);
@@ -3932,7 +3935,7 @@ function trailAddPrice(price,ts){
 
 async function trailPreload(){
   try{
-    const url1m='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=240';
+    const url1m='https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=96';
     const data1m=await fetchJson(url1m);
     if(Array.isArray(data1m)){
       const now=Date.now();
@@ -3974,7 +3977,11 @@ function renderMeteorTrail(){
   canvas.width=W;canvas.height=H;
   canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
   const ctx=canvas.getContext('2d');
-  ctx.strokeStyle='rgba(247,147,26,0.35)';
+  const x0=pts[0].x, x1=pts[pts.length-1].x;
+  const grad=ctx.createLinearGradient(x0,0,x1,0);
+  grad.addColorStop(0,'rgba(247,147,26,0)');
+  grad.addColorStop(1,'rgba(247,147,26,1)');
+  ctx.strokeStyle=grad;
   ctx.lineWidth=1;
   ctx.lineCap='round';
   ctx.lineJoin='round';
