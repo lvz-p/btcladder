@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.94 PWA';
+const VERSION='BtcLadder v1.1.95 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3952,8 +3952,8 @@ async function trailPreload(){
 function renderMeteorTrail(){
   const col=$('canvasCol');
   if(!col||_priceTrail.length<2)return;
-  const old=col.querySelector('#meteorTrail');
-  if(old)old.remove();
+  /* use chartInner as parent so trail survives canvasCol innerHTML replacement */
+  const parent=document.getElementById('chartInner')||col;
   const W=col.offsetWidth;
   const H=col.offsetHeight;
   if(!W||!H)return;
@@ -3972,10 +3972,14 @@ function renderMeteorTrail(){
   })).filter(p=>p.x>=0&&p.x<dotX);
   if(pts.length<2)return;
 
-  const canvas=document.createElement('canvas');
-  canvas.id='meteorTrail';
+  let canvas=parent.querySelector('#meteorTrail');
+  if(!canvas){
+    canvas=document.createElement('canvas');
+    canvas.id='meteorTrail';
+    canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
+    parent.appendChild(canvas);
+  }
   canvas.width=W;canvas.height=H;
-  canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
   const ctx=canvas.getContext('2d');
 
   const SECTIONS=10;
@@ -4003,7 +4007,6 @@ function renderMeteorTrail(){
     ctx.stroke();
   }
 
-  col.appendChild(canvas);
 }
 
 </script>
