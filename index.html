@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.93 PWA';
+const VERSION='BtcLadder v1.1.94 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3977,23 +3977,31 @@ function renderMeteorTrail(){
   canvas.width=W;canvas.height=H;
   canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
   const ctx=canvas.getContext('2d');
-  const x0=pts[0].x, x1=pts[pts.length-1].x;
-  const grad=ctx.createLinearGradient(x0,0,x1,0);
-  grad.addColorStop(0,'rgba(247,147,26,0)');
-  grad.addColorStop(1,'rgba(247,147,26,1)');
-  ctx.strokeStyle=grad;
-  ctx.lineWidth=1;
-  ctx.lineCap='round';
-  ctx.lineJoin='round';
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x,pts[0].y);
-  for(let i=1;i<pts.length-1;i++){
-    const mx=(pts[i].x+pts[i+1].x)/2;
-    const my=(pts[i].y+pts[i+1].y)/2;
-    ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+
+  const SECTIONS=10;
+  const ptsPerSection=Math.ceil(pts.length/SECTIONS);
+  for(let s=0;s<SECTIONS;s++){
+    /* s=0 oldest/thinnest, s=9 newest/thickest */
+    const sStart=s*ptsPerSection;
+    const sEnd=Math.min((s+1)*ptsPerSection+1,pts.length);
+    if(sEnd<=sStart+1)continue;
+    const sp=pts.slice(sStart,sEnd);
+    const width=parseFloat((0.1+s*0.1).toFixed(1));
+    const opacity=parseFloat(((s+1)/SECTIONS).toFixed(3));
+    ctx.strokeStyle=`rgba(247,147,26,${opacity})`;
+    ctx.lineWidth=width;
+    ctx.lineCap='butt';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(sp[0].x,sp[0].y);
+    for(let i=1;i<sp.length-1;i++){
+      const mx=(sp[i].x+sp[i+1].x)/2;
+      const my=(sp[i].y+sp[i+1].y)/2;
+      ctx.quadraticCurveTo(sp[i].x,sp[i].y,mx,my);
+    }
+    ctx.lineTo(sp[sp.length-1].x,sp[sp.length-1].y);
+    ctx.stroke();
   }
-  ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
-  ctx.stroke();
 
   col.appendChild(canvas);
 }
