@@ -1110,6 +1110,7 @@ function renderChart(cur,ma,oc,tl=[]){
   $('canvasCol').innerHTML=canvas;
   $('canvasCol').dataset.lo=lo;
   $('canvasCol').dataset.hi=hi;
+  if(typeof renderMeteorTrail==='function')renderMeteorTrail();
   if(window._showEmptyMsg){
     $('canvasCol').innerHTML+=`<div style="pointer-events:none;position:absolute;top:12px;left:0;right:0;text-align:center;z-index:5;font-size:12px;font-family:var(--mono);color:var(--muted);letter-spacing:.04em">Enable signals above to see price levels</div>`;
     window._showEmptyMsg=false;
@@ -1623,7 +1624,6 @@ function rerender(){
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
   renderDiag();
   requestAnimationFrame(updateAxisWidth);
-  requestAnimationFrame(renderMeteorTrail);
   /* TL Viewer OC status shown by tl_fetchOCData directly */
 }
 
@@ -3952,8 +3952,8 @@ async function trailPreload(){
 function renderMeteorTrail(){
   const col=$('canvasCol');
   if(!col||_priceTrail.length<2)return;
-  /* use chartInner as parent so trail survives canvasCol innerHTML replacement */
-  const parent=document.getElementById('chartInner')||col;
+  const old=col.querySelector('#meteorTrail');
+  if(old)old.remove();
   const W=col.offsetWidth;
   const H=col.offsetHeight;
   if(!W||!H)return;
@@ -3972,14 +3972,10 @@ function renderMeteorTrail(){
   })).filter(p=>p.x>=0&&p.x<dotX);
   if(pts.length<2)return;
 
-  let canvas=parent.querySelector('#meteorTrail');
-  if(!canvas){
-    canvas=document.createElement('canvas');
-    canvas.id='meteorTrail';
-    canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
-    parent.appendChild(canvas);
-  }
+  const canvas=document.createElement('canvas');
+  canvas.id='meteorTrail';
   canvas.width=W;canvas.height=H;
+  canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
   const ctx=canvas.getContext('2d');
 
   const SECTIONS=10;
@@ -4007,6 +4003,7 @@ function renderMeteorTrail(){
     ctx.stroke();
   }
 
+  col.appendChild(canvas);
 }
 
 </script>
