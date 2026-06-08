@@ -570,7 +570,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v1.1.97e PWA';
+const VERSION='BtcLadder v1.1.99 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -3284,6 +3284,13 @@ async function refreshPriceOnly(){
       renderSummary(lastCurrent, getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
     /* rerender ladder with new price */
     rerender();
+    /* update last candle close in tl_candles with current price — keeps ghost state fresh */
+    if(tlViewerReady&&lastCurrent){
+      const tf=tlViewerMode==='weekly'?'1w':tlViewerMode==='monthly'?'1M':'1d';
+      const cs=tl_candles[tf];
+      if(cs&&cs.length){cs[cs.length-1].close=lastCurrent;}
+      if(document.getElementById('tlSection')?.style.display!=='none')tl_draw(tlViewerMode);
+    }
     /* trendline breach detection */
     checkTrendlineBreaches(prev, lastCurrent);
   }catch(e){console.warn('price refresh failed:',e);}
@@ -3941,13 +3948,8 @@ async function trailPreload(){
     if(Array.isArray(data1m)){
       const now=Date.now();
       const cutoff=now-TRAIL_WINDOW;
-      const raw=data1m.filter(c=>c[0]>=cutoff&&parseFloat(c[4])>0);
-      /* 3-period MA to smooth out noise */
-      raw.forEach((c,i)=>{
-        const prices=[raw[i],raw[i-1],raw[i-2],raw[i-3]].filter(Boolean).map(x=>parseFloat(x[4]));
-        const smoothed=prices.reduce((a,b)=>a+b,0)/prices.length;
-        trailAddPrice(smoothed,c[0]);
-      });
+      data1m.filter(c=>c[0]>=cutoff&&parseFloat(c[4])>0)
+            .forEach(c=>trailAddPrice(parseFloat(c[4]),c[0]));
     }
     if(typeof rerender==='function'&&lastCurrent)rerender();
   }catch(e){console.warn('trail preload failed:',e);}
@@ -3955,63 +3957,56 @@ async function trailPreload(){
 
 
 
-/* ── Price Trail — single smooth path ── */
+/* ── Price Spray — vertical glow density strip ── */
 function renderMeteorTrail(){
   const col=$('canvasCol');
   if(!col||_priceTrail.length<2)return;
-  const old=col.querySelector('#meteorTrail');
-  if(old)old.remove();
+  let canvas=col.querySelector('#meteorTrail');
+  if(!canvas){
+    canvas=document.createElement('canvas');
+    canvas.id='meteorTrail';
+    canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
+    col.appendChild(canvas);
+  }
   const W=col.offsetWidth;
   const H=col.offsetHeight;
   if(!W||!H)return;
+  canvas.width=W;canvas.height=H;
   const now=Date.now();
   const _lo=parseFloat(col.dataset.lo)||0;
   const _hi=parseFloat(col.dataset.hi)||1;
   if(_hi<=_lo)return;
   const toYpx=price=>H*(1-(price-_lo)/(_hi-_lo));
-  const maxOffsetPx=W*0.50;
   const dotX=W-9;
-  const toXpx=ts=>dotX-Math.min(1,(now-ts)/TRAIL_WINDOW)*maxOffsetPx;
-
-  const pts=_priceTrail.map(p=>({
-    x:toXpx(p.ts),
-    y:toYpx(p.price)
-  })).filter(p=>p.x>=0&&p.x<=dotX);
-  const curPrice=parseFloat($('canvasCol').dataset.cur||0)||_priceTrail[_priceTrail.length-1]?.price;
-  if(curPrice)pts.push({x:dotX,y:toYpx(curPrice)});
-  if(pts.length<2)return;
-
-  const canvas=document.createElement('canvas');
-  canvas.id='meteorTrail';
-  canvas.width=W;canvas.height=H;
-  canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
-  const ctx=canvas.getContext('2d');
-
-  const SECTIONS=10;
-  const ptsPerSection=Math.ceil(pts.length/SECTIONS);
-  for(let s=0;s<SECTIONS;s++){
-    /* s=0 oldest/thinnest, s=9 newest/thickest */
-    const sStart=s*ptsPerSection;
-    const sEnd=Math.min((s+1)*ptsPerSection+1,pts.length);
-    if(sEnd<=sStart+1)continue;
-    const sp=pts.slice(sStart,sEnd);
-    const width=parseFloat((0.1+s*0.1).toFixed(1));
-    ctx.strokeStyle='rgba(247,147,26,0.8)';
-    ctx.lineWidth=width;
-    ctx.lineCap='butt';
-    ctx.lineJoin='round';
-    ctx.beginPath();
-    ctx.moveTo(sp[0].x,sp[0].y);
-    for(let i=1;i<sp.length-1;i++){
-      const mx=(sp[i].x+sp[i+1].x)/2;
-      const my=(sp[i].y+sp[i+1].y)/2;
-      ctx.quadraticCurveTo(sp[i].x,sp[i].y,mx,my);
+  const BINS=Math.round(H);
+  const heat=new Float32Array(BINS);
+  _priceTrail.forEach(p=>{
+    const ageFrac=Math.min(1,(now-p.ts)/TRAIL_WINDOW);
+    const weight=1-ageFrac;
+    const bin=Math.floor(toYpx(p.price));
+    const spread=3;
+    for(let dy=-spread*2;dy<=spread*2;dy++){
+      const b=bin+dy;
+      if(b>=0&&b<BINS){
+        const g=Math.exp(-(dy*dy)/(2*spread*spread));
+        heat[b]+=weight*g;
+      }
     }
-    ctx.lineTo(sp[sp.length-1].x,sp[sp.length-1].y);
-    ctx.stroke();
+  });
+  const maxHeat=Math.max(...heat,0.001);
+  const ctx=canvas.getContext('2d');
+  const glowW=16;
+  for(let y=0;y<BINS;y++){
+    if(heat[y]<0.01)continue;
+    const intensity=heat[y]/maxHeat;
+    const alpha=intensity*0.6;
+    const grad=ctx.createLinearGradient(dotX-glowW,y,dotX+4,y);
+    grad.addColorStop(0,'rgba(247,147,26,0)');
+    grad.addColorStop(0.6,`rgba(247,147,26,${(alpha*0.4).toFixed(3)})`);
+    grad.addColorStop(1,`rgba(247,147,26,${alpha.toFixed(3)})`);
+    ctx.fillStyle=grad;
+    ctx.fillRect(dotX-glowW,y,glowW+4,1);
   }
-
-  col.appendChild(canvas);
 }
 
 </script>
