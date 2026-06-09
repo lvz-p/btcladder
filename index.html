@@ -201,8 +201,6 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 
 .zoom-hint{position:absolute;top:8px;right:8px;font-size:10px;font-family:var(--mono);color:var(--muted2);background:var(--surface);border:0.5px solid var(--border);border-radius:5px;padding:3px 7px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:20}
 .zoom-hint.show{opacity:1}
-.zoom-reset{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:12px;font-family:var(--mono);font-weight:700;color:var(--btc);background:var(--btc-dim);border:0.5px solid rgba(247,147,26,.4);border-radius:5px;padding:3px 9px;cursor:pointer;opacity:0;transition:opacity .3s;z-index:20;white-space:nowrap}
-.zoom-reset.show{opacity:1}
 .canvas-col{position:relative;overflow:hidden;cursor:default;touch-action:none} /* touch handled by JS */
 .axis-price-col{touch-action:pan-y} /* let browser scroll */
 .labels-col-touch{touch-action:pan-y} /* let browser scroll */
@@ -415,18 +413,18 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="legend" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
       <button id="rangeBtn" class="leg tog tier1 on" style="font-family:var(--font)" title="Select price range filter">±10%</button>
       <span style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)">
-        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 10px 4px 10px"><div class="leg-pip" style="background:linear-gradient(90deg,var(--col-D) 33%,var(--col-W) 66%,var(--col-M) 100%)"></div>MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
+        <button class="leg tog tier1 on" id="maBtn" data-cat="MA" style="border:none;border-radius:0;background:transparent;padding:4px 10px 4px 10px">MA</button><button id="maExpandBtn" title="Expand MA groups" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button>
       </span>
-      <button class="leg tog tier1 on" data-cat="onchain"><div class="leg-pip OC"></div>On-chain</button>
-      <span id="tlPill" style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)"><button class="leg tog tier1 on" id="tlMasterBtn" style="border:none;border-radius:0;background:transparent;padding:4px 10px"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Trends</button><button id="tlExpandBtn" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button></span>
+      <button class="leg tog tier1 on" data-cat="onchain">On-chain</button>
+      <span id="tlPill" style="display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:999px;overflow:hidden;background:var(--surface)"><button class="leg tog tier1 on" id="tlMasterBtn" style="border:none;border-radius:0;background:transparent;padding:4px 10px">Trends</button><button id="tlExpandBtn" style="border:none;border-left:1px solid var(--border2);background:transparent;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);line-height:1;display:inline-flex;align-items:center">▼</button></span>
       <button class="leg tog tier1 on" id="zoneBtn" title="Zones"><div class="leg-zone"></div></button>
       <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
       <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
     </div>
     <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
-      <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)">DAILY</span>
-      <span class="ma-t2 on" data-cat="W" style="color:var(--col-W)">WEEKLY</span>
-      <span class="ma-t2 on" data-cat="M" style="color:var(--col-M)">MONTHLY</span>
+      <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-D);vertical-align:middle;margin-right:4px"></span>Daily</span>
+      <span class="ma-t2 on" data-cat="W" style="color:var(--col-W)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-W);vertical-align:middle;margin-right:4px"></span>Weekly</span>
+      <span class="ma-t2 on" data-cat="M" style="color:var(--col-M)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-M);vertical-align:middle;margin-right:4px"></span>Monthly</span>
     </div>
     <div id="tlExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:8px;padding-left:4px;align-items:center">
       <button class="leg tog tl-t2 on" data-cat="TL" style="font-size:10px;padding:2px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Diag</button>
@@ -439,7 +437,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <span class="rng-t2" id="rpall" data-prox="all">ALL</span>
     </div>
   </div>
-  <div id="zoomReset" class="zoom-reset" onclick="resetZoom()" style="display:none">↺ Reset zoom</div>
   <div class="chart-inner" id="chartInner">
     <div class="axis-price-col" id="axisPriceCol"></div>
     <div class="canvas-col" id="canvasCol">
@@ -559,7 +556,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
         <div class="gtxt">
           <p><strong style="color:var(--text)">Ctrl+scroll</strong> (or Cmd+scroll on Mac) zooms in/out centered on your cursor's price position.</p>
           <p><strong style="color:var(--text)">Click-drag</strong> pans the price axis up and down. When zoomed or panned, all price levels are shown regardless of the distance filter.</p>
-          <p><strong style="color:var(--text)">Double-click</strong> resets to the active range preset. The ↺ Reset zoom button also appears when zoomed.</p>
         </div>
       </details>
 </div>
@@ -615,7 +611,6 @@ function computePresetRange(cur,ma,oc){
 function resetZoom(){
   zoomLo=null;zoomHi=null;userZoomed=false;
   document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.toggle('on',b.dataset.prox===proxFilter));
-  const zr=$('zoomReset');if(zr)zr.style.display='none';
   updateRangeBtn();
   rerender();
 }
@@ -627,7 +622,6 @@ function applyZoom(newLo,newHi,cur){
   zoomLo=newLo;zoomHi=newHi;userZoomed=true;
   if(typeof updateRangeBtn==='function')updateRangeBtn();
   document.querySelectorAll('.tog[data-prox]').forEach(b=>b.classList.remove('on'));
-  const zr=$('zoomReset');if(zr)zr.style.display='';
   rerender();
 }
 
@@ -1002,7 +996,7 @@ function renderChart(cur,ma,oc,tl=[]){
     nonCur.filter(l=>l.type==='zone').forEach(l=>{
     const yTop=toY(l.max),yBot=toY(l.min);
     const topPct=(yTop/H*100).toFixed(2);
-    const hPct=Math.max(3,((yBot-yTop)/H*100)).toFixed(2);
+    const hPct=Math.max(0.3,((yBot-yTop)/H*100)).toFixed(3);
     canvas+=`<div class="azone" style="top:${topPct}%;height:${hPct}%"></div>`;
   });
 
@@ -1098,12 +1092,12 @@ function renderChart(cur,ma,oc,tl=[]){
     if(l.type==='zone'){
       const yTop=toY(l.max),yBot=toY(l.min);
       const topPct=(yTop/H*100).toFixed(2);
-      const hPct=Math.max(3,((yBot-yTop)/H*100)).toFixed(2);
+      const hPct=Math.max(0.3,((yBot-yTop)/H*100)).toFixed(3);
       /* fix: zone hover zone — same z-index as line hover zones, tooltip triggered on hover */
       canvas+=`<div class="hover-zone hz-zone" data-code="${code}" style="top:${topPct}%;height:${hPct}%"></div>`;
     } else {
       const _ghost=l.ghost&&l.sourceType==='trendline';
-      if(l.sourceType==='horizontal'){const zT=toY(l.priceMax||l.price),zB=toY(l.priceMin||l.price);const zTP=(zT/H*100).toFixed(2),zH2=Math.max(2,((zB-zT)/H*100)).toFixed(2);let zRGB='167,139,250';if(l.hlRole==='support')zRGB='74,222,128';else if(l.hlRole==='resistance')zRGB='248,113,113';canvas+=`<div style="position:absolute;left:0;top:${zTP}%;height:${zH2}%;width:100%;background:rgba(${zRGB},0.06);pointer-events:none"></div>`;}
+      if(l.sourceType==='horizontal'){const zT=toY(l.priceMax||l.price),zB=toY(l.priceMin||l.price);const zTP=(zT/H*100).toFixed(3),zH2=Math.max(0.3,((zB-zT)/H*100)).toFixed(3);let zRGB='167,139,250';if(l.hlRole==='support')zRGB='74,222,128';else if(l.hlRole==='resistance')zRGB='248,113,113';canvas+=`<div style="position:absolute;left:0;top:${zTP}%;height:${zH2}%;width:100%;background:rgba(${zRGB},0.06);pointer-events:none"></div>`;}
       canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${_ghost?'transparent':col};${_ghost?'background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px)':''};opacity:${_ghost?'0.25':'0.65'}"></div>`;
       canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col};opacity:${_ghost?'0.25':'1'}"></div>`;
       canvas+=`<div class="hover-zone" data-code="${code}" style="top:${yPct}%"></div>`;
@@ -1277,6 +1271,7 @@ function renderChart(cur,ma,oc,tl=[]){
       if(canvasEl&&!canvasEl.contains(e.target)){
         isTouchPanning=false;
         velHistory=[];
+        lastTapTime=0; /* reset double-tap timer when touching outside canvas */
         pinchStartLo=0;pinchStartHi=0;pinchStartDist=0;
         if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
       }
@@ -1348,6 +1343,7 @@ function renderChart(cur,ma,oc,tl=[]){
   canvas.addEventListener('mousedown',e=>{
     if(e.button!==0||e.ctrlKey||e.metaKey)return;
     if(window._recentTouch)return; /* ignore synthetic mousedown from touch */
+    if(!canvas.contains(e.target))return; /* ignore clicks on overlapping elements */
     const clo=canvas._lo,chi=canvas._hi;
     if(!Number.isFinite(clo)||!Number.isFinite(chi))return;
     isPanning=true;
@@ -1470,6 +1466,7 @@ function renderChart(cur,ma,oc,tl=[]){
   document.addEventListener('touchend',e=>{
     if(e.touches.length===0){
       /* finger lifted — start momentum if velocity is significant */
+      /* guard: only apply momentum if panning was active (touch started on canvas) */
       if(isTouchPanning&&velHistory.length>=2){
         const cur=window._cur||lastCurrent;
         const rect=canvas.getBoundingClientRect();
@@ -2583,7 +2580,7 @@ function tl_draw(mode,fast=false){
       const col=l.hlRole==='support'?'#22c55e':l.hlRole==='resistance'?'#ef4444':'#a78bfa';
       const rect=mkSvg('rect');
       rect.setAttribute('x',pad.l);rect.setAttribute('y',Math.min(yTop,yBot));
-      rect.setAttribute('width',W-pad.l-pad.r);rect.setAttribute('height',Math.max(3,Math.abs(yBot-yTop)));
+      rect.setAttribute('width',W-pad.l-pad.r);rect.setAttribute('height',Math.max(0.5,Math.abs(yBot-yTop)));
       rect.setAttribute('fill',col);rect.setAttribute('fill-opacity','0.12');
       rect.setAttribute('stroke',col);rect.setAttribute('stroke-width','0.5');rect.setAttribute('stroke-opacity','0.4');
       rect.setAttribute('pointer-events','none');
