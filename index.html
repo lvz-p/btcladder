@@ -91,8 +91,14 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .tog[data-cat="W"].on{background:var(--col-W-dim);color:var(--col-W)}
 .tog[data-cat="M"].on{background:var(--col-M-dim);color:var(--col-M)}
 .tog[data-cat="onchain"].on{background:var(--col-OC-dim);color:var(--col-OC)}
+.tl-t2{appearance:none;-webkit-appearance:none} /* reset button default styles, t2-pill handles the rest */
 .tl-t2[data-cat="TL"].on{background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.4)}
 .tl-t2[data-cat="HL"].on{background:rgba(167,139,250,.1);color:#a78bfa;border-color:rgba(167,139,250,.4)}
+.t2-pill{font-size:11px;font-family:var(--mono);font-weight:700;cursor:pointer;user-select:none;padding:2px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.t2-pill.on{background:rgba(255,255,255,.08);color:var(--text);border-color:rgba(255,255,255,.2)}
+.ma-t2.t2-pill[data-cat="D"].on{background:rgba(99,102,241,.1);color:var(--col-D);border-color:rgba(99,102,241,.4)}
+.ma-t2.t2-pill[data-cat="W"].on{background:rgba(74,222,128,.1);color:var(--col-W);border-color:rgba(74,222,128,.4)}
+.ma-t2.t2-pill[data-cat="M"].on{background:rgba(251,191,36,.1);color:var(--col-M);border-color:rgba(251,191,36,.4)}
 .lbl-sm{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:0 4px;white-space:nowrap}
 .zone-tog{font-family:var(--font);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
 .zone-tog.on{background:var(--btc-dim);border-color:rgba(247,147,26,.35);color:var(--btc)}
@@ -110,8 +116,8 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 button.leg.tog{transition:all .15s;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;cursor:pointer;font-family:var(--font);font-size:10px;background:var(--surface)}
 button.leg.tog.tier1{font-size:12px;padding:4px 10px;font-weight:700;min-height:22px;box-sizing:border-box}
 #maExpandBtn{font-size:13px;padding:2px 8px}
-.ma-t2{font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:.05em;cursor:pointer;text-transform:uppercase;transition:all .12s;user-select:none}
-.rng-t2{font-size:11px;font-family:var(--mono);font-weight:700;cursor:pointer;transition:all .12s;user-select:none;color:var(--muted);opacity:.45}
+.ma-t2{} /* styles now in .t2-pill */
+.rng-t2{} /* styles now in .t2-pill */
 .rng-t2.on{opacity:1;color:var(--text)}
 .ma-t2:not(.on){color:var(--muted)!important;text-decoration:line-through;opacity:.4}
 button.leg.tog:hover{background:var(--surface2)}
@@ -422,19 +428,18 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
     </div>
     <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
-      <span class="ma-t2 on" data-cat="D" style="color:var(--col-D)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-D);vertical-align:middle;margin-right:4px"></span>Daily</span>
-      <span class="ma-t2 on" data-cat="W" style="color:var(--col-W)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-W);vertical-align:middle;margin-right:4px"></span>Weekly</span>
-      <span class="ma-t2 on" data-cat="M" style="color:var(--col-M)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-M);vertical-align:middle;margin-right:4px"></span>Monthly</span>
+      <span class="ma-t2 t2-pill on" data-cat="D" style="color:var(--col-D)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-D);vertical-align:middle;margin-right:4px"></span>Daily</span>
+      <span class="ma-t2 t2-pill on" data-cat="W" style="color:var(--col-W)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-W);vertical-align:middle;margin-right:4px"></span>Weekly</span>
+      <span class="ma-t2 t2-pill on" data-cat="M" style="color:var(--col-M)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-M);vertical-align:middle;margin-right:4px"></span>Monthly</span>
     </div>
     <div id="tlExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:8px;padding-left:4px;align-items:center">
-      <button class="leg tog tl-t2 on" data-cat="TL" style="font-size:10px;padding:2px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Diag</button>
-      <button class="leg tog tl-t2 on" data-cat="HL" style="font-size:10px;padding:2px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer"><div class="leg-pip" style="background:linear-gradient(135deg,#4ade80 33%,#a78bfa 66%,#f87171 100%)"></div>Horiz</button>
+      <button class="tl-t2 t2-pill on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Diag</button>
+      <button class="tl-t2 t2-pill on" data-cat="HL"><div class="leg-pip" style="background:linear-gradient(135deg,#4ade80 33%,#a78bfa 66%,#f87171 100%)"></div>Horiz</button>
     </div>
     <div id="rangeExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center;font-size:11px;font-family:var(--font)">
-      <span class="rng-t2" id="rp5" data-prox="5">±5%</span>
-      <span class="rng-t2 on" id="rp10" data-prox="10">±10%</span>
-      <span class="rng-t2" id="rp25" data-prox="25">±25%</span>
-      <span class="rng-t2" id="rpall" data-prox="all">ALL</span>
+      <span class="rng-t2 t2-pill" id="rp5" data-prox="5">±5%</span>
+      <span class="rng-t2 t2-pill on" id="rp10" data-prox="10">±10%</span>
+      <span class="rng-t2 t2-pill" id="rp25" data-prox="25">±25%</span>
     </div>
   </div>
   <div class="chart-inner" id="chartInner">
@@ -586,7 +591,7 @@ let catFilters={D:true,W:true,M:true,onchain:true,TL:true,HL:true};
 try{catFilters={...catFilters,...JSON.parse(gs('filters','{}')||'{}')}}catch(_){}
 /* migrate legacy MA key if saved */
 if(catFilters['MA']!==undefined){catFilters['D']=catFilters['W']=catFilters['M']=catFilters['MA'];delete catFilters['MA'];}
-let proxFilter=gs('proximity','10')||'10';
+let proxFilter=gs('proximity','10')||'10';if(proxFilter==='all')proxFilter='25'; /* migrate legacy ALL */
 let autoZone=gs('autoZone','true')!=='false';
 
 /* ── ZOOM / PAN STATE ── */
@@ -875,6 +880,30 @@ function buildTipHTML(tip,cur){
         <span class="tt-mpct ${pCls}">${pctStr(x.d)}</span>
       </div>`;
     }).join('<div class="tt-divider"></div>');
+  } else if(tip.isTL&&tip.tlLine){
+    /* trendline tooltip: anchor dates + projected price */
+    const tl=tip.tlLine;
+    const tag=tip.code||'';
+    const prefix=tag.slice(0,1).toUpperCase();
+    const tfName=prefix==='D'?'Daily':prefix==='W'?'Weekly':'Monthly';
+    const typeName=tl.type==='resistance'?'Resistance':'Support';
+    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} ${typeName}</span>`;
+    /* anchor dates */
+    const fmtDate=t=>{const d=new Date(t);return d.toLocaleString('default',{month:'short',year:'numeric'});};
+    const dateA=tl.a&&tl.a.t?fmtDate(tl.a.t):'—';
+    const dateB=tl.b&&tl.b.t?fmtDate(tl.b.t):'—';
+    /* projected price */
+    const now=Date.now();
+    const horizMs=prefix==='D'?30*864e5:prefix==='W'?60*864e5:90*864e5;
+    const projT=now+horizMs;
+    const projPrice=typeof tl_projectLineAtTime==='function'?tl_projectLineAtTime(tl,projT):null;
+    const projLabel=prefix==='D'?'30d':prefix==='W'?'60d':'90d';
+    const pCls=pctCls(tip.d);
+    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
+      `<div style="font-size:13px;color:var(--muted);line-height:2.2;padding:2px 0 0">` +
+      `<div>Anchors: ${dateA} → ${dateB}</div>` +
+      (projPrice&&projPrice>0?`<div>${projLabel} projection: <span style="color:${tip.col};font-weight:600">${fmt(projPrice)}</span></div>`:'') +
+      `</div>`;
   } else {
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
     const pCls=pctCls(tip.d);
@@ -1079,6 +1108,7 @@ function renderChart(cur,ma,oc,tl=[]){
     const d=pct(l.price,cur);
     const tip={code,label:l.label,price:l.price,d,col,bg:levelBg(l),
       isZone:l.type==='zone',isOC:l.sourceType==='onchain',isHoriz:l.sourceType==='horizontal',
+      isTL:l.sourceType==='trendline',tlLine:l._tlLine||null,
       hlRole:l.hlRole,hlScore:l.score,hlOverlap:l.overlapCount,hlRej:l.rejections,hlSelReason:l.selReason,distPct:l.distPct,
       priceMin:l.priceMin,priceMax:l.priceMax,
       min:l.min,max:l.max,
@@ -1121,6 +1151,8 @@ function renderChart(cur,ma,oc,tl=[]){
   $('canvasCol').dataset.lo=lo;
   $('canvasCol').dataset.hi=hi;
   $('canvasCol').dataset.cur=cur;
+  $('canvasCol').dataset.h=H;
+  $('canvasCol').dataset.w=$('canvasCol').offsetWidth; /* explicit width for trail */
   if(typeof renderMeteorTrail==='function')renderMeteorTrail();
   if(window._showEmptyMsg){
     $('canvasCol').innerHTML+=`<div style="pointer-events:none;position:absolute;top:12px;left:0;right:0;text-align:center;z-index:5;font-size:12px;font-family:var(--mono);color:var(--muted);letter-spacing:.04em">Enable signals above to see price levels</div>`;
@@ -3588,6 +3620,19 @@ function renderAnimatedPrice(newPrice, oldPrice){
 /* ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── CONTROLS ── */
+/* close all tier2 expands — call before opening any one */
+function closeAllExpands(){
+  const panels=[
+    {ex:'maExpand',btn:'maExpandBtn'},
+    {ex:'tlExpand',btn:'tlExpandBtn'},
+    {ex:'rangeExpand',btn:null}
+  ];
+  panels.forEach(p=>{
+    const el=document.getElementById(p.ex);
+    if(el)el.style.display='none';
+    if(p.btn){const b=document.getElementById(p.btn);if(b)b.textContent='▼';}
+  });
+}
 (function(){
   const master=document.getElementById('tlMasterBtn');
   const expBtn=document.getElementById('tlExpandBtn');
@@ -3595,7 +3640,7 @@ function renderAnimatedPrice(newPrice, oldPrice){
   const syncMaster=()=>{const on=catFilters.TL!==false||catFilters.HL!==false;if(master)master.classList.toggle('on',on);};
   syncMaster();
   if(master)master.onclick=()=>{const on=catFilters.TL!==false||catFilters.HL!==false;catFilters.TL=catFilters.HL=!on;syncMaster();if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',!on));ss('filters',JSON.stringify(catFilters));rerender();};
-  if(expBtn)expBtn.onclick=()=>{if(!ex)return;const open=ex.style.display==='none'||!ex.style.display;if(open){const maEx=document.getElementById('maExpand'),maBtn=document.getElementById('maExpandBtn');if(maEx&&maEx.style.display!=='none'){maEx.style.display='none';if(maBtn)maBtn.textContent='▼';}}ex.style.display=open?'flex':'none';expBtn.textContent=open?'▲':'▼';if(open)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',catFilters[t.dataset.cat]!==false));};
+  if(expBtn)expBtn.onclick=()=>{if(!ex)return;const open=ex.style.display==='none'||!ex.style.display;if(open)closeAllExpands();ex.style.display=open?'flex':'none';expBtn.textContent=open?'▲':'▼';if(open)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',catFilters[t.dataset.cat]!==false));};
   if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>{t.onclick=()=>{const c=t.dataset.cat;catFilters[c]=!t.classList.contains('on');t.classList.toggle('on',catFilters[c]!==false);syncMaster();ss('filters',JSON.stringify(catFilters));rerender();};});
 })();
 
@@ -3630,8 +3675,7 @@ document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
       const ex=document.getElementById('maExpand');
       if(!ex)return;
       const opening=ex.style.display==='none';
-      /* close range expand if open */
-      if(opening){const rEx=document.getElementById('rangeExpand');const rBtn=document.getElementById('rangeExpandBtn');if(rEx&&rEx.style.display!=='none'){rEx.style.display='none';if(rBtn)rBtn.textContent='▼';}}
+      if(opening)closeAllExpands();
       ex.style.display=opening?'flex':'none';
       exBtn.textContent=opening?'▲':'▼';
       if(opening)syncTier2Visual();
@@ -3688,8 +3732,7 @@ if(rangeBtn)rangeBtn.onclick=()=>{
   const ex=document.getElementById('rangeExpand');
   if(!ex)return;
   const opening=ex.style.display==='none';
-  /* close MA expand if open */
-  if(opening){const maEx=document.getElementById('maExpand');const maBtn=document.getElementById('maExpandBtn');if(maEx&&maEx.style.display!=='none'){maEx.style.display='none';if(maBtn)maBtn.textContent='▼';}}
+  if(opening)closeAllExpands();
   ex.style.display=opening?'flex':'none';
 };
 document.querySelectorAll('#rangeExpand .rng-t2').forEach(t=>{
@@ -4144,14 +4187,15 @@ function renderMeteorTrail(){
   const col=$('canvasCol');
   if(!col||_priceTrail.length<2)return;
   let canvas=col.querySelector('#meteorTrail');
+  const TRAIL_W=80; /* fixed width — anchored to right edge, independent of canvasCol width */
   if(!canvas){
     canvas=document.createElement('canvas');
     canvas.id='meteorTrail';
-    canvas.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
+    canvas.style.cssText='position:absolute;top:0;right:0;pointer-events:none;z-index:5';
     col.appendChild(canvas);
   }
-  const W=col.offsetWidth;
-  const H=col.offsetHeight;
+  const W=TRAIL_W;
+  const H=parseFloat(col.dataset.h)||col.offsetHeight;
   if(!W||!H)return;
   canvas.width=W;canvas.height=H;
   const now=Date.now();
@@ -4159,7 +4203,7 @@ function renderMeteorTrail(){
   const _hi=parseFloat(col.dataset.hi)||1;
   if(_hi<=_lo)return;
   const toYpx=price=>H*(1-(price-_lo)/(_hi-_lo));
-  const dotX=W-9;
+  const dotX=W-9; /* W is now TRAIL_W=80, right:0 anchored — matches btc-dot right:2px */
   const BINS=Math.round(H);
   const heat=new Float32Array(BINS);
   _priceTrail.forEach(p=>{
