@@ -20,7 +20,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#08090c;--surface:#111318;--surface2:#181c24;
@@ -91,14 +91,11 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);min-height:1
 .tog[data-cat="W"].on{background:var(--col-W-dim);color:var(--col-W)}
 .tog[data-cat="M"].on{background:var(--col-M-dim);color:var(--col-M)}
 .tog[data-cat="onchain"].on{background:var(--col-OC-dim);color:var(--col-OC)}
-.tl-t2{appearance:none;-webkit-appearance:none} /* reset button default styles, t2-pill handles the rest */
-.tl-t2[data-cat="TL"].on{background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.4)}
-.tl-t2[data-cat="HL"].on{background:rgba(167,139,250,.1);color:#a78bfa;border-color:rgba(167,139,250,.4)}
+.tl-t2{appearance:none;-webkit-appearance:none} /* colors handled by tl-tf-pill */
 .t2-pill{font-size:11px;font-family:var(--mono);font-weight:700;cursor:pointer;user-select:none;padding:2px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .t2-pill.on{background:rgba(255,255,255,.08);color:var(--text);border-color:rgba(255,255,255,.2)}
-.ma-t2.t2-pill[data-cat="D"].on{background:rgba(99,102,241,.1);color:var(--col-D);border-color:rgba(99,102,241,.4)}
-.ma-t2.t2-pill[data-cat="W"].on{background:rgba(74,222,128,.1);color:var(--col-W);border-color:rgba(74,222,128,.4)}
-.ma-t2.t2-pill[data-cat="M"].on{background:rgba(251,191,36,.1);color:var(--col-M);border-color:rgba(251,191,36,.4)}
+/* tl-tf-pill removed — all tier2 use plain t2-pill */
+
 .lbl-sm{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:0 4px;white-space:nowrap}
 .zone-tog{font-family:var(--font);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap}
 .zone-tog.on{background:var(--btc-dim);border-color:rgba(247,147,26,.35);color:var(--btc)}
@@ -276,7 +273,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-chart-wrap{width:100%;background:rgba(0,0,0,.35);border-radius:var(--r);overflow:visible;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .tl-chart-wrap svg{width:100%;display:block;user-select:none;-webkit-user-select:none}
 .tl-legend{margin-top:10px;padding:0 18px}
-.tl-leg-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:2px 7px;cursor:pointer;font-size:10px;font-weight:600;font-family:var(--font);transition:all .12s;white-space:nowrap}
+.tl-leg-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:2px 7px;cursor:pointer;font-size:10px;font-weight:600;font-family:var(--font);transition:background .12s,border-color .12s,color .12s,opacity .12s;white-space:nowrap}
 .tl-leg-btn:hover{background:var(--surface)}
 .tl-leg-btn.off{opacity:.3;text-decoration:line-through}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
@@ -427,14 +424,18 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       <button class="leg tog tier1 on" id="urpdBtn"><div style="display:flex;flex-direction:column;gap:1.5px;justify-content:center;flex-shrink:0"><div style="width:18px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.85)"></div><div style="width:9px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.5)"></div><div style="width:14px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.7)"></div><div style="width:5px;height:2.5px;border-radius:2px;background:rgba(96,165,250,0.35)"></div></div>URPD</button>
       <button class="leg tog tier1 on" id="msmBtn" title="Market State"><div style="width:4px;height:14px;border-radius:2px;background:linear-gradient(to bottom,rgba(185,28,28,0.8),rgba(217,119,6,0.7),rgba(100,116,139,0.6),rgba(100,149,237,0.7),rgba(67,56,202,0.8));flex-shrink:0"></div>State</button>
     </div>
-    <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center">
-      <span class="ma-t2 t2-pill on" data-cat="D" style="color:var(--col-D)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-D);vertical-align:middle;margin-right:4px"></span>Daily</span>
-      <span class="ma-t2 t2-pill on" data-cat="W" style="color:var(--col-W)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-W);vertical-align:middle;margin-right:4px"></span>Weekly</span>
-      <span class="ma-t2 t2-pill on" data-cat="M" style="color:var(--col-M)"><span style="display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--col-M);vertical-align:middle;margin-right:4px"></span>Monthly</span>
+    <div id="maExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:8px;padding-left:4px;align-items:center">
+      <span style="font-size:11px;font-family:var(--mono);font-weight:600;color:var(--text);opacity:.75;user-select:none;margin-right:2px">Moving Average</span>
+      <span class="ma-t2 t2-pill on" data-cat="D">Daily</span>
+      <span class="ma-t2 t2-pill on" data-cat="W">Weekly</span>
+      <span class="ma-t2 t2-pill on" data-cat="M">Monthly</span>
     </div>
     <div id="tlExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:8px;padding-left:4px;align-items:center">
-      <button class="tl-t2 t2-pill on" data-cat="TL"><div class="leg-pip" style="background:linear-gradient(90deg,#4ade80 50%,#f87171 50%)"></div>Diag</button>
-      <button class="tl-t2 t2-pill on" data-cat="HL"><div class="leg-pip" style="background:linear-gradient(135deg,#4ade80 33%,#a78bfa 66%,#f87171 100%)"></div>Horiz</button>
+      <span style="font-size:11px;font-family:var(--mono);font-weight:600;color:var(--text);opacity:.75;user-select:none;margin-right:2px">Trends</span>
+      <button class="tl-t2 t2-pill on" data-cat="TL_D">Daily</button>
+      <button class="tl-t2 t2-pill on" data-cat="TL_W">Weekly</button>
+      <button class="tl-t2 t2-pill on" data-cat="TL_M">Monthly</button>
+      <button class="tl-t2 t2-pill on" data-cat="HL">Horiz</button>
     </div>
     <div id="rangeExpand" style="display:none;margin-top:6px;flex-wrap:wrap;gap:12px;padding-left:4px;align-items:center;font-size:11px;font-family:var(--font)">
       <span class="rng-t2 t2-pill" id="rp5" data-prox="5">±5%</span>
@@ -577,7 +578,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v2.0.0 PWA';
+const VERSION='BtcLadder v2.0.6 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -587,7 +588,7 @@ const pct=(a,b)=>((a-b)/b*100);
 const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
 
 let autoTimer=null,lastCurrent=null,lastMas=[],lastOnchain=[],lastDiag=[],lastPriceRows=[],lastOnchainDiag=[];
-let catFilters={D:true,W:true,M:true,onchain:true,TL:true,HL:true};
+let catFilters={D:true,W:true,M:true,onchain:true,TL:true,TL_D:true,TL_W:true,TL_M:true,HL:true};
 try{catFilters={...catFilters,...JSON.parse(gs('filters','{}')||'{}')}}catch(_){}
 /* migrate legacy MA key if saved */
 if(catFilters['MA']!==undefined){catFilters['D']=catFilters['W']=catFilters['M']=catFilters['MA'];delete catFilters['MA'];}
@@ -736,7 +737,7 @@ async function getOnchainLevels(){
 
 /* ── LEVEL HELPERS ── */
 function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='trendline')return l.label;if(l.sourceType==='horizontal')return l.label;if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
-function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='trendline')return catFilters.TL!==false;if(l.sourceType==='horizontal')return catFilters.HL!==false;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
+function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='trendline'){const _p=(l.label||l.viewerTag||'')[0].toUpperCase();const _k=_p==='D'?'TL_D':_p==='M'?'TL_M':'TL_W';return catFilters.TL!==false&&catFilters[_k]!==false;}if(l.sourceType==='horizontal')return catFilters.HL!==false;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
 function withinProx(l,cur){if(l.type==='current'||proxFilter==='all'||userZoomed)return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
 function getLevels(cur,ma,oc,tl=[]){
   return[...ma,...oc,...tl,...hs_levels,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
@@ -1617,7 +1618,7 @@ function renderTable(cur,ma,oc,tl=[]){
     </tr>`;
   }).join('');
   /* filter info bar */
-  const activeFilters=Object.entries(catFilters).filter(([,v])=>v!==false).map(([k])=>k==='onchain'?'On-chain':k==='TL'?'Diag':k==='HL'?'Horiz':k==='D'?'Daily':k==='W'?'Weekly':k==='M'?'Monthly':k);
+  const activeFilters=Object.entries(catFilters).filter(([,v])=>v!==false).map(([k])=>k==='onchain'?'On-chain':k==='TL_D'?'Diag-D':k==='TL_W'?'Diag-W':k==='TL_M'?'Diag-M':k==='TL'?'Diag':k==='HL'?'Horiz':k==='D'?'Daily':k==='W'?'Weekly':k==='M'?'Monthly':k);
   const fi=$('tableFilterInfo');if(!fi)return;
   if(fi)fi.innerHTML=`<span style="color:var(--muted);font-size:12px;font-family:var(--mono)">Showing: ${activeFilters.join(' · ')} · ${proxFilter==='all'?'All distances':`±${proxFilter}%`} · Zones: ${autoZone?'on':'off'}</span><button onclick="document.querySelector('.filter-bar').scrollIntoView({behavior:'smooth',block:'center'})" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--mono);margin-left:8px">↑ Filters</button>`;
   if($('maTable'))$('maTable').innerHTML=`<table class="tbl"><thead><tr><th>Tag</th><th>Level</th><th>Price</th><th>Distance</th></tr></thead><tbody>${body}</tbody></table>`;
@@ -2150,9 +2151,8 @@ function tl_renderLegend(lines){
     const isWick=c.anchorBasis==='wick';
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
-    b.innerHTML=isWick
-      ? `<span style="display:inline-block;width:16px;height:0;border-top:${idx<2?2.5:1.5}px dashed ${off?'rgba(255,255,255,.25)':col};vertical-align:middle;margin-right:2px"></span>${c.viewerTag}`
-      : `<span style="display:inline-block;width:16px;height:0;border-top:${idx<2?2.5:1.5}px solid ${off?'rgba(255,255,255,.25)':col};vertical-align:middle;margin-right:2px"></span>${c.viewerTag}`;
+    /* no pip — color conveys support/resistance; wick vs close shown on SVG only */
+    b.innerHTML=`<span style="color:${off?'rgba(255,255,255,.25)':col}">${c.viewerTag}</span>`;
     b.onclick=()=>{tl_visible[c.viewerTag]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
   });
@@ -3637,11 +3637,11 @@ function closeAllExpands(){
   const master=document.getElementById('tlMasterBtn');
   const expBtn=document.getElementById('tlExpandBtn');
   const ex=document.getElementById('tlExpand');
-  const syncMaster=()=>{const on=catFilters.TL!==false||catFilters.HL!==false;if(master)master.classList.toggle('on',on);};
+  const syncMaster=()=>{const on=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false||catFilters.HL!==false;if(master)master.classList.toggle('on',on);};
   syncMaster();
-  if(master)master.onclick=()=>{const on=catFilters.TL!==false||catFilters.HL!==false;catFilters.TL=catFilters.HL=!on;syncMaster();if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',!on));ss('filters',JSON.stringify(catFilters));rerender();};
+  if(master)master.onclick=()=>{const on=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false||catFilters.HL!==false;catFilters.TL=catFilters.TL_D=catFilters.TL_W=catFilters.TL_M=catFilters.HL=!on;syncMaster();if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',!on));ss('filters',JSON.stringify(catFilters));rerender();};
   if(expBtn)expBtn.onclick=()=>{if(!ex)return;const open=ex.style.display==='none'||!ex.style.display;if(open)closeAllExpands();ex.style.display=open?'flex':'none';expBtn.textContent=open?'▲':'▼';if(open)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',catFilters[t.dataset.cat]!==false));};
-  if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>{t.onclick=()=>{const c=t.dataset.cat;catFilters[c]=!t.classList.contains('on');t.classList.toggle('on',catFilters[c]!==false);syncMaster();ss('filters',JSON.stringify(catFilters));rerender();};});
+  if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>{t.onclick=()=>{const c=t.dataset.cat;catFilters[c]=!t.classList.contains('on');t.classList.toggle('on',catFilters[c]!==false);catFilters.TL=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false;syncMaster();ss('filters',JSON.stringify(catFilters));rerender();};});
 })();
 
 document.querySelectorAll('.tog[data-cat]').forEach(btn=>{
