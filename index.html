@@ -1035,7 +1035,17 @@ function renderChart(cur,ma,oc,tl=[]){
     const yTop=toY(l.max),yBot=toY(l.min);
     const topPct=(yTop/H*100).toFixed(2);
     const hPct=Math.max(0.3,((yBot-yTop)/H*100)).toFixed(3);
-    canvas+=`<div class="azone" style="top:${topPct}%;height:${hPct}%"></div>`;
+    /* 3-tier visual strength by confluence size: 2 levels (current style,
+       .13 dashed), 3-4 levels (.20 dashed), 5+ levels (.30 solid — "major
+       zone"). Member count already available as l.items.length. */
+    const n=(l.items||l.members||[]).length;
+    const tierStyle=n>=5
+      ? 'background:rgba(255,255,255,.30);border-top:1.5px solid rgba(255,255,255,.5);border-bottom:1.5px solid rgba(255,255,255,.5)'
+      : n>=3
+      ? 'background:rgba(255,255,255,.20);border-top:1px dashed rgba(255,255,255,.38);border-bottom:1px dashed rgba(255,255,255,.38)'
+      : '';
+    const tierAttr=tierStyle?` style="top:${topPct}%;height:${hPct}%;${tierStyle}"`:` style="top:${topPct}%;height:${hPct}%"`;
+    canvas+=`<div class="azone"${tierAttr}></div>`;
   });
 
   /* ── MSM STATE STRIP: left:18%, width:30%, fades right into canvas ── */
@@ -2436,7 +2446,18 @@ function tl_draw(mode,fast=false){
     const d=new Date(tl_dateForIndex(cs,ii,mode));
     lbls.push({i:ii,mon:MSHORT[d.getUTCMonth()],yr:String(d.getUTCFullYear()),day:String(d.getUTCDate())});
   }
-  const _maxXLabels=mode==='1M'?5:mode==='1w'?6:7;
+  /* cap label count by actual rendered width — on mobile (_svgRenderedW
+     smaller) the fixed 5/6/7 caps leave too little gap for the widest
+     label format ("Mon 'YY", e.g. "Jan '26"), causing overlap/collisions.
+     Measure that widest format and ensure each label gets enough room. */
+  const _xMEl=document.createElement('span');
+  _xMEl.style.cssText='position:absolute;visibility:hidden;font-size:11px;font-family:var(--mono);white-space:nowrap';
+  _xMEl.textContent="Jan '26";
+  document.body.appendChild(_xMEl);
+  const _xLabelPx=Math.ceil(_xMEl.getBoundingClientRect().width);
+  document.body.removeChild(_xMEl);
+  const _maxXLabelsFit=Math.max(2,Math.floor(_svgRenderedW/(_xLabelPx+12)));
+  const _maxXLabels=Math.min(mode==='1M'?5:mode==='1w'?6:7,_maxXLabelsFit);
   const lstep=Math.max(1,Math.ceil(lbls.length/_maxXLabels));
   const selIdx=new Set();
   for(let i=0;i<lbls.length;i+=lstep)selIdx.add(i);
