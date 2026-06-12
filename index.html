@@ -2452,11 +2452,11 @@ function tl_draw(mode,fast=false){
      Measure that widest format and ensure each label gets enough room. */
   const _xMEl=document.createElement('span');
   _xMEl.style.cssText='position:absolute;visibility:hidden;font-size:11px;font-family:var(--mono);white-space:nowrap';
-  _xMEl.textContent="Jan '26";
+  _xMEl.textContent="Jan'26";
   document.body.appendChild(_xMEl);
   const _xLabelPx=Math.ceil(_xMEl.getBoundingClientRect().width);
   document.body.removeChild(_xMEl);
-  const _maxXLabelsFit=Math.max(2,Math.floor(_svgRenderedW/(_xLabelPx+12)));
+  const _maxXLabelsFit=Math.max(2,Math.floor(_svgRenderedW/(_xLabelPx+18)));
   const _maxXLabels=Math.min(mode==='1M'?5:mode==='1w'?6:7,_maxXLabelsFit);
   const lstep=Math.max(1,Math.ceil(lbls.length/_maxXLabels));
   const selIdx=new Set();
@@ -2476,7 +2476,7 @@ function tl_draw(mode,fast=false){
       top=(d.yr!==lastYr)?d.yr:'';
     }else{
       bot=d.day;
-      top=(d.mon!==lastMon)?((d.yr!==lastYr)?`${d.mon} '${d.yr.slice(2)}`:d.mon):'';
+      top=(d.mon!==lastMon)?((d.yr!==lastYr)?`${d.mon}'${d.yr.slice(2)}`:d.mon):'';
     }
     lastMon=d.mon;lastYr=d.yr;
     _xLabels.push({xi:x(d.i),top,bot});
