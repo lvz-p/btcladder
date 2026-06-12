@@ -576,7 +576,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='BtcLadder v2.1.5 PWA';
+const VERSION='BtcLadder v2.2.0 PWA';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -2039,6 +2039,24 @@ const TL_FETCH={'1d':{mode:'custom',look:1000},'1w':{mode:'max',look:null},'1M':
    (the focus window) plus aesthetic margins — independent of which
    trendlines are toggled on/off, so toggling never triggers a rezoom. */
 const TL_VIEW_MARGIN={'1d':{left:10,right:10},'1w':{left:10,right:10},'1M':{left:0,right:10}};
+/* Extrapolates a timestamp for index i outside [0,cs.length-1] —
+   needed for the "future" margin (and any left-pan past index 0) where
+   no real candle exists. Daily/weekly use a fixed step; monthly uses
+   calendar-month arithmetic (months aren't fixed-length). */
+function tl_dateForIndex(cs,i,mode){
+  if(!cs||!cs.length)return Date.now();
+  if(i>=0&&i<cs.length)return cs[i].t;
+  if(mode==='1M'){
+    const ref=i<0?cs[0]:cs[cs.length-1];
+    const refI=i<0?0:cs.length-1;
+    const d=new Date(ref.t);
+    return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+(i-refI),1);
+  }
+  const step=mode==='1w'?7*864e5:864e5;
+  if(i>=cs.length)return cs[cs.length-1].t+(i-(cs.length-1))*step;
+  return cs[0].t+i*step;
+}
+
 function tl_defaultView(mode){
   const cs=tl_candles[mode]||[];
   const focusLen=(tl_focus[mode]||cs).length;
@@ -2185,14 +2203,17 @@ function tl_renderLegend(lines){
     b.onclick=()=>{tl_visible[c.viewerTag]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
   });
-  /* group toggle */
+  /* group toggle — includes H-levels (hs_levels), which render into the
+     same button row using the same tl_visible mechanism, but were
+     previously excluded from this group's all/off logic */
   const lbl=document.getElementById('tlLegTLLabel');
   if(lbl){
-    const allOff=lines.length>0&&lines.every(c=>tl_visible[c.viewerTag]===false);
+    const allItems=[...lines,...hs_levels];
+    const allOff=allItems.length>0&&allItems.every(c=>tl_visible[c.viewerTag]===false);
     lbl.classList.toggle('all-off',allOff);
     lbl.onclick=()=>{
-      const allOff2=lines.every(c=>tl_visible[c.viewerTag]===false);
-      lines.forEach(c=>tl_visible[c.viewerTag]=allOff2?true:false);
+      const allOff2=allItems.every(c=>tl_visible[c.viewerTag]===false);
+      allItems.forEach(c=>tl_visible[c.viewerTag]=allOff2?true:false);
       tl_draw(tlViewerMode);
     };
   }
@@ -2240,7 +2261,13 @@ function tl_draw(mode,fast=false){
   });
 
   const cs=tl_candles[mode]||[];
-  if(!cs.length)return;
+  /* guard on tl_focus too — cs (full fetch) can become non-empty before
+     tl_focus[mode] (the analysis-window slice) is set inside tl_runForTf.
+     Without this, tl_defaultView would fall back to focusLen=cs.length
+     (showing ALL candles), materialize that as the default view, then
+     never re-materialize once tl_focus is actually set — a visible jump
+     from "nothing" to "wrong (too zoomed out) default". */
+  if(!cs.length||!tl_focus[mode])return;
 
   const showMA=true; /* always show MAs — controlled via legend toggles */
   const showOC=true; /* always show on-chain — controlled via legend toggles */
@@ -2318,22 +2345,34 @@ function tl_draw(mode,fast=false){
     return vals;
   }
 
+  /* Y-SCALE PRINCIPLE: candles UNION the full extent of every CONFIGURED
+     MA/on-chain series over the visible range — regardless of toggle
+     state. This set doesn't depend on tl_maVisible/tl_ocVisible, so:
+     (1) toggling any overlay never rescales, AND
+     (2) any overlay, once toggled on, is guaranteed to be visible —
+         it can't render off-screen.
+     Trendlines remain excluded (their `now` is already relevance-filtered
+     near current price, so this rarely matters for them). */
   let allPrices=[...visCs.flatMap(c=>[c.low,c.high])];
-  /* include only VISIBLE MA values in y-scale using extended candles */
-  /* tl_candles[mode] is now the full fetch (>= focus window) — cs already covers MA needs */
-    const maCs0=cs;
-  const maOffset0=maCs0.length-cs.length;
+
+  /* all configured MAs for this mode, full extent over visible range */
+  const maCs0=cs;
   (MA_CONFIG[mode]||[]).forEach(m=>{
-    if(tl_maVisible[m.label]===false)return;
     const hist=computeMA(maCs0,m.period);
     if(!hist.length)return;
-    const histOffset0=maOffset0-m.period+1;
     for(let i=vs;i<=ve;i++){
-      const hi=i+histOffset0;
+      const hi=i-(m.period-1);
       if(hi>=0&&hi<hist.length&&hist[hi]>0)allPrices.push(hist[hi]);
     }
   });
-  /* include trendline projections — removed: trendlines should not affect y-scale */
+
+  /* On-chain (RP/TMM/STHCB/LTHCB) intentionally NOT included here.
+     Reason: window._tlOCData loads async (~300ms+ after first tl_draw),
+     so conditioning on its presence makes the FIRST draw (no OC data yet)
+     compute a different ymin/ymax than the SECOND draw (OC data arrived) —
+     a visible jump on page load. OC was never the source of the original
+     toggle-rescale bug (it wasn't in allPrices before either), so excluding
+     it here costs nothing while avoiding this async-timing jump. */
   const rawLo=Math.min(...allPrices)*0.995;
   const rawHi=Math.max(...allPrices)*1.005;
   const ymin=tl_Y(rawLo,log),ymax=tl_Y(rawHi,log);
@@ -2385,23 +2424,41 @@ function tl_draw(mode,fast=false){
     _yLabels.push({yy,val});
   }
 
-  /* ── x-axis labels ── */
+  /* ── x-axis labels ──
+     Iterate the full [vs,ve] index range (not just visCs / real candles) —
+     so the "future" margin (and any left-pan past index 0) still gets
+     extrapolated date labels, via tl_dateForIndex. */
   const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let lastLbl=null;const lbls=[];
-  visCs.forEach((c,i)=>{
-    const d=new Date(c.t);
-    const mon=MSHORT[d.getUTCMonth()];
-    const yr=String(d.getUTCFullYear());
-    const day=String(d.getUTCDate());
-    const top=mode==='1M'?yr:mon;
-    const bot=mode==='1M'?mon:day;
-    const lbl=top+'|'+bot;
-    if(lbl!==lastLbl){lbls.push({i:vs+i,top,bot,t:c.t});lastLbl=lbl;}
-  });
+  const lbls=[];
+  const veLbl=Math.ceil(veF); /* unclamped — ve is clamped to cs.length-1 for
+     visCs slicing, but labels must extend into the future margin too */
+  for(let ii=vs;ii<=veLbl;ii++){
+    const d=new Date(tl_dateForIndex(cs,ii,mode));
+    lbls.push({i:ii,mon:MSHORT[d.getUTCMonth()],yr:String(d.getUTCFullYear()),day:String(d.getUTCDate())});
+  }
   const _maxXLabels=mode==='1M'?5:mode==='1w'?6:7;
   const lstep=Math.max(1,Math.ceil(lbls.length/_maxXLabels));
-  lbls.filter((_,i)=>i%lstep===0).forEach(d=>{
-    _xLabels.push({xi:x(d.i),top:d.top,bot:d.bot});
+  const selIdx=new Set();
+  for(let i=0;i<lbls.length;i+=lstep)selIdx.add(i);
+  selIdx.add(lbls.length-1); /* always include the rightmost label — otherwise
+    the future-margin region can fall off the lstep grid and get no label */
+  /* top line shown only when it changes from the previous SELECTED label
+     (e.g. "Jun, , , Jul" not "Jun, Jun, Jun, Jul"). For daily/weekly, the
+     month is also suffixed with 'YY when the year changes at that point,
+     so year-crossings are visible without a separate row. Monthly shows
+     the year on its top line only when the year changes. */
+  let lastMon=null,lastYr=null;
+  [...selIdx].sort((a,b)=>a-b).map(i=>lbls[i]).forEach(d=>{
+    let top,bot;
+    if(mode==='1M'){
+      bot=d.mon;
+      top=(d.yr!==lastYr)?d.yr:'';
+    }else{
+      bot=d.day;
+      top=(d.mon!==lastMon)?((d.yr!==lastYr)?`${d.mon} '${d.yr.slice(2)}`:d.mon):'';
+    }
+    lastMon=d.mon;lastYr=d.yr;
+    _xLabels.push({xi:x(d.i),top,bot});
   });
 
   /* ── border ── */
@@ -2583,11 +2640,14 @@ function tl_draw(mode,fast=false){
     });
     tll.addEventListener('mouseleave',()=>{if(tip)tip.style.display='none';tl_clearHighlight();});
     addC(tll);
-    /* anchor dots — only if visible in range */
+    /* anchor dots — only if visible in range.
+       pt.i is FOCUS-space (same as c.a.i/c.line above) — map to
+       DISPLAY-space with +off before comparing against vs/ve or x(). */
     [c.a,c.b].forEach(pt=>{
-      if(pt.i<vs||pt.i>ve)return;
+      const dispI=pt.i+off;
+      if(dispI<vs||dispI>ve)return;
       const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      dot.setAttribute('cx',x(pt.i));dot.setAttribute('cy',y(pt.p));dot.setAttribute('r',4);
+      dot.setAttribute('cx',x(dispI));dot.setAttribute('cy',y(pt.p));dot.setAttribute('r',4);
       dot.setAttribute('fill','none');dot.setAttribute('stroke',col);dot.setAttribute('stroke-width','1.5');
       addC(dot);
     });
@@ -2628,13 +2688,27 @@ function tl_draw(mode,fast=false){
     xAxisEl.style.left=chartLeft+'%';
     xAxisEl.style.right=(100-chartRight)+'%';
     xAxisEl.innerHTML='';
-    _xLabels.forEach(({xi,top,bot})=>{
-      const pct=(xi-pad.l)/(W-pad.l-pad.r)*100;
+    _xLabels.forEach(({xi,top,bot},idx)=>{
+      let pct=(xi-pad.l)/(W-pad.l-pad.r)*100;
+      /* First/last labels represent the leftmost/rightmost VISIBLE candle —
+         floor/ceil rounding (vs=floor(vsF), veLbl=ceil(veF)) can place them
+         just past 0%/100%. Clamp these into view rather than dropping;
+         interior labels landing outside [0,100] are dropped (genuinely
+         offscreen). */
+      if(idx===0)pct=Math.max(0,pct);
+      if(idx===_xLabels.length-1)pct=Math.min(100,pct);
       if(pct<0||pct>100)return;
       const d=document.createElement('div');
       d.className='tl-x-lbl';
       d.style.left=pct+'%';
-      d.innerHTML=`<span style="display:block;line-height:1.2">${top}</span><span style="display:block;line-height:1.2;opacity:.7">${bot}</span>`;
+      /* anchor first/last labels to the edge (extend inward) instead of
+         centering — centering at pct=0/100 would split the label across
+         the chart border. &nbsp; keeps the top row's line-box present even
+         when empty, so single-row labels (suppressed month/year) don't
+         shift vertically relative to two-row labels. */
+      if(idx===0)d.style.transform='translateY(-50%)',d.style.textAlign='left';
+      else if(idx===_xLabels.length-1)d.style.transform='translate(-100%,-50%)',d.style.textAlign='right';
+      d.innerHTML=`<span style="display:block;line-height:1.2">${top||'&nbsp;'}</span><span style="display:block;line-height:1.2;opacity:.7">${bot||'&nbsp;'}</span>`;
       xAxisEl.appendChild(d);
     });
   }
@@ -2977,7 +3051,8 @@ async function tl_fetchOCData(){
     const mouseXsvg2=(e.clientX-rect.left)/rect.width*1100;
     const vl=svg.querySelector('#tlChVLine');
     if(vl){vl.setAttribute('x1',mouseXsvg2);vl.setAttribute('x2',mouseXsvg2);vl.style.display='inline';}
-    /* find nearest candle for date label */
+    /* date label — extrapolates via tl_dateForIndex if cursor is in the
+       "future" margin (or any left-pan past index 0), not just real candles */
     const modeD=tlViewerMode;const zsD=getView(modeD);
     if(zsD){
       const csD=tl_candles[modeD]||[];
@@ -2985,15 +3060,12 @@ async function tl_fetchOCData(){
       const veFD=zsD.end!==null?zsD.end:csD.length-1;
       const spanD=veFD-vsFD||1;
       const cidxD=Math.round(vsFD+(mouseXsvg2-62)/(1100-62-20)*spanD);
-      const cd=csD[Math.max(0,Math.min(csD.length-1,cidxD))];
-      if(cd){
-        const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const dd=new Date(cd.t);
-        const dStr=`${dd.getUTCDate()} ${MSHORT[dd.getUTCMonth()]} ${dd.getUTCFullYear()}`;
-        const dateLbl=document.getElementById('tlCrosshairDate');
-        if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dStr;
-          dateLbl.style.left=(e.clientX-rect.left)/rect.width*100+'%';}
-      }
+      const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dd=new Date(tl_dateForIndex(csD,cidxD,modeD));
+      const dStr=`${dd.getUTCDate()} ${MSHORT[dd.getUTCMonth()]} ${dd.getUTCFullYear()}`;
+      const dateLbl=document.getElementById('tlCrosshairDate');
+      if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dStr;
+        dateLbl.style.left=(e.clientX-rect.left)/rect.width*100+'%';}
     }
     /* price label */
     const lbl=document.getElementById('tlCrosshairPrice');
@@ -3083,7 +3155,9 @@ async function tl_fetchOCData(){
         priceEl.style.transform='translateY(-50%)';
       }
     }
-    /* date label */
+    /* date label — extrapolates via tl_dateForIndex into the "future"
+       margin (or any left-pan past index 0). OHLC tooltip needs a REAL
+       candle, so it's hidden (not extrapolated) outside [0,cs.length-1]. */
     const cs=tl_candles[tlViewerMode]||[];
     const zs=getView(tlViewerMode);
     if(cs.length&&zs){
@@ -3091,18 +3165,17 @@ async function tl_fetchOCData(){
       const veF=zs.end!==null?zs.end:cs.length-1;
       const span=veF-vsF||1;
       const candleIdx=Math.round(vsF+(mouseXsvg-padL)/(svgW-padL-padR)*span);
-      const ci=Math.max(0,Math.min(cs.length-1,candleIdx));
-      const c=cs[ci];
-      if(c){
-        const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const d=new Date(c.t);
-        const dStr=`${d.getUTCDate()} ${MSHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-        const dateLbl=document.getElementById('tlCrosshairDate');
-        if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dStr;
-          dateLbl.style.left=(clientX-rect.left)/rect.width*100+'%';}
-        /* OHLC tooltip */
-        const tip=document.getElementById('tlTip');
-        if(tip){
+      const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const d=new Date(tl_dateForIndex(cs,candleIdx,tlViewerMode));
+      const dStr=`${d.getUTCDate()} ${MSHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+      const dateLbl=document.getElementById('tlCrosshairDate');
+      if(dateLbl){dateLbl.style.display='block';dateLbl.textContent=dStr;
+        dateLbl.style.left=(clientX-rect.left)/rect.width*100+'%';}
+      /* OHLC tooltip — only for real candles */
+      const c=(candleIdx>=0&&candleIdx<cs.length)?cs[candleIdx]:null;
+      const tip=document.getElementById('tlTip');
+      if(tip){
+        if(c){
           const isUp=c.close>=c.open;
           const fmt=p=>'$'+Math.round(p).toLocaleString();
           tip.innerHTML=`<div style="font-size:10px;color:#94a3b8;margin-bottom:2px">${dStr}</div>`+
@@ -3115,6 +3188,8 @@ async function tl_fetchOCData(){
           const _ty=Math.max(8,clientY-_th-24);
           tip.style.left=_tx+'px';
           tip.style.top=_ty+'px';
+        } else {
+          tip.style.display='none';
         }
       }
     }
