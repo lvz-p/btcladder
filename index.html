@@ -2423,6 +2423,18 @@ function tl_draw(mode,fast=false){
     }
   });
 
+  /* all configured H-levels (hs_levels), regardless of toggle state —
+     same toggle-independent treatment as MAs above. Unlike on-chain,
+     H-levels are static (not async-loaded), so no first/second-draw
+     jump risk from including them. Without this, an H-level outside the
+     candle/MA-derived range silently does nothing when toggled (its y
+     position falls outside the visible/clip area). */
+  hs_levels.forEach(l=>{
+    if(l.priceMin>0)allPrices.push(l.priceMin);
+    if(l.priceMax>0)allPrices.push(l.priceMax);
+    if((!l.priceMin&&!l.priceMax)&&l.price>0)allPrices.push(l.price);
+  });
+
   /* On-chain (RP/TMM/STHCB/LTHCB) intentionally NOT included here.
      Reason: window._tlOCData loads async (~300ms+ after first tl_draw),
      so conditioning on its presence makes the FIRST draw (no OC data yet)
@@ -2683,6 +2695,22 @@ function tl_draw(mode,fast=false){
 
   } /* end on-chain */
   /* ── trendlines ── */
+  /* Max display-space indices a ray extends past the LAST REAL CANDLE
+     (cs.length-1) — same reference point for every line, regardless of
+     where that line's own anchors sit. Without this, when zoomed way
+     out, `rayEnd` (tied to the current view edge veF) can be hundreds of
+     indices past cs.length-1 — and since project() extrapolates
+     LINEARLY in price (log mode is off for daily), that distance
+     translates directly into price drift, producing absurd (even
+     negative) endpoint prices and a visibly different ray angle that
+     changes continuously as you zoom. Capping all rays at the same
+     near-future point (a bit past the last candle, within the normal
+     pan range) keeps every ray a short, stable continuation AND lets
+     you pan there to see where converging lines meet — capping per-line
+     by b.i instead cut long-anchored lines (e.g. MTS1/2, DTR1-3) off
+     before they even reached the last candle, which is worse. */
+  const TL_RAY_MAX_EXTEND=30;
+  window._tlLastGeom={mode,vs,veF,vsF,span,off:tl_idxOffset[mode]||0,focusLen:(tl_focus[mode]||cs).length,W,padL:pad.l,padR:pad.r,lines:[]};
   vis.forEach((c,idx)=>{
     const col=c.type==='support'?'#22c55e':'#ef4444';
     const isWick=c.anchorBasis==='wick';
@@ -2693,9 +2721,13 @@ function tl_draw(mode,fast=false){
     const off=tl_idxOffset[c.tf]||0;
     const aDisp=c.a.i+off;
     const x1=x(Math.max(vs,aDisp)),y1=y(c.line.project(Math.max(vs,aDisp)-off));
-    /* extend as ray into empty right panning space */
-    const rayEnd=veF+Math.max(10,(veF-vsF)*0.3);
+    /* extend as ray into empty right panning space, capped at a fixed
+       point past the last real candle (same for every line) */
+    const desiredRayEnd=veF+Math.max(10,(veF-vsF)*0.3);
+    const rayEnd=Math.min(desiredRayEnd,(cs.length-1)+TL_RAY_MAX_EXTEND);
     const x2=x(rayEnd),y2=y(c.line.project(rayEnd-off));
+    window._tlLastGeom.lines.push({tag:c.viewerTag,ai:c.a.i,ap:c.a.p,bi:c.b.i,bp:c.b.p,
+      m:c.line.m,q:c.line.q,aDisp,x1,y1,rayEnd,x2,y2,projRay:c.line.project(rayEnd-off)});
     tll.setAttribute('x1',x1);tll.setAttribute('y1',y1);
     tll.setAttribute('x2',x2);tll.setAttribute('y2',y2);
     tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',idx<3?3:2);
@@ -4177,7 +4209,21 @@ function _renderDiagToEl(el){
   const hsAllRow=hs_allScored.length
     ?{name:'H/S All Scored',ok:true,msg:hs_allScored.map(l=>l.rankLabel+' $'+Math.round(l.price/1000)+'k sc:'+l.score.toFixed(0)+' rel:'+l.relevance.toFixed(0)+' dist:'+l.dist.toFixed(0)+'%'+(hs_levels.find(s=>s.label===l.rankLabel)?' ✓':'')).join(' · ')}
     :{name:'H/S All Scored',ok:false,msg:'none'};
-  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,hsRow,hsAllRow,urpdRow];
+  /* TEMP DIAG: per-line geometry for the currently-visible chart's
+     trendlines — anchors, slope/intercept, view state. Used to debug
+     the ray-extrapolation issue; remove once resolved. */
+  const geomRows=[];
+  if(window._tlLastGeom){
+    const g=window._tlLastGeom;
+    geomRows.push({name:`Geom ${g.mode} view`,ok:true,
+      msg:`vs=${g.vs.toFixed(2)} veF=${g.veF.toFixed(2)} vsF=${g.vsF.toFixed(2)} span=${g.span.toFixed(2)} off=${g.off} focusLen=${g.focusLen} W=${g.W} pad.l=${g.padL} pad.r=${g.padR}`});
+    g.lines.forEach(l=>{
+      geomRows.push({name:`Geom ${l.tag}`,ok:true,
+        msg:`a.i=${l.ai} a.p=${l.ap.toFixed(0)} b.i=${l.bi} b.p=${l.bp.toFixed(0)} m=${l.m.toExponential(4)} q=${l.q.toFixed(4)} `+
+            `aDisp=${l.aDisp} x1=${l.x1.toFixed(1)} y1=${l.y1.toFixed(1)} rayEnd=${l.rayEnd.toFixed(2)} x2=${l.x2.toFixed(1)} y2=${l.y2.toFixed(1)} project(rayEnd-off)=${l.projRay.toFixed(2)}`});
+    });
+  }
+  const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,hsRow,hsAllRow,urpdRow,...geomRows];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
   el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">${VERSION}</div>
   <table class="diag-tbl"><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>
