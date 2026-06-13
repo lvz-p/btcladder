@@ -2456,7 +2456,13 @@ function tl_draw(mode,fast=false){
   document.body.appendChild(_xMEl);
   const _xLabelPx=Math.ceil(_xMEl.getBoundingClientRect().width);
   document.body.removeChild(_xMEl);
-  const _maxXLabelsFit=Math.max(2,Math.floor(_svgRenderedW/(_xLabelPx+18)));
+  /* Edge labels (leftmost/rightmost) are anchored to extend INWARD
+     (text-align left/right, no centering transform) rather than centered —
+     so they occupy their FULL width on the side facing the next label,
+     instead of half. If that next label is ALSO "Mon'YY"-width, the
+     effective space needed is ~1.5x a label-width, not 1x. Use 1.5x to
+     budget for this worst case (edge label + adjacent wide label). */
+  const _maxXLabelsFit=Math.max(2,Math.floor(_svgRenderedW/(_xLabelPx*1.5+18)));
   const _maxXLabels=Math.min(mode==='1M'?5:mode==='1w'?6:7,_maxXLabelsFit);
   const lstep=Math.max(1,Math.ceil(lbls.length/_maxXLabels));
   const selIdx=new Set();
@@ -3778,7 +3784,7 @@ function closeAllExpands(){
   const ex=document.getElementById('tlExpand');
   const syncMaster=()=>{const on=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false||ladderFilters.HL!==false;if(master)master.classList.toggle('on',on);};
   syncMaster();
-  if(master)master.onclick=()=>{const on=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false||catFilters.HL!==false;catFilters.TL=catFilters.TL_D=catFilters.TL_W=catFilters.TL_M=!on;ladderFilters.HL=!on;syncMaster();if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',!on));ss('filters',JSON.stringify(catFilters));rerender();};
+  if(master)master.onclick=()=>{const on=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false||ladderFilters.HL!==false;catFilters.TL=catFilters.TL_D=catFilters.TL_W=catFilters.TL_M=!on;ladderFilters.HL=!on;syncMaster();if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',!on));ss('filters',JSON.stringify(catFilters));rerender();};
   if(expBtn)expBtn.onclick=()=>{if(!ex)return;const open=ex.style.display==='none'||!ex.style.display;if(open)closeAllExpands();ex.style.display=open?'flex':'none';expBtn.textContent=open?'▲':'▼';if(open)ex.querySelectorAll('.tl-t2').forEach(t=>t.classList.toggle('on',catFilters[t.dataset.cat]!==false));};
   if(ex)ex.querySelectorAll('.tl-t2').forEach(t=>{t.onclick=()=>{const c=t.dataset.cat;if(c==='HL'){ladderFilters.HL=!t.classList.contains('on');t.classList.toggle('on',ladderFilters.HL!==false);}else{catFilters[c]=!t.classList.contains('on');t.classList.toggle('on',catFilters[c]!==false);catFilters.TL=catFilters.TL_D!==false||catFilters.TL_W!==false||catFilters.TL_M!==false;}syncMaster();ss('filters',JSON.stringify(catFilters));rerender();};});
 })();
