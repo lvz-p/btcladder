@@ -334,9 +334,25 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 /* ── View Switcher ── */
 .view-card{transition:opacity .18s ease}
 .view-card.hiding{opacity:0;pointer-events:none}
-.view-switch-icon{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:3px;border:1px solid var(--border2);border-radius:8px;padding:5px 8px;background:var(--surface2);cursor:pointer;color:var(--muted);transition:all .15s}
+.view-actions{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:6px}
+.view-switch-icon{display:flex;align-items:center;gap:3px;border:1px solid var(--border2);border-radius:8px;padding:5px 8px;background:var(--surface2);cursor:pointer;color:var(--muted);transition:all .15s}
 .view-switch-icon:hover{color:var(--text);background:var(--surface)}
 .view-switch-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Side-by-side (desktop only): opt-in via button, never automatic ── */
+.side-by-side-icon{display:none;align-items:center;gap:3px;border:1px solid var(--border2);border-radius:8px;padding:5px 8px;background:var(--surface2);cursor:pointer;color:var(--muted);transition:all .15s}
+.side-by-side-icon:hover{color:var(--text);background:var(--surface)}
+.side-by-side-icon.active{color:var(--btc);border-color:var(--btc)}
+.side-by-side-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:1200px){.side-by-side-icon{display:flex}}
+#sideBySideWrap{display:contents}
+#sideBySideWrap.active{display:flex;align-items:flex-start}
+#sideBySideWrap.active>#chartShell,#sideBySideWrap.active>#tlSection{flex:1 1 50%;min-width:380px;display:block!important}
+.sbs-divider{display:none;flex:0 0 6px;cursor:col-resize;position:relative;align-self:stretch}
+#sideBySideWrap.active>.sbs-divider{display:block}
+.sbs-grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:2px;height:32px;border-radius:2px;background:var(--border2);transition:background .15s}
+.sbs-divider:hover .sbs-grip,.sbs-divider.dragging .sbs-grip{background:var(--btc)}
+.wrap.side-by-side{max-width:1600px}
 
 
 /* ── Dynamic sizing ── */
@@ -389,25 +405,31 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div id="nextLevelsLine" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding:6px 0;white-space:nowrap">
       <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
         <span style="color:var(--red)">↓</span>
-        <span id="supportName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-        <span id="supportPrice" style="color:var(--red)">—</span>
-        <span id="supportDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+        <span id="nextLowerName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+        <span id="nextLowerPrice" style="color:var(--red)">—</span>
+        <span id="nextLowerDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
       </span>
       <span style="color:var(--border2)">·</span>
       <span style="font-size:12px;font-family:var(--mono);white-space:nowrap">
         <span style="color:var(--green)">↑</span>
-        <span id="resistName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
-        <span id="resistPrice" style="color:var(--green)">—</span>
-        <span id="resistDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
+        <span id="nextHigherName" style="color:var(--text);font-weight:700;margin:0 3px"></span>
+        <span id="nextHigherPrice" style="color:var(--green)">—</span>
+        <span id="nextHigherDist" style="color:var(--muted);font-size:11px;margin-left:2px"></span>
       </span>
     </div>
   </div>
-  <button class="view-switch-icon" id="viewSwitchBtn" onclick="switchView()" title="Switch view">
-    <svg id="viewSwitchIcon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    <svg viewBox="0 0 24 24" style="width:10px;height:10px"><polyline points="9 18 15 12 9 6"/></svg>
-  </button>
+  <div class="view-actions">
+    <button class="side-by-side-icon" id="sideBySideBtn" onclick="toggleSideBySide()" title="Side by side view">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="9" height="16" rx="1.5"/><rect x="13" y="4" width="9" height="16" rx="1.5"/></svg>
+    </button>
+    <button class="view-switch-icon" id="viewSwitchBtn" onclick="switchView()" title="Switch view">
+      <svg id="viewSwitchIcon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <svg viewBox="0 0 24 24" style="width:10px;height:10px"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
 </div>
 
+<div id="sideBySideWrap">
 <div class="chart-shell" id="chartShell">
   <!-- Toggle bar inside ladder card -->
   <div id="ladderToggleBar" style="padding:8px 12px;border-bottom:1px solid var(--border)">
@@ -452,6 +474,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     <div class="labels-col" id="labelsCol"></div>
   </div>
 </div>
+<div class="sbs-divider" id="sbsDivider"><div class="sbs-grip"></div></div>
 <div class="section view-card" id="tlSection" style="display:none">
   <div class="tl-viewer">
     <div class="tl-ctrl-row">
@@ -481,6 +504,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
     </div>
   </div>
 </div>
+</div><!-- /sideBySideWrap -->
 
 <div class="tooltip" id="tooltip">
   <div class="tt-head" id="ttHead"></div>
@@ -494,12 +518,31 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 
 
 <div id="guideContent" style="display:none">
-      <details class="gsec"><summary>How to read the chart</summary>
+      <details class="gsec" open><summary>Disclaimer</summary>
         <div class="gtxt">
-          <p>The vertical axis is a true price axis — vertical position corresponds directly to price. The orange BTC line is your current price anchor. Levels above are resistances; below are supports.</p>
-          <p><strong style="color:var(--text)">Confluence zones</strong> (shaded bands) appear when multiple independent signals converge within a tight price range. Hover to see each member level's individual price.</p>
-          <p>When several levels are too close on screen to display individually, they appear as a <strong style="color:var(--text)">×N badge</strong>. Hover to see all individual prices.</p>
-          <p>Green % = level is above current price. Red % = below. Amber = within 0.8%.</p>
+          <p>This tool is for informational and educational purposes only. Nothing shown here — price levels, trendlines, moving averages, on-chain metrics, or confluence zones — is financial, investment, or trading advice, and none of it should be interpreted as a recommendation to buy, sell, or hold any asset.</p>
+          <p>All data is pulled from third-party public APIs (listed in "Data sources &amp; credits" below) and may be delayed, incomplete, or inaccurate. No guarantee is made as to its correctness or timeliness.</p>
+          <p>Cryptocurrency markets are highly volatile. Historical patterns, levels, and trendlines do not predict future price movement. Any decisions you make based on information from this tool are entirely your own responsibility — the creator of this tool accepts no liability for any losses, financial or otherwise, resulting from its use.</p>
+          <p>This tool is provided "as is," without warranty of any kind. It is not affiliated with, endorsed by, or sponsored by Binance, Coinbase, Bitstamp, Kraken, or BitView. If you're making real financial decisions, consult a licensed financial advisor and do your own research.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>The ladder — what it shows &amp; how to read it</summary>
+        <div class="gtxt">
+          <p>The vertical axis is a true price axis — vertical position corresponds directly to price. The orange line marks the current BTC price.</p>
+          <p>Each level is color-coded: green for support-side, red for resistance-side, plus separate colors for moving averages and on-chain metrics (see Tag structure). Tap or hover a level for its full name and price.</p>
+          <p><strong style="color:var(--text)">Confluence zones</strong> (shaded bands) mark where multiple levels converge within a tight price range. Light, medium, and solid-bordered shading indicate 2, 3-4, and 5+ converging levels — more convergence generally means a more significant zone. Hover a zone to see its individual levels.</p>
+          <p>When levels sit too close together to show individually, they collapse into a <strong style="color:var(--text)">×N badge</strong>. This is just for readability — tap to see the individual levels.</p>
+          <p>Green % = above current price. Red % = below. Amber = within 0.8%.</p>
+          <p><strong style="color:var(--text)">Ctrl+scroll</strong> (or Cmd+scroll on Mac) zooms the price axis; <strong style="color:var(--text)">click-drag</strong> pans it. While zoomed or panned, all levels are shown regardless of the distance filter.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>The chart — what it shows &amp; how to read it</summary>
+        <div class="gtxt">
+          <p>Tap the chart icon near the top of the page to open the chart for the current timeframe (Daily, Weekly, or Monthly).</p>
+          <p>The chart shows candles together with moving averages, on-chain levels, trendlines, and H-levels.</p>
+          <p><strong style="color:var(--text)">Pinch</strong> (or Ctrl/Cmd+scroll) to zoom; <strong style="color:var(--text)">drag</strong> to pan. The default view includes every trendline anchor for that timeframe, with a small margin on each side and space on the right for upcoming candles. Hold or hover a candle to see its date and OHLC values.</p>
+          <p>Use the legend to show or hide individual moving averages, on-chain levels, trendlines, or H-levels — or tap a group label (e.g. "Trends") to toggle the whole group at once.</p>
+          <p>A solid trendline is anchored to candle closes; a dashed trendline is anchored to wicks (highs/lows).</p>
         </div>
       </details>
       <details class="gsec"><summary>Tag structure</summary>
@@ -519,19 +562,38 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
             WTR# = Weekly Trendline · Resistance · Rank #<br>
             WTS# = Weekly Trendline · Support · Rank #<br>
             MTR# = Monthly Trendline · Resistance · Rank #<br>
-            MTS# = Monthly Trendline · Support · Rank #
+            MTS# = Monthly Trendline · Support · Rank #<br><br>
+            H# = Horizontal Support/Resistance · Rank #
           </div>
         </div>
       </details>
-      <details class="gsec"><summary>Trendlines — how they work</summary>
+      <details class="gsec"><summary>Trendlines — what the tags mean</summary>
         <div class="gtxt">
-          <p>Trendlines are detected algorithmically across three timeframes: Daily (180 candles), Weekly (200 candles), and Monthly (full history).</p>
-          <p>1. <strong style="color:var(--text)">Pivot detection</strong> — finds price points that are locally extreme within a window of surrounding candles (pivot highs for resistance, lows for support).</p>
-          <p>2. <strong style="color:var(--text)">Line generation</strong> — draws candidate lines between every valid pair of pivots of the same type.</p>
-          <p>3. <strong style="color:var(--text)">Validation</strong> — rejects any line breached by price between or after the anchor points.</p>
-          <p>4. <strong style="color:var(--text)">Scoring</strong> — ranks valid lines using a weighted heuristic combining: anchor span, recency of second anchor, total history covered, number of touches, and proximity of projected value to current BTC price. This is a heuristic — not a fundamental measure. Adjacent ranks (DTR1 vs DTR2) may be close in quality; the gap between top and bottom is more meaningful.</p>
-          <p>5. <strong style="color:var(--text)">Deduplication</strong> — removes near-identical lines, keeps the top 8 per timeframe.</p>
-          <p>The <strong style="color:var(--text)"># rank</strong> in each tag reflects score ordering within that timeframe and type. Open the <strong style="color:var(--text)">Trendlines</strong> section to see the full chart with anchor points and line extensions.</p>
+          <p>Trendlines are detected automatically across three timeframes — Daily, Weekly, and Monthly — shown as <strong style="color:var(--text)">DTR#/DTS#</strong> (Daily), <strong style="color:var(--text)">WTR#/WTS#</strong> (Weekly), and <strong style="color:var(--text)">MTR#/MTS#</strong> (Monthly), where R = resistance, S = support.</p>
+          <p>The <strong style="color:var(--text)">#</strong> is a rank from an internal scoring heuristic — 1 is the strongest candidate, but adjacent ranks (e.g. DTR1 vs DTR2) can be close in quality. Treat the ranking as a rough guide, not a precise measure.</p>
+          <p>Toggle individual lines, or an entire timeframe/type group at once, via the chart legend. Open the chart to see each line's anchor points and how it projects forward.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>Horizontal S/R levels</summary>
+        <div class="gtxt">
+          <p><strong style="color:var(--text)">H1–Hn</strong> are horizontal support/resistance levels derived from weekly price history — price zones where Bitcoin has repeatedly reversed, consolidated, or been defended in the past.</p>
+          <p>H1 is the strongest by an internal scoring heuristic, but as with trendlines, treat the ranking as a rough guide — a lower-numbered level isn't always meaningfully stronger than a nearby higher-numbered one. Read the overall picture of where levels cluster rather than focusing on individual ranks.</p>
+          <p>H-levels appear alongside trendlines on the chart and can be toggled individually, or together with trendlines via the chart legend's <strong style="color:var(--text)">Trends</strong> group.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>On-chain levels</summary>
+        <div class="gtxt">
+          <p><strong style="color:var(--text)">Realized Price (RP)</strong> — Average acquisition price of all BTC, weighted by last on-chain movement. Key long-term support in bear markets.</p>
+          <p><strong style="color:var(--text)">STH Cost Basis (STHCB)</strong> — Cost basis of short-term holders (coins moved within ~155 days). Reflects recent speculative positioning.</p>
+          <p><strong style="color:var(--text)">LTH Cost Basis (LTHCB)</strong> — Cost basis of long-term holders (coins unmoved 155+ days). Associated with macro accumulation zones.</p>
+          <p><strong style="color:var(--text)">True Market Mean (TMM)</strong> — Economically weighted cost basis from Cointime Economics, a framework developed by <a href="https://x.com/dpuellARK" target="_blank" rel="noopener" style="color:var(--btc)">David Puell</a> and <a href="https://x.com/_Checkmatey_" target="_blank" rel="noopener" style="color:var(--btc)">James Check</a>. Identifies macro equilibrium zones.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>Market state (the "State" toggle)</summary>
+        <div class="gtxt">
+          <p>Toggling <strong style="color:var(--text)">State</strong> adds a colored band across the ladder. Each vertical position is colored according to a five-state classification — <strong style="color:var(--text)">CAP</strong> (Capitulation), <strong style="color:var(--text)">ACC</strong> (Accumulation), <strong style="color:var(--text)">NEU</strong> (Neutral), <strong style="color:var(--text)">PRE</strong> (Premium), and <strong style="color:var(--text)">DIS</strong> (Distribution) — based on where price sits relative to two historical cost-basis ratios (price/TMM and price/STHCB, each ranked against their own history), combined with SOPR (whether coins currently moving on-chain are realizing a profit or a loss on average).</p>
+          <p>The badge shows which state current price falls into; the band shows where each state's territory currently sits across the visible price range.</p>
+          <p>These are descriptive labels for how current conditions compare to their own history — they are not trading signals or recommendations.</p>
         </div>
       </details>
       <details class="gsec"><summary>URPD overlay — what it shows</summary>
@@ -542,24 +604,11 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
           <p>Toggle <strong style="color:var(--text)">▦ URPD</strong> to show or hide the overlay.</p>
         </div>
       </details>
-      <details class="gsec"><summary>On-chain levels</summary>
+      <details class="gsec"><summary>Data sources &amp; credits</summary>
         <div class="gtxt">
-          <p><strong style="color:var(--text)">Realized Price (RP)</strong> — Average acquisition price of all BTC, weighted by last on-chain movement. Key long-term support in bear markets.</p>
-          <p><strong style="color:var(--text)">STH Cost Basis (STHCB)</strong> — Cost basis of short-term holders (coins moved within ~155 days). Reflects recent speculative positioning.</p>
-          <p><strong style="color:var(--text)">LTH Cost Basis (LTHCB)</strong> — Cost basis of long-term holders (coins unmoved 155+ days). Associated with macro accumulation zones.</p>
-          <p><strong style="color:var(--text)">True Market Mean (TMM)</strong> — Economically weighted cost basis from Cointime Economics. Identifies macro equilibrium zones.</p>
-        </div>
-      </details>
-      <details class="gsec"><summary>Confluence zones &amp; display groups</summary>
-        <div class="gtxt">
-          <p>Confluence zones use a mean-shift algorithm on the 1D price axis. Each level shifts toward its local density centroid, then levels with converged centers are grouped. Maximum zone width is 2% of price.</p>
-          <p>Display groups (×N badges) are separate — a readability feature when lines are within ~18px on screen. They carry no analytical meaning. Hover to see individual prices.</p>
-        </div>
-      </details>
-      <details class="gsec"><summary>Zoom &amp; pan</summary>
-        <div class="gtxt">
-          <p><strong style="color:var(--text)">Ctrl+scroll</strong> (or Cmd+scroll on Mac) zooms in/out centered on your cursor's price position.</p>
-          <p><strong style="color:var(--text)">Click-drag</strong> pans the price axis up and down. When zoomed or panned, all price levels are shown regardless of the distance filter.</p>
+          <p><strong style="color:var(--text)">Binance</strong> (<a href="https://www.binance.com" target="_blank" rel="noopener" style="color:var(--btc)">binance.com</a>) — historical price candles for all moving averages, trendlines, and horizontal S/R levels.</p>
+          <p><strong style="color:var(--text)">Coinbase</strong> (<a href="https://www.coinbase.com" target="_blank" rel="noopener" style="color:var(--btc)">coinbase.com</a>), <strong style="color:var(--text)">Bitstamp</strong> (<a href="https://www.bitstamp.net" target="_blank" rel="noopener" style="color:var(--btc)">bitstamp.net</a>), <strong style="color:var(--text)">Kraken</strong> (<a href="https://www.kraken.com" target="_blank" rel="noopener" style="color:var(--btc)">kraken.com</a>) — current spot price reference (median of available sources).</p>
+          <p><strong style="color:var(--text)">BitView</strong> (<a href="https://bitview.space" target="_blank" rel="noopener" style="color:var(--btc)">bitview.space</a>) — on-chain valuation metrics (Realized Price, STH/LTH Cost Basis, True Market Mean).</p>
         </div>
       </details>
 </div>
@@ -895,8 +944,7 @@ function buildTipHTML(tip,cur){
     const tag=tip.code||'';
     const prefix=tag.slice(0,1).toUpperCase();
     const tfName=prefix==='D'?'Daily':prefix==='W'?'Weekly':'Monthly';
-    const typeName=tl.type==='resistance'?'Resistance':'Support';
-    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} ${typeName}</span>`;
+    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} Trend</span>`;
     /* anchor dates */
     const fmtDate=t=>{const d=new Date(t);return d.toLocaleString('default',{month:'short',year:'numeric'});};
     const dateA=tl.a&&tl.a.t?fmtDate(tl.a.t):'—';
@@ -1597,9 +1645,8 @@ function levelFullName(l){
     const tag=l.label||'';
     const prefix=tag.slice(0,1).toUpperCase();
     const tfName=prefix==='D'?'Daily':prefix==='W'?'Weekly':prefix==='M'?'Monthly':(l.tlTf==='1d'?'Daily':l.tlTf==='1w'?'Weekly':'Monthly');
-    const typeName=l.tlType==='resistance'?'Resistance':'Support';
     const rankNum=tag.replace(/[A-Za-z]/g,'');
-    return`${tfName} Trendline · ${typeName} · Rank ${rankNum}`;
+    return`${tfName} Trendline · Rank ${rankNum}`;
   }
   if(l.sourceType==='onchain'){
     const names={RP:'Realized Price',STHCB:'Short-term Holder Cost Basis',LTHCB:'Long-term Holder Cost Basis',TMM:'True Market Mean'};
@@ -1645,24 +1692,24 @@ function renderSummary(cur,levels){
   const sup=levels.filter(l=>l.price<cur&&l.type!=='current').sort((a,b)=>b.price-a.price)[0];
   const res=levels.filter(l=>l.price>cur&&l.type!=='current').sort((a,b)=>a.price-b.price)[0];
   if(sup){
-    const sn=$('supportName'),sp=$('supportPrice'),sd=$('supportDist');
+    const sn=$('nextLowerName'),sp=$('nextLowerPrice'),sd=$('nextLowerDist');
     if(sn){sn.textContent=levelCode(sup);sn.style.color=levelColor(sup);}
     if(sp)sp.textContent=fmt(sup.price);
     if(sd)sd.textContent=pctStr(pct(sup.price,cur));
   } else {
-    const sp=$('supportPrice');if(sp)sp.textContent='—';
-    const sn=$('supportName');if(sn)sn.textContent='';
-    const sd=$('supportDist');if(sd)sd.textContent='';
+    const sp=$('nextLowerPrice');if(sp)sp.textContent='—';
+    const sn=$('nextLowerName');if(sn)sn.textContent='';
+    const sd=$('nextLowerDist');if(sd)sd.textContent='';
   }
   if(res){
-    const rn=$('resistName'),rp=$('resistPrice'),rd=$('resistDist');
+    const rn=$('nextHigherName'),rp=$('nextHigherPrice'),rd=$('nextHigherDist');
     if(rn){rn.textContent=levelCode(res);rn.style.color=levelColor(res);}
     if(rp)rp.textContent=fmt(res.price);
     if(rd)rd.textContent=pctStr(pct(res.price,cur));
   } else {
-    const rp=$('resistPrice');if(rp)rp.textContent='—';
-    const rn=$('resistName');if(rn)rn.textContent='';
-    const rd=$('resistDist');if(rd)rd.textContent='';
+    const rp=$('nextHigherPrice');if(rp)rp.textContent='—';
+    const rn=$('nextHigherName');if(rn)rn.textContent='';
+    const rd=$('nextHigherDist');if(rd)rd.textContent='';
   }
 }
 function renderDiag(){
@@ -1686,7 +1733,7 @@ function renderDiag(){
 }
 function rerender(){
   if(!lastCurrent)return;
-  if(typeof sizeLadderCard==="function")sizeLadderCard();
+  if(typeof sizeCards==="function")sizeCards();
   renderChart(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderTable(lastCurrent,lastMas,lastOnchain,lastTrendlines);
   renderSummary(lastCurrent,getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
@@ -2790,7 +2837,7 @@ function tl_draw(mode,fast=false){
   tl_renderOCLegend(OC_CONFIG);
   hs_renderLegend();
   /* size chart after legend — only matters on first render when pre-sizing couldn't run */
-  requestAnimationFrame(()=>{if(typeof sizeChartCard==='function')sizeChartCard();});
+  requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();});
 }
 
 /* MA and OC visibility state */
@@ -3619,7 +3666,7 @@ async function refreshPriceOnly(){
         $('priceChgWrap').style.display='';
       }
     }catch(_){}
-    /* update nearest support/resistance */
+    /* update next lower/higher level */
     if(lastMas.length||lastOnchain.length||lastTrendlines.length)
       renderSummary(lastCurrent, getAllLevels(lastCurrent,lastMas,lastOnchain,lastTrendlines));
     /* rerender ladder with new price */
@@ -4147,6 +4194,115 @@ document.getElementById('infoModal')?.addEventListener('click',function(e){
 let _activeView='ladder';
 const _svgChart='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>';
 const _svgLadder='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>';
+/* shared first-render flow: size the chart card, then wait for the SVG to
+   have real width (via ResizeObserver) before drawing — used by both
+   switchView (mobile single-view) and toggleSideBySide (desktop). */
+function _tlFirstRender(){
+  if(typeof sizeChartCard==='function')sizeChartCard();
+  const svgEl=document.getElementById('tlSvg');
+  if(svgEl){
+    svgEl.style.visibility='hidden';
+    let _r=false;
+    const _ro=new ResizeObserver(entries=>{
+      for(const e of entries){if(e.contentRect.width>100&&!_r){_r=true;_ro.disconnect();window._tlForcedWidth=e.contentRect.width;tl_draw(tlViewerMode);window._tlForcedWidth=null;requestAnimationFrame(()=>{svgEl.style.visibility='visible';});}}
+    });
+    _ro.observe(svgEl);
+    setTimeout(()=>{if(!_r){_ro.disconnect();tl_draw(tlViewerMode);svgEl.style.visibility='visible';}},2000);
+  }
+  setTimeout(tl_fetchOCData,200);
+}
+
+/* ── Side-by-side (desktop, opt-in only — never automatic) ── */
+let _sideBySide=false;
+let _sbsRatio=50; /* % width given to chartShell (ladder); divider takes 10px */
+const SBS_BREAKPOINT=1200;
+const SBS_MIN=25,SBS_MAX=75; /* clamp range for the divider drag */
+
+function _applySbsRatio(){
+  const ladderCard=document.getElementById('chartShell');
+  const chartCard=document.getElementById('tlSection');
+  if(!ladderCard||!chartCard)return;
+  ladderCard.style.flex=`1 1 calc(${_sbsRatio}% - 3px)`;
+  chartCard.style.flex=`1 1 calc(${100-_sbsRatio}% - 3px)`;
+}
+
+(function(){
+  const divider=document.getElementById('sbsDivider');
+  if(!divider)return;
+  let dragging=false;
+  divider.addEventListener('pointerdown',e=>{
+    if(!_sideBySide)return;
+    dragging=true;divider.classList.add('dragging');
+    divider.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  divider.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const wrap=document.getElementById('sideBySideWrap');
+    const rect=wrap.getBoundingClientRect();
+    let pct=(e.clientX-rect.left)/rect.width*100;
+    pct=Math.max(SBS_MIN,Math.min(SBS_MAX,pct));
+    _sbsRatio=pct;
+    _applySbsRatio();
+    /* keep card/svg heights tracking the legend's live wrap during drag —
+       otherwise the legend grows a row (CSS, instant) while the SVG's
+       explicit height lags until pointerup, clipping the new row */
+    if(typeof sizeCards==='function')sizeCards();
+  });
+  const endDrag=e=>{
+    if(!dragging)return;
+    dragging=false;divider.classList.remove('dragging');
+    if(typeof sizeCards==='function')sizeCards();
+    if(typeof sizeChartCard==='function')sizeChartCard();
+    tl_draw(tlViewerMode);
+  };
+  divider.addEventListener('pointerup',endDrag);
+  divider.addEventListener('pointercancel',endDrag);
+  divider.addEventListener('dblclick',()=>{
+    if(!_sideBySide)return;
+    _sbsRatio=50;_applySbsRatio();
+    if(typeof sizeCards==='function')sizeCards();
+    if(typeof sizeChartCard==='function')sizeChartCard();
+    tl_draw(tlViewerMode);
+  });
+})();
+function toggleSideBySide(){
+  const wrap=document.getElementById('sideBySideWrap');
+  const wrapEl=document.querySelector('.wrap');
+  const ladderCard=document.getElementById('chartShell');
+  const chartCard=document.getElementById('tlSection');
+  const switchBtn=document.getElementById('viewSwitchBtn');
+  const sbsBtn=document.getElementById('sideBySideBtn');
+  _sideBySide=!_sideBySide;
+  if(_sideBySide){
+    wrap.classList.add('active');
+    wrapEl.classList.add('side-by-side');
+    sbsBtn.classList.add('active');
+    if(switchBtn)switchBtn.style.display='none';
+    const chartWasHidden=chartCard.style.display==='none';
+    ladderCard.style.display='block';
+    chartCard.style.display='block';
+    _applySbsRatio();
+    if(typeof sizeCards==='function')sizeCards();
+    if(chartWasHidden)_tlFirstRender();
+    else{if(typeof sizeChartCard==='function')sizeChartCard();tl_draw(tlViewerMode);}
+  }else{
+    wrap.classList.remove('active');
+    wrapEl.classList.remove('side-by-side');
+    sbsBtn.classList.remove('active');
+    if(switchBtn)switchBtn.style.display='';
+    ladderCard.style.flex='';chartCard.style.flex='';
+    if(_activeView==='ladder'){chartCard.style.display='none';ladderCard.style.display='block';}
+    else{ladderCard.style.display='none';chartCard.style.display='block';}
+    if(typeof sizeCards==='function')sizeCards();
+    if(_activeView==='chart')tl_draw(tlViewerMode);
+  }
+}
+/* auto-exit if the window narrows below the side-by-side breakpoint */
+window.addEventListener('resize',()=>{
+  if(_sideBySide&&window.innerWidth<SBS_BREAKPOINT)toggleSideBySide();
+});
+
 function switchView(){
   const ladderCard=document.getElementById('chartShell');
   const chartCard=document.getElementById('tlSection');
@@ -4165,21 +4321,7 @@ function switchView(){
       requestAnimationFrame(()=>requestAnimationFrame(()=>{chartCard.style.opacity='1';}));
       if(icon)icon.innerHTML=_svgLadder;
       _activeView='chart';
-      /* size chart card first if legend already rendered, then draw */
-      if(typeof sizeChartCard==='function')sizeChartCard();
-      /* render chart */
-      const svgEl=document.getElementById('tlSvg');
-      if(svgEl){
-        /* hide SVG until sized and drawn to prevent jump */
-        svgEl.style.visibility='hidden';
-        let _r=false;
-        const _ro=new ResizeObserver(entries=>{
-          for(const e of entries){if(e.contentRect.width>100&&!_r){_r=true;_ro.disconnect();window._tlForcedWidth=e.contentRect.width;tl_draw(tlViewerMode);window._tlForcedWidth=null;requestAnimationFrame(()=>{svgEl.style.visibility='visible';});}}
-        });
-        _ro.observe(svgEl);
-        setTimeout(()=>{if(!_r){_ro.disconnect();tl_draw(tlViewerMode);svgEl.style.visibility='visible';}},2000);
-      }
-      setTimeout(tl_fetchOCData,200);
+      _tlFirstRender();
     },180);
   } else {
     chartCard.style.opacity='0';
@@ -4264,10 +4406,35 @@ function sizeChartCard(){
   if(svg)svg.style.height=svgH+'px';
 }
 
-function sizeCards(){sizeLadderCard();sizeChartCard();}
+function sizeCards(){
+  sizeLadderCard();
+  sizeChartCard();
+  if(_sideBySide){
+    /* Equalize OUTER card heights only — never touch chartInner/tlSvg/etc,
+       which are watched by a ResizeObserver (chartInner -> rerender ->
+       sizeLadderCard) that would otherwise fight any stretch we apply to
+       them. The shorter card's container just gets taller; its content
+       keeps the exact size sizeLadderCard/sizeChartCard gave it, and the
+       extra space is blank (overflow:hidden already on both cards). */
+    const ladderCard=document.getElementById('chartShell');
+    const chartCard=document.getElementById('tlSection');
+    if(ladderCard&&chartCard){
+      const ladderH=ladderCard.getBoundingClientRect().height;
+      const chartH=chartCard.getBoundingClientRect().height;
+      const target=Math.max(ladderH,chartH);
+      if(target-ladderH>0.5)ladderCard.style.height=target+'px';
+      if(target-chartH>0.5)chartCard.style.height=target+'px';
+    }
+  }
+}
 
 window.addEventListener('load',()=>{setTimeout(sizeLadderCard,50);setTimeout(sizeLadderCard,300);setTimeout(sizeCards,1000);});
-window.addEventListener('resize',()=>{clearTimeout(window._sizeTimer);window._sizeTimer=setTimeout(sizeCards,80);});
+window.addEventListener('resize',()=>{
+  /* rAF-throttled — runs on nearly every resize tick (not just after the
+     resize stops), so card/svg heights track the legend's live wrap
+     continuously instead of lagging behind by ~80ms */
+  if(!window._sizeRAF)window._sizeRAF=requestAnimationFrame(()=>{window._sizeRAF=null;sizeCards();});
+});
 
 
 /* ── Refresh on tab resume after 5+ minutes hidden ── */
@@ -4415,6 +4582,7 @@ if('serviceWorker' in navigator){
       <span id="modalVersion" style="font-size:11px;font-family:var(--mono);color:var(--muted)"></span>
       <button onclick="document.getElementById('infoModal').style.display='none'" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:0">×</button>
     </div>
+    <div style="padding:5px 18px;font-size:10px;color:var(--muted2);text-align:center;border-bottom:1px solid var(--border2)">Not financial advice — for informational purposes only.</div>
     <div id="infoContentGuide" style="padding:18px;max-height:70vh;overflow-y:auto"></div>
     <div id="infoContentDiag" style="padding:18px;max-height:70vh;overflow-y:auto;display:none"></div>
   </div>
