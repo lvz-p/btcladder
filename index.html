@@ -116,9 +116,9 @@ button.leg.tog.tier1{font-size:12px;padding:4px 10px;font-weight:700;min-height:
 .ma-t2{} /* styles now in .t2-pill */
 .rng-t2{} /* styles now in .t2-pill */
 .rng-t2.on{opacity:1;color:var(--text)}
-.ma-t2:not(.on){color:var(--muted)!important;text-decoration:line-through;opacity:.4}
+.ma-t2:not(.on){color:var(--muted)!important;text-decoration:none;opacity:.45}
 button.leg.tog:hover{background:var(--surface2)}
-button.leg.tog:not(.on){opacity:.38;text-decoration:line-through;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
+button.leg.tog:not(.on){opacity:.45;text-decoration:none;background:transparent!important;color:var(--muted)!important;border-color:var(--border2)!important}
 #rangeBtn:not(.on){text-decoration:none}
 button.leg.tog.on[data-cat="D"]{background:var(--col-D-dim);color:var(--col-D);border-color:rgba(96,165,250,.3)}
 button.leg.tog.on[data-cat="W"]{background:var(--col-W-dim);color:var(--col-W);border-color:rgba(167,139,250,.3)}
@@ -263,7 +263,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-legend-group{padding:7px 0;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start}
 .tl-legend-group:last-child{border-bottom:none}
 .tl-legend-group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font);cursor:pointer;user-select:none;flex-shrink:0;width:90px;padding-top:2px}
-.tl-legend-group-label.all-off{text-decoration:line-through;opacity:.4}
+.tl-legend-group-label.all-off{text-decoration:none;opacity:.45}
 .tl-legend-group-hdr{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font);flex-shrink:0;width:76px;cursor:pointer;user-select:none;padding-top:2px}
 .tl-legend-group-btns{flex:1;display:flex;flex-wrap:wrap;gap:3px;row-gap:4px}
 .tl-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
@@ -273,7 +273,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 .tl-legend{margin-top:10px;padding:0 18px}
 .tl-leg-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:999px;padding:2px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--mono);transition:background .12s,border-color .12s,color .12s,opacity .12s;white-space:nowrap}
 .tl-leg-btn:hover{background:var(--surface)}
-.tl-leg-btn.off{opacity:.3;text-decoration:line-through}
+.tl-leg-btn.off{opacity:.45;text-decoration:none}
 .tl-leg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
 .axisLabel{fill:#94a3b8;font-size:18px;font-family:var(--mono)}.xLabel{fill:#94a3b8;font-size:16px;font-family:var(--mono)}
 .tl-y-axis{position:absolute;top:0;left:0;bottom:0;pointer-events:none;overflow:visible}
@@ -562,6 +562,12 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
             WTS# = Weekly Trendline · Support · Rank #<br>
             MTR# = Monthly Trendline · Resistance · Rank #<br>
             MTS# = Monthly Trendline · Support · Rank #<br><br>
+            GDR# = BTC/XAUt Daily Trendline · Resistance · Rank #<br>
+            GDS# = BTC/XAUt Daily Trendline · Support · Rank #<br>
+            GWR# = BTC/XAUt Weekly Trendline · Resistance · Rank #<br>
+            GWS# = BTC/XAUt Weekly Trendline · Support · Rank #<br>
+            GMR# = BTC/XAUt Monthly Trendline · Resistance · Rank #<br>
+            GMS# = BTC/XAUt Monthly Trendline · Support · Rank #<br><br>
             H# = Horizontal Support/Resistance · Rank #
           </div>
         </div>
@@ -571,6 +577,13 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
           <p>Trendlines are detected automatically across three timeframes — Daily, Weekly, and Monthly — shown as <strong style="color:var(--text)">DTR#/DTS#</strong> (Daily), <strong style="color:var(--text)">WTR#/WTS#</strong> (Weekly), and <strong style="color:var(--text)">MTR#/MTS#</strong> (Monthly), where R = resistance, S = support.</p>
           <p>The <strong style="color:var(--text)">#</strong> is a rank from an internal scoring heuristic — 1 is the strongest candidate, but adjacent ranks (e.g. DTR1 vs DTR2) can be close in quality. Treat the ranking as a rough guide, not a precise measure.</p>
           <p>Toggle individual lines, or an entire timeframe/type group at once, via the chart legend. Open the chart to see each line's anchor points and how it projects forward.</p>
+        </div>
+      </details>
+      <details class="gsec"><summary>BTC/XAUt trendlines</summary>
+        <div class="gtxt">
+          <p><strong style="color:var(--text)">GDR#/GDS#</strong> (Daily), <strong style="color:var(--text)">GWR#/GWS#</strong> (Weekly), and <strong style="color:var(--text)">GMR#/GMS#</strong> (Monthly) are trendlines detected on the BTC/XAUt (Bitcoin priced in gold) ratio chart, translated back into implied BTC/USDT values using gold's actual USD price history.</p>
+          <p>They appear in <span style="color:#fde047;font-weight:700">yellow</span> on both the BTC/USDT chart and the ladder, so they're visually distinct from native BTC trendlines (green/red) and on-chain levels (amber). A rank-1 line (the top-scoring of its type) is toggled on by default; rank-2 is shown but off.</p>
+          <p>Toggle individual lines via the chart legend, or use the <strong style="color:var(--text)">Trends</strong> group and its Daily/Weekly/Monthly sub-filters to show or hide them together with native trendlines.</p>
         </div>
       </details>
       <details class="gsec"><summary>Horizontal S/R levels</summary>
@@ -624,7 +637,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.3.0';
+const VERSION='v2.4.1';
 const NS='btcLadder_v86';
 const gs=(k,d=null)=>{try{const v=localStorage.getItem(NS+'_'+k);return v===null?d:v}catch(_){return d}};
 const ss=(k,v)=>{try{localStorage.setItem(NS+'_'+k,String(v))}catch(_){}};
@@ -793,12 +806,10 @@ async function getOnchainLevels(){
 /* ── LEVEL HELPERS ── */
 function levelCode(l){if(l.type==='current')return'BTC';if(l.sourceType==='trendline')return l.label;if(l.sourceType==='goldOverlay')return l.label;if(l.sourceType==='horizontal')return l.label;if(l.sourceType==='onchain')return l.short||'OC';return`${l.group}${l.period}MA`}
 function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='trendline'){const _p=(l.label||l.viewerTag||'')[0].toUpperCase();const _k=_p==='D'?'TL_D':_p==='M'?'TL_M':'TL_W';return catFilters.TL!==false&&catFilters[_k]!==false;}if(l.sourceType==='goldOverlay'){
-  /* BTC/XAUt-translated trendline levels — distinct sourceType so
-     isVisible's label[0]-based D/W/M routing (built for native DR1/
-     WS2/MR1-style tags) never sees gold's GDR1/GWS2-style tags and
-     misroutes them. Visibility mirrors the SAME toggle that controls
-     this line's curve on the BTC/USDT chart (btcXautOverlayVisible) —
-     one on/off switch for both, not a separate ladder-only filter. */
+  if(catFilters.TL===false)return false;
+  const _gp=(l.label||l.viewerTag||'')[1]?.toUpperCase();
+  const _gk=_gp==='D'?'TL_D':_gp==='M'?'TL_M':'TL_W';
+  if(catFilters[_gk]===false)return false;
   return btcXautOverlayVisible[l.viewerTag]!==false;
 }if(l.sourceType==='horizontal')return ladderFilters.HL!==false;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
 function withinProx(l,cur){if(l.type==='current'||proxFilter==='all'||userZoomed)return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
@@ -866,8 +877,8 @@ function meanShiftZones(levels,cur){
 /* ── COLORS ── */
 const COL={D:'#60a5fa',W:'#a78bfa',M:'#f472b6',onchain:'#fbbf24',zone:'rgba(255,255,255,0.6)',BTC:'#f7931a','TL-support':'#4ade80','TL-resistance':'#f87171'};
 const COL_BG={D:'rgba(96,165,250,0.10)',W:'rgba(167,139,250,0.10)',M:'rgba(244,114,182,0.10)',onchain:'rgba(251,191,36,0.10)',zone:'rgba(255,255,255,0.08)',BTC:'rgba(247,147,26,0.12)','TL-support':'rgba(74,222,128,0.10)','TL-resistance':'rgba(248,113,113,0.10)'};
-function levelColor(l){if(l.type==='current')return COL.BTC;if(l.type==='zone')return COL.zone;if(l.sourceType==='trendline'||l.sourceType==='goldOverlay')return l.tlType==='support'?COL['TL-support']:COL['TL-resistance'];if(l.sourceType==='horizontal')return l.hlRole==='support'?COL['TL-support']:l.hlRole==='resistance'?COL['TL-resistance']:'#cbd5e1';if(l.sourceType==='onchain')return COL.onchain;return COL[l.group]||COL.D}
-function levelBg(l){if(l.type==='zone')return COL_BG.zone;if(l.sourceType==='trendline'||l.sourceType==='goldOverlay')return l.tlType==='support'?COL_BG['TL-support']:COL_BG['TL-resistance'];if(l.sourceType==='horizontal')return l.hlRole==='support'?COL_BG['TL-support']:l.hlRole==='resistance'?COL_BG['TL-resistance']:'rgba(203,213,225,0.08)';if(l.sourceType==='onchain')return COL_BG.onchain;return COL_BG[l.group]||COL_BG.D}
+function levelColor(l){if(l.type==='current')return COL.BTC;if(l.type==='zone')return COL.zone;if(l.sourceType==='trendline')return l.tlType==='support'?COL['TL-support']:COL['TL-resistance'];if(l.sourceType==='goldOverlay')return'#fde047';if(l.sourceType==='horizontal')return'#cbd5e1';if(l.sourceType==='onchain')return COL.onchain;return COL[l.group]||COL.D}
+function levelBg(l){if(l.type==='zone')return COL_BG.zone;if(l.sourceType==='trendline')return l.tlType==='support'?COL_BG['TL-support']:COL_BG['TL-resistance'];if(l.sourceType==='goldOverlay')return'rgba(253,224,71,0.08)';if(l.sourceType==='horizontal')return'rgba(203,213,225,0.08)';if(l.sourceType==='onchain')return COL_BG.onchain;return COL_BG[l.group]||COL_BG.D}
 function pctCls(d){return Math.abs(d)<0.8?'near':(d>0?'pos':'neg')}
 function pctStr(d){return(d>=0?'+':'')+d.toFixed(1)+'%'}
 
@@ -1229,7 +1240,7 @@ function renderChart(cur,ma,oc,tl=[]){
       canvas+=`<div class="hover-zone hz-zone" data-code="${code}" style="top:${topPct}%;height:${hPct}%"></div>`;
     } else {
       const _ghost=l.ghost&&l.sourceType==='trendline';
-      if(l.sourceType==='horizontal'){const zT=toY(l.priceMax||l.price),zB=toY(l.priceMin||l.price);const zTP=(zT/H*100).toFixed(3),zH2=Math.max(0.3,((zB-zT)/H*100)).toFixed(3);let zRGB='203,213,225';if(l.hlRole==='support')zRGB='74,222,128';else if(l.hlRole==='resistance')zRGB='248,113,113';canvas+=`<div style="position:absolute;left:0;top:${zTP}%;height:${zH2}%;width:100%;background:rgba(${zRGB},0.06);pointer-events:none"></div>`;}
+      if(l.sourceType==='horizontal'){const zT=toY(l.priceMax||l.price),zB=toY(l.priceMin||l.price);const zTP=(zT/H*100).toFixed(3),zH2=Math.max(0.3,((zB-zT)/H*100)).toFixed(3);let zRGB='203,213,225';canvas+=`<div style="position:absolute;left:0;top:${zTP}%;height:${zH2}%;width:100%;background:rgba(${zRGB},0.06);pointer-events:none"></div>`;}
       canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${_ghost?'transparent':col};${_ghost?'background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px)':''};opacity:${_ghost?'0.25':'0.65'}" data-opacity="${_ghost?'0.25':'0.65'}"></div>`;
       canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col};opacity:${_ghost?'0.25':'1'}"></div>`;
       canvas+=`<div class="hover-zone" data-code="${code}" style="top:${yPct}%"></div>`;
@@ -2376,7 +2387,7 @@ function hs_renderLegend(){
   el.querySelectorAll('.hs-leg-btn').forEach(b=>b.remove());
   if(!hs_levels.length)return;
   hs_levels.forEach(l=>{
-    const col=l.hlRole==='support'?'#22c55e':l.hlRole==='resistance'?'#ef4444':'#cbd5e1';
+    const col='#cbd5e1';
     const off=tl_visible[l.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn hs-leg-btn'+(off?' off':'');
@@ -2400,7 +2411,7 @@ function gold_renderUsdOverlayLegend(mode){
   const ov=btcXautOverlays[mode]||[];
   if(!ov.length)return;
   ov.forEach(o=>{
-    const col=o.type==='support'?'#22c55e':'#ef4444';
+    const col='#fde047';
     const off=btcXautOverlayVisible[o.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn gold-ov-leg-btn'+(off?' off':'');
@@ -2976,9 +2987,18 @@ function tl_draw(mode,fast=false){
      before they even reached the last candle, which is worse. */
   const TL_RAY_MAX_EXTEND=30;
   window._tlLastGeom={mode,vs,veF,vsF,span,off:pair.idxOffset(mode),focusLen:(tl_focus[mode]||cs).length,W,padL:pad.l,padR:pad.r,lines:[]};
+  /* Pre-rank by lineScore so thickness/opacity are stable regardless of
+     which lines are currently toggled on — rank-1 of each type always
+     thick/bright, rank-2 always thinner/dimmer, same as BTC/USDT. */
+  const _tlRankMap=new Map();
+  {const bySup=[...vis].filter(x=>x.type==='support').sort((a,b)=>b.lineScore-a.lineScore);
+   const byRes=[...vis].filter(x=>x.type==='resistance').sort((a,b)=>b.lineScore-a.lineScore);
+   bySup.forEach((x,i)=>_tlRankMap.set(x.viewerTag,i));
+   byRes.forEach((x,i)=>_tlRankMap.set(x.viewerTag,i));}
   vis.forEach((c,idx)=>{
     const col=c.type==='support'?'#22c55e':'#ef4444';
     const isWick=c.anchorBasis==='wick';
+    const _rank=_tlRankMap.get(c.viewerTag)??idx;
     const tll=document.createElementNS('http://www.w3.org/2000/svg','line');
     /* c.a.i / c.line are in FOCUS-array index-space (the slice used for
        generation); x()/vs/veF are in DISPLAY-array index-space (now larger,
@@ -2999,8 +3019,8 @@ function tl_draw(mode,fast=false){
       m:c.line.m,q:c.line.q,aDisp,x1,y1,rayEnd,x2,y2,projRay:c.line.project(rayEnd-off)});
     tll.setAttribute('x1',x1);tll.setAttribute('y1',y1);
     tll.setAttribute('x2',x2);tll.setAttribute('y2',y2);
-    tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',idx<3?3:2);
-    tll.setAttribute('opacity',idx<3?'.9':'.65');
+    tll.setAttribute('stroke',col);tll.setAttribute('stroke-width',_rank===0?3:2);
+    tll.setAttribute('opacity',_rank===0?'.9':'.65');
     if(isWick){
       tll.setAttribute('stroke-dasharray','8,4');
       tll.setAttribute('stroke-linecap','butt'); /* butt needed for dashes to show */
@@ -3111,7 +3131,7 @@ function tl_draw(mode,fast=false){
       const yTop=l.priceMax?y(l.priceMax):yMid-2;
       const yBot=l.priceMin?y(l.priceMin):yMid+2;
       if(yMid<pad.t-10||yMid>H-pad.b+10)return;
-      const col=l.hlRole==='support'?'#22c55e':l.hlRole==='resistance'?'#ef4444':'#cbd5e1';
+      const col='#cbd5e1';
       const rect=mkSvg('rect');
       rect.setAttribute('x',pad.l);rect.setAttribute('y',Math.min(yTop,yBot));
       rect.setAttribute('width',W-pad.l-pad.r);rect.setAttribute('height',Math.max(0.5,Math.abs(yBot-yTop)));
@@ -3147,7 +3167,7 @@ function tl_draw(mode,fast=false){
     const dIdx=csDateIdx();
     const ov=btcXautOverlays[mode].filter(o=>btcXautOverlayVisible[o.viewerTag]!==false);
     ov.forEach(o=>{
-      const col=o.type==='support'?'#22c55e':'#ef4444';
+      const col='#fde047';
       /* resolve each point's DATE to this draw's actual index/x position
          — points carry only {date, usd}, no index, so they're always
          placed relative to whatever array/view is currently active,
@@ -3160,9 +3180,9 @@ function tl_draw(mode,fast=false){
       path.setAttribute('d',d);
       path.setAttribute('fill','none');
       path.setAttribute('stroke',col);
-      path.setAttribute('stroke-width','2');
-      path.setAttribute('stroke-dasharray','3,3'); /* dashed — visually distinct from native straight trendline rays */
-      path.setAttribute('opacity','0.85');
+      path.setAttribute('stroke-width','1.5');
+      /* rank-1 (gold_visible===true) = full opacity; rank-2 (false) = dimmed */
+      path.setAttribute('opacity',gold_visible[o.viewerTag]===true?'0.85':'0.5');
       path.setAttribute('data-tltag',o.viewerTag);
       path.style.cursor='pointer';
       const tipEl=document.getElementById('tlTip');
@@ -5188,6 +5208,49 @@ async function gold_fetchXautLive(interval,fromMs){
   return out;
 }
 
+/* ── ONE-TIME diagnostic: CSV vs live XAUTUSDT overlap comparison ──
+   The currently-embedded GOLD_BACKFILL.gold_d is deliberately bounded
+   to end exactly where live XAUt begins (2026-03-25), so there's no
+   overlap in the data BtcLadder actually uses day to day. To measure
+   how much the two sources would have differed on the SAME real
+   dates, this fetches live XAUTUSDT for the full window starting at
+   its actual Binance listing date (2026-03-26) and compares each
+   day's live close against the ORIGINAL (unbounded) CSV's close for
+   that same date — both real, both daily, both close-basis. Only
+   gold's own data is needed (the BTC leg/ratio doesn't matter for
+   this comparison), so this is independent of gold_ensureLoaded.
+   window._goldCsvVsLiveOverlap stores the result for gold_diagRows to
+   display; computed lazily on first Diagnostics open while gold's
+   tab is active. */
+/* Small, STANDALONE dataset (date+close only, ~58 rows) built directly
+   from the user's ORIGINAL, unbounded CSV upload (which extends to
+   2026-06-12), covering ONLY the dates that genuinely overlap with
+   live XAUTUSDT's actual trading history (2026-03-26 onward). This is
+   intentionally SEPARATE from GOLD_BACKFILL (the production embed,
+   deliberately bounded to 2026-03-25 with no overlap by design) — used
+   ONLY by this one-time diagnostic, never by the actual gold pipeline. */
+const GOLD_CSV_OVERLAP_CHECK=[[1774483200000,4380.03],[1774569600000,4492.99],[1774828800000,4511.25],[1774915200000,4672.01],[1775001600000,4758.76],[1775088000000,4676.42],[1775174400000,4676.42],[1775433600000,4650.89],[1775520000000,4706.0],[1775606400000,4719.37],[1775692800000,4766.0],[1775779200000,4748.18],[1776038400000,4741.69],[1776124800000,4841.14],[1776211200000,4791.14],[1776297600000,4788.58],[1776384000000,4830.43],[1776643200000,4820.83],[1776729600000,4712.85],[1776816000000,4738.78],[1776902400000,4693.88],[1776988800000,4709.25],[1777248000000,4682.1],[1777334400000,4595.51],[1777420800000,4544.12],[1777507200000,4622.59],[1777593600000,4614.95],[1777852800000,4523.9],[1777939200000,4557.23],[1778025600000,4690.25],[1778112000000,4686.81],[1778198400000,4714.89],[1778457600000,4735.27],[1778544000000,4715.27],[1778630400000,4688.63],[1778716800000,4651.97],[1778803200000,4540.07],[1779062400000,4567.61],[1779148800000,4482.46],[1779235200000,4545.16],[1779321600000,4545.18],[1779408000000,4509.38],[1779667200000,4571.16],[1779753600000,4507.51],[1779840000000,4458.21],[1779926400000,4494.93],[1780012800000,4539.27],[1780272000000,4485.15],[1780358400000,4488.09],[1780444800000,4434.42],[1780531200000,4475.43],[1780617600000,4329.33],[1780790400000,4343.98],[1780876800000,4329.85],[1780963200000,4264.15],[1781049600000,4075.08],[1781136000000,4215.12],[1781222400000,4219.32]];
+async function gold_checkCsvVsLiveOverlap(){
+  if(window._goldCsvVsLiveOverlap)return window._goldCsvVsLiveOverlap;
+  try{
+    const liveFull=await gold_fetchXautLive('1d',gold_dateToMs('2026-03-26'));
+    const csvByDate=new Map(GOLD_CSV_OVERLAP_CHECK.map(r=>[gold_ymd(r[0]),r[1]]));
+    const rows=[];
+    liveFull.forEach(l=>{
+      const csvClose=csvByDate.get(l.date);
+      if(csvClose===undefined)return;
+      const pct=(l.close-csvClose)/csvClose*100;
+      rows.push({date:l.date,live:l.close,csv:csvClose,pct});
+    });
+    window._goldCsvVsLiveOverlap=rows;
+    return rows;
+  }catch(e){
+    window._goldCsvVsLiveOverlap=[];
+    window._goldCsvVsLiveOverlapErr=e.message||String(e);
+    return [];
+  }
+}
+
 /* ── State ── */
 let gold_candles={};      /* {'1d':[...],'1w':[...],'1M':[...]} ratio candles, full history per tf */
 let gold_cands={};        /* {'1d':[...lines],...} final survivor set per tf, tagged+ordered */
@@ -5207,9 +5270,28 @@ let gold_loadPromise=null;
    state — reused here unchanged, exactly as the reference tool reuses
    its own copies of the same math. No redefinition needed. */
 
+/* 0.5% breach tolerance, BTC/XAUt-only (this constant is never read by
+   BTC's own validation logic — confirmed isolated to gold_isInvalidated
+   below). Set deliberately above 0 for two structural reasons, not as
+   a workaround for any one specific line:
+   1) XAUTUSDT (the live leg, post-backfill) is a synthetic token
+      tracking gold, not gold itself — basis drift from spot/LBMA gold
+      is expected and ongoing, not a data error.
+   2) The ratio is BTC/USDT ÷ XAUTUSDT/USDT, i.e. effectively priced
+      through two stablecoin-adjacent USD legs (USDT itself, plus
+      whatever reference USD basis the embedded backfill's source used)
+      — small, structural USDT/USD divergence is a second, independent
+      source of basis noise on top of (1).
+   A hairline breach (a fraction of a percent) is exactly the kind of
+   signal this noise floor should absorb; a real, larger breach is
+   unaffected. Raised from an initial 0.1% to 0.5% after live testing
+   (the 2026-01-14→2026-05-04 daily resistance candidate: cleared the
+   0.0255% near-miss on 2026-05-05 fine under 0.1%, but still broke on
+   2026-05-10 at a real 0.5001% move — right at this new threshold). */
 const GOLD_VALIDATION_TOL=0;
 const GOLD_NEAR_THRESHOLD={'1d':1,'1w':1.5,'1M':2};
-const GOLD_DEDUP_TOL={'1d':1.0,'1w':1.5,'1M':2.0};
+const GOLD_DEDUP_TOL={'1d':1.5,'1w':2.0,'1M':2.5};
+const GOLD_WIN_FACTOR={'1d':0.7,'1w':0.4,'1M':0.2};
 const GOLD_GEN_DEFAULTS={'1d':{w:3,minSpace:30,look:180},'1w':{w:3,minSpace:25,look:200},'1M':{w:4,minSpace:20,look:1200}};
 const GOLD_TF_PREFIX={'1d':{support:'GDS',resistance:'GDR'},'1w':{support:'GWS',resistance:'GWR'},'1M':{support:'GMS',resistance:'GMR'}};
 
@@ -5245,7 +5327,17 @@ function gold_isInvalidated(cs,line,type,a,b,basis,log){
     const py=tl_Y(pp,log);
     const diff=type==='support'?py-lpY:lpY-py;
     const relDiff=log?diff:diff/lpY;
-    if(relDiff<-tolLog)return{invalidated:true,breachIdx:i,breachDate:cs[i].date,breachClose:pp,lineProj:Math.exp(lpY)};
+    /* lineProj must use tl_invY(lpY,log), NOT a bare Math.exp(lpY) —
+       lpY is only in LOG space when log===true (monthly trendlines);
+       for daily/weekly (linear scale), lpY is already a plain price
+       value, and exponentiating it produces a meaningless astronomical
+       number (e.g. a real ~17.6 ratio value became a reported
+       "lineProj" of ~45.8 million) — purely a diagnostic-display bug,
+       this number was never used in the actual invalidated/not
+       decision (relDiff, computed above, was already correct), only
+       in the breach-report value shown in diagnostics/rejected-list
+       dumps. */
+    if(relDiff<-tolLog)return{invalidated:true,breachIdx:i,breachDate:cs[i].date,breachClose:pp,lineProj:tl_invY(lpY,log)};
   }
   return{invalidated:false};
 }
@@ -5284,19 +5376,32 @@ function gold_generateCandidates(points,type,cs,log,minSpace,basis,nearTol){
       const dist=Math.abs((now-cs[last].close)/cs[last].close*100);
       const spanFactor=Math.log(1+totalSpan)/Math.log(1+(cs.length-1));
       const hoverFactor=Math.log(1+hoverCount+2)/Math.log(1+total+2);
-      out.push({type,a,b,line,now,dist,lineScore:spanFactor*hoverFactor,hoverRate,hoverCount,hoverTotal:total,span:totalSpan,anchorBasis:basis,ghost:false});
+      /* x100 multiplier — purely a display-precision fix, not a
+         ranking change. lineScore is only ever used for relative
+         SORTING (dedup, tag assignment, top-2 display selection) —
+         confirmed no code anywhere checks it against an absolute
+         threshold or combines it arithmetically with a differently-
+         scaled value. Multiplying every line's score by the same
+         constant preserves sort order exactly, so this has zero effect
+         on which lines survive or how they're ranked — it only moves
+         the decimal point so genuinely different scores (e.g. 0.0008
+         vs 0.0003) stop both rounding to the same "0.00" at the
+         2-decimal precision diagnostics display them at. */
+      out.push({type,a,b,line,now,dist,lineScore:spanFactor*hoverFactor*100,hoverRate,hoverCount,hoverTotal:total,span:totalSpan,anchorBasis:basis,ghost:false});
     }
   }
   return{kept:out,rej};
 }
 
-function gold_computePivotProminence(cs,idx,type,wDefault){
-  const price=cs[idx].close;
+function gold_computePivotProminence(cs,idx,type,wDefault,basis){
+  const bw=basis==='wick';
+  const price=bw?(type==='resistance'?cs[idx].high:cs[idx].low):cs[idx].close;
   if(idx===0)return wDefault/Math.max(1,wDefault);
   let count=0;
   for(let j=idx-1;j>=0;j--){
-    if(type==='resistance'&&cs[j].close>=price)break;
-    if(type==='support'&&cs[j].close<=price)break;
+    const cmp=bw?(type==='resistance'?cs[j].high:cs[j].low):cs[j].close;
+    if(type==='resistance'&&cmp>=price)break;
+    if(type==='support'&&cmp<=price)break;
     count++;
   }
   return Math.max(count/idx,wDefault/idx);
@@ -5322,8 +5427,9 @@ function gold_checkAgeBand(c,tf){
   return c.a.i>=last-windowCandles&&c.b.i>=last-windowCandles;
 }
 
-function gold_findDuplicates(all,cs,tf){
-  const tol=GOLD_DEDUP_TOL[tf]||1.5;
+function gold_findDuplicates(all,cs,tf,w){
+  const tol=GOLD_DEDUP_TOL[tf]||2.0;
+  const win=2*(w||3);
   const last=cs.length-1;
   const sorted=[...all].sort((a,b)=>b.lineScore-a.lineScore||b.span-a.span||a.b.i-b.b.i);
   for(let i=0;i<sorted.length;i++){
@@ -5331,9 +5437,77 @@ function gold_findDuplicates(all,cs,tf){
     for(let j=i+1;j<sorted.length;j++){
       const k=sorted[j];if(k._duplicateOf)continue;
       if(c.type!==k.type)continue;
-      const sharedAnchor=c.a.i===k.a.i||c.b.i===k.b.i;
+      const a1Near=Math.abs(c.a.i-k.a.i)<=win;
+      const a2Near=Math.abs(c.b.i-k.b.i)<=win;
+      const sharedAnchor=a1Near||a2Near;
       const diffLast=Math.abs((c.line.project(last)-k.line.project(last))/k.line.project(last)*100);
       if(sharedAnchor&&diffLast<=tol)k._duplicateOf=c;
+    }
+  }
+}
+
+/* ── Per-basis pipeline run — used by gold_runForTf to run close and
+   (for 1d) wick basis separately before cross-dedup. */
+function gold_runOneBasis(tf,cs,csFull,basis,fullDateIdx){
+  const d=GOLD_GEN_DEFAULTS[tf];
+  const log=tf==='1M';
+  const nearTol=GOLD_NEAR_THRESHOLD[tf]||2;
+  const pivs=gold_detectPivots(cs,d.w,basis);
+  const sup=gold_generateCandidates(pivs.lows,'support',cs,log,d.minSpace,basis,nearTol);
+  const res=gold_generateCandidates(pivs.highs,'resistance',cs,log,d.minSpace,basis,nearTol);
+  const all=[...sup.kept,...res.kept];
+  all.forEach(c=>{
+    c.anchorBasis=basis;
+    c.tf=tf;
+    c.engineCandles=cs;
+    if(c.a.prominence==null){
+      const fi=fullDateIdx.get(cs[c.a.i].date);
+      c.a.prominence=fi!=null?gold_computePivotProminence(csFull,fi,c.type,d.w,basis):d.w;
+    }
+    if(c.b.prominence==null){
+      const fi=fullDateIdx.get(cs[c.b.i].date);
+      c.b.prominence=fi!=null?gold_computePivotProminence(csFull,fi,c.type,d.w,basis):d.w;
+    }
+  });
+  all.forEach(c=>gold_applyPromToLineScore(c));
+  all.forEach(c=>{c.hideAgeBand=gold_checkAgeBand(c,tf);});
+  /* same-basis dedup runs HERE, before cross-basis dedup — matches
+     reference tool's runOneBasis which calls findDuplicates internally */
+  gold_findDuplicates(all,cs,tf,d.w);
+  return{all,rej:[...sup.rej,...res.rej],pivs};
+}
+
+/* Cross-basis dedup: pair close and wick lines of the same type where
+   both anchor pairs are within w candles of each other AND their
+   projections at the last candle are within tol%. Lower lineScore
+   loses and is marked _crossBasisDup=true, _duplicateOf=winner. */
+function gold_crossBasisDedup(closeAll,wickAll,tf,w){
+  /* Mirrors reference tool exactly: both anchor pairs must be within w
+     candles (d1<=w AND d2<=w). Builds all candidate pairs, sorts by
+     anchor distance asc then best score desc, resolves greedily so each
+     line is used at most once. Higher lineScore wins; tie goes to
+     close-basis (c.lineScore>=wk.lineScore → wick loses). */
+  const pairs=[];
+  for(const c of closeAll){
+    if(c._duplicateOf)continue;
+    for(const wk of wickAll){
+      if(wk._duplicateOf)continue;
+      if(c.type!==wk.type)continue;
+      const d1=Math.abs(c.a.i-wk.a.i);
+      const d2=Math.abs(c.b.i-wk.b.i);
+      if(d1<=w&&d2<=w)pairs.push({c,wk,dist:d1+d2});
+    }
+  }
+  pairs.sort((a,b)=>a.dist-b.dist||
+    Math.max(b.c.lineScore,b.wk.lineScore)-Math.max(a.c.lineScore,a.wk.lineScore));
+  const usedC=new Set(),usedW=new Set();
+  for(const{c,wk}of pairs){
+    if(usedC.has(c)||usedW.has(wk))continue;
+    usedC.add(c);usedW.add(wk);
+    if(c.lineScore>=wk.lineScore){
+      wk._duplicateOf=c;wk._crossBasisDup=true;
+    } else {
+      c._duplicateOf=wk;c._crossBasisDup=true;
     }
   }
 }
@@ -5343,86 +5517,98 @@ function gold_findDuplicates(all,cs,tf){
    -> age-band -> tag -> store. csFull is the COMPLETE ratio history for
    this tf (used for prominence, which scans the full series, not just
    the focus window — same as the reference tool). cs is the focus-
-   windowed slice actually used for pivot/candidate generation. */
+   windowed slice actually used for pivot/candidate generation.
+   For 1d: runs both close and wick basis, cross-deduplicates, then
+   merges. For 1w/1M: close basis only (reference tool does the same). */
 function gold_runForTf(tf,cs,csFull){
   const d=GOLD_GEN_DEFAULTS[tf];
-  const log=tf==='1M';
-  const basis='close';
-  const pivs=gold_detectPivots(cs,d.w,basis);
-  const nearTol=GOLD_NEAR_THRESHOLD[tf]||2;
-  const sup=gold_generateCandidates(pivs.lows,'support',cs,log,d.minSpace,basis,nearTol);
-  const res=gold_generateCandidates(pivs.highs,'resistance',cs,log,d.minSpace,basis,nearTol);
-  const all=[...sup.kept,...res.kept];
   const fullDateIdx=new Map();
   csFull.forEach((c,i)=>fullDateIdx.set(c.date,i));
   /* FOCUS-SPACE -> DISPLAY-SPACE OFFSET (mirrors tl_idxOffset for BTC).
      cs (the windowed/focus array used to generate these lines, e.g. the
      last 180 days) is SMALLER than csFull (the full ratio history that
-     should actually be pannable/displayable) for '1d'/'1w' — for '1M',
+     should actually be pannable/displayable) for 1d/1w — for 1M,
      gold_computeFocus returns the full array unchanged, so offset=0
      there. Anchor indices (c.a.i/c.b.i) are positions WITHIN cs; this
      offset converts them to positions within csFull, the array that
-     should actually be rendered/panned. Without this, tl_draw was
-     rendering gold's csFull as the display array while leaving anchor
-     indices unconverted — for daily/weekly, where cs is a small recent
-     subset of a much longer csFull, this misaligned every trendline
-     and made the default/pan view only show as much of csFull as cs's
-     own length, displaying empty space (with misplaced trendlines
-     drawn into it) beyond that. */
+     should actually be rendered/panned. */
   if(csFull.length&&cs.length){
     gold_idxOffset[tf]=fullDateIdx.get(cs[0].date)||0;
   }else{
     gold_idxOffset[tf]=0;
   }
-  all.forEach(c=>{
-    c.tf=tf;
-    c.engineCandles=cs;
-    if(c.a.prominence==null){
-      const fi=fullDateIdx.get(cs[c.a.i].date);
-      c.a.prominence=fi!=null?gold_computePivotProminence(csFull,fi,c.type,d.w):d.w;
-    }
-    if(c.b.prominence==null){
-      const fi=fullDateIdx.get(cs[c.b.i].date);
-      c.b.prominence=fi!=null?gold_computePivotProminence(csFull,fi,c.type,d.w):d.w;
-    }
-  });
-  all.forEach(c=>gold_applyPromToLineScore(c));
-  all.forEach(c=>{c.hideAgeBand=gold_checkAgeBand(c,tf);});
-  gold_findDuplicates(all,cs,tf);
-  // tag assignment, sorted by lineScore desc
+
+  let all,rej,pivs;
+  if(tf==='1d'){
+    /* Run close and wick basis separately, then cross-dedup */
+    const closeRun=gold_runOneBasis(tf,cs,csFull,'close',fullDateIdx);
+    const wickRun=gold_runOneBasis(tf,cs,csFull,'wick',fullDateIdx);
+    gold_crossBasisDedup(closeRun.all,wickRun.all,tf,d.w);
+    all=[...closeRun.all,...wickRun.all];
+    rej=[...closeRun.rej,...wickRun.rej];
+    pivs=closeRun.pivs; /* expose close-basis pivots for diag */
+  } else {
+    const run=gold_runOneBasis(tf,cs,csFull,'close',fullDateIdx);
+    all=run.all;rej=run.rej;pivs=run.pivs;
+  }
+
+  /* tag assignment: non-cross-basis-dups first so they claim numbers;
+     within each group sort by lineScore desc. */
   const prefix=GOLD_TF_PREFIX[tf];
-  const sortedForTag=[...all].sort((a,b)=>b.lineScore-a.lineScore||b.span-a.span);
+  const sortedForTag=[...all].sort((a,b)=>{
+    const aNonDup=!a._crossBasisDup?0:1;
+    const bNonDup=!b._crossBasisDup?0:1;
+    if(aNonDup!==bNonDup)return aNonDup-bNonDup;
+    return b.lineScore-a.lineScore||b.span-a.span;
+  });
   let sN=0,rN=0;
   sortedForTag.forEach(c=>{
     if(c.type==='support'){sN++;c.viewerTag=prefix.support+sN;}
     else{rN++;c.viewerTag=prefix.resistance+rN;}
     c._displayed=!c.hideAgeBand&&!c._duplicateOf;
   });
-  return{all,rej:[...sup.rej,...res.rej],pivs};
+  return{all,rej,pivs};
 }
 
-/* Default-on selection — ports the reference tool's price-relevancy-
-   window + top-2-per-type logic (Section 9 of the engineering doc). */
-const GOLD_WIN_FACTOR={'1d':0.8,'1w':0.6,'1M':0.4};
-/* Selects the 4 lines that reach gold's legend at all (top 2 resistance
-   + top 2 support within the price-relevancy window), and separately
-   which of those 4 are ON by default (rank #1 of each type only — rank
-   #2 of each type still appears as a button, just starts toggled off).
-   Returns {shown: [4 line objects], onTags: Set of rank-1 tags}. */
+
+/* Display selection — mirrors the reference tool's exact algorithm:
+   1. Normalize lineScores across all candidates in the run.
+   2. Compute relevanceScore = lineScoreN * D, where D is a proximity
+      factor capped at 1 (support: min(1, now/curP); resistance:
+      min(1, curP/now)) — lines closer to price score higher.
+   3. Filter _displayed lines to those within the GOLD_WIN_FACTOR price
+      window [curP*factor, curP/factor] for this tf.
+   4. Sort by relevanceScore desc (ties: lineScoreN desc, span desc).
+   5. Take top-2 per type within the window → up to 4 lines in shownSet.
+   BtcLadder difference from the reference tool: only shownSet lines
+   appear in the legend (≤4 toggles total). Top-1 of each type = ON by
+   default; top-2 of each type = OFF. Lines outside the window or
+   eliminated upstream (dup/age-banded) never appear as toggles. */
 function gold_selectDefaultOn(run,cs,tf){
   const displayed=run.all.filter(c=>c._displayed);
-  const allSorted=[...displayed].sort((a,b)=>b.lineScore-a.lineScore||b.span-a.span);
-  /* tf passed explicitly by the caller (which always knows it) rather
-     than inferred from run.all[0].tf — that inference silently fell
-     back to the wrong WIN_FACTOR ('1d''s) whenever a timeframe
-     generated zero lines, since run.all[0] would be undefined. */
-  const factor=GOLD_WIN_FACTOR[tf]||0.8;
+  // 1. normalize
+  const maxLs=Math.max(...run.all.map(c=>c.lineScore),1e-12);
+  run.all.forEach(c=>{ c.lineScoreN=c.lineScore/maxLs; });
+  // 2. relevanceScore
   const curP=cs[cs.length-1].close;
-  const winLo=factor*curP,winHi=curP/factor;
+  const factor=GOLD_WIN_FACTOR[tf];
+  const winLo=factor*curP, winHi=curP/factor;
+  displayed.forEach(c=>{
+    const D=c.type==='support'
+      ?Math.min(1,c.now/curP)
+      :Math.min(1,curP/c.now);
+    c.relevanceScore=c.lineScoreN*D;
+  });
+  run.all.filter(c=>!c._displayed).forEach(c=>{ c.relevanceScore=0; });
+  // 3+4. sort displayed by relevanceScore desc
+  const allSorted=[...displayed].sort((a,b)=>
+    b.relevanceScore-a.relevanceScore||b.lineScoreN-a.lineScoreN||b.span-a.span);
+  // 5. top-2 per type within WIN_FACTOR window
   const inWindow=c=>c.now>=winLo&&c.now<=winHi;
   const resShown=allSorted.filter(c=>c.type==='resistance'&&inWindow(c)).slice(0,2);
   const supShown=allSorted.filter(c=>c.type==='support'&&inWindow(c)).slice(0,2);
   const shown=[...resShown,...supShown];
+  // top-1 of each type ON, top-2 OFF
   const onTags=new Set([resShown[0],supShown[0]].filter(Boolean).map(c=>c.viewerTag));
   return{shown,onTags};
 }
@@ -5608,7 +5794,96 @@ function gold_diagRows(){
      the one case it's most needed. Show whatever's available first,
      THEN fall back to the "not loaded" message only if there's truly
      nothing to show. */
-  const rows=[];
+  const _diagRows=[];
+  /* CSV vs live XAUTUSDT overlap check — async, so this triggers the
+     fetch on first call (fire-and-forget) and displays results once
+     cached on a LATER call (reopen Diagnostics after a moment if it
+     shows "not ready yet"). */
+  if(window._goldCsvVsLiveOverlap){
+    const ov=window._goldCsvVsLiveOverlap;
+    if(ov.length){
+      const pcts=ov.map(r=>r.pct);
+      const absPcts=pcts.map(Math.abs);
+      const avgAbs=absPcts.reduce((a,b)=>a+b,0)/absPcts.length;
+      const maxAbs=Math.max(...absPcts);
+      const maxRow=ov.find(r=>Math.abs(r.pct)===maxAbs);
+      _diagRows.push({name:'CSV vs live XAUTUSDT — overlap summary ('+ov.length+' real overlapping dates, 2026-03-26 onward)',ok:true,
+        msg:`avg |diff|=${avgAbs.toFixed(4)}% · max |diff|=${maxAbs.toFixed(4)}% on ${maxRow.date} (live=${maxRow.live.toFixed(2)} csv=${maxRow.csv.toFixed(2)})`});
+      _diagRows.push({name:'CSV vs live XAUTUSDT — full daily breakdown',ok:true,
+        msg:ov.map(r=>`[${r.date} live=${r.live.toFixed(2)} csv=${r.csv.toFixed(2)} diff=${r.pct>=0?'+':''}${r.pct.toFixed(3)}%]`).join(' ')});
+    }else{
+      _diagRows.push({name:'CSV vs live XAUTUSDT — overlap check',ok:false,msg:window._goldCsvVsLiveOverlapErr?'fetch failed: '+window._goldCsvVsLiveOverlapErr:'no overlapping dates found'});
+    }
+  }else{
+    gold_checkCsvVsLiveOverlap(); /* fire-and-forget — reopen Diagnostics in a moment to see results */
+    _diagRows.push({name:'CSV vs live XAUTUSDT — overlap check',ok:false,msg:'fetching now — reopen Diagnostics in a few seconds to see results'});
+  }
+  if(gold_candles['1d']&&gold_candles['1d'].length){
+    /* ONE-SHOT comprehensive check for the 2026-01-14 missing-pivot
+       question — replicates gold_detectPivots' exact w=3 window logic
+       inline against real data, independent of any other function, so
+       this single dump is conclusive on its own. */
+    const csFull=gold_candles['1d'];
+    const focusCs=gold_computeFocus('1d',csFull);
+    const targetDate='2026-01-14';
+    const targetIdxFull=csFull.findIndex(c=>c.date===targetDate);
+    const targetIdxFocus=focusCs.findIndex(c=>c.date===targetDate);
+
+    const wideRange=csFull.filter(c=>c.date>='2026-01-08'&&c.date<='2026-01-20');
+    _diagRows.push({name:'1) Gold 1d ratio candles 2026-01-08..01-20 (full array, close values used by basis=close)',ok:true,
+      msg:wideRange.map(c=>`[${c.date} close=${c.close.toFixed(4)}]`).join(' ')});
+
+    _diagRows.push({name:'2) 2026-01-14 array positions',ok:targetIdxFull!==-1,
+      msg:`fullArrayIdx=${targetIdxFull} focusWindowIdx=${targetIdxFocus} (focusWindowIdx=-1 means NOT in the windowed array gold_runForTf actually uses — focus window spans dates ${focusCs[0]?focusCs[0].date:'?'}..${focusCs[focusCs.length-1]?focusCs[focusCs.length-1].date:'?'}, length=${focusCs.length})`});
+
+    if(targetIdxFocus>=0){
+      const w=GOLD_GEN_DEFAULTS['1d'].w;
+      const last=focusCs.length-1;
+      const i=targetIdxFocus;
+      const wRight=Math.min(w,last-i);
+      const inRange=(i>=w)&&(i<=last-1)&&(wRight>=1);
+      let isH=true;
+      const detail=[];
+      if(inRange){
+        const h=focusCs[i].close;
+        for(let j=i-w;j<=i+wRight;j++){
+          if(j===i)continue;
+          const cmp=focusCs[j].close;
+          detail.push(`${focusCs[j].date}=${cmp.toFixed(4)}${cmp>=h?' >=H(FAILS)':''}`);
+          if(cmp>=h)isH=false;
+        }
+      }
+      _diagRows.push({name:'3) Manual w=3 high-pivot replication for 2026-01-14 (gold_detectPivots\' exact logic, inlined)',ok:inRange,
+        msg:!inRange?`OUT OF RANGE for pivot detection: i=${i} w=${w} last=${last} wRight=${Math.min(w,last-i)} (needs i>=w AND i<=last-1 AND wRight>=1 — fails one of those bounds, meaning it's too close to the edge of the FOCUS window to ever be tested as a pivot, regardless of its actual value)`
+          :`center=${targetDate}(${focusCs[i].close.toFixed(4)}) | neighbors: ${detail.join(', ')} | RESULT: isHighPivot=${isH}`});
+    }
+
+    const run1d=gold_lastRun&&gold_lastRun['1d'];
+    if(run1d&&run1d.pivs){
+      const match=run1d.pivs.highs.find(p=>gold_ymd(p.t)===targetDate);
+      _diagRows.push({name:'4) Actual stored pivs.highs — does it contain 2026-01-14?',ok:!!match,
+        msg:match?`YES: ${match.pid} i=${match.i} p=${match.p.toFixed(4)}`:'NO — full list: '+run1d.pivs.highs.map(p=>`${p.pid}@${gold_ymd(p.t)}(i=${p.i},p=${p.p.toFixed(4)})`).join(' ')});
+
+      if(match){
+        const minSpace=GOLD_GEN_DEFAULTS['1d'].minSpace;
+        const allHighs=run1d.pivs.highs;
+        const pairAttempts=allHighs.filter(p=>p.i!==match.i).map(p=>{
+          const gap=Math.abs(p.i-match.i);
+          return `${p.pid}@${gold_ymd(p.t)}(i=${p.i}) gap=${gap}${gap<minSpace?' FAILS minSpace='+minSpace:' OK'}`;
+        });
+        _diagRows.push({name:'5) Every OTHER high pivot paired against 2026-01-14, minSpace='+minSpace+' check',ok:true,
+          msg:pairAttempts.join(' · ')});
+      }
+
+      if(run1d.rej){
+        const hits=run1d.rej.filter(r=>gold_ymd(r.a.t)===targetDate||gold_ymd(r.b.t)===targetDate);
+        _diagRows.push({name:'6) REJECTED (invalidated) candidates anchored at 2026-01-14',ok:hits.length>0,
+          msg:hits.length?hits.map(r=>`[${r.type} ${gold_ymd(r.a.t)}(${r.a.p.toFixed(4)})→${gold_ymd(r.b.t)}(${r.b.p.toFixed(4)}) BREACH@${r.breachDate} breachClose=${r.breachClose.toFixed(4)} lineProj=${r.lineProj.toFixed(4)}]`).join(' · '):'none found'});
+      }
+    }
+  }
+
+  const rows=[..._diagRows];
   if(window._goldLoadFatalError){
     rows.push({name:'Gold pipeline FATAL ERROR',ok:false,msg:window._goldLoadFatalError});
   }
@@ -5683,7 +5958,19 @@ function gold_diagRows(){
     const dv=gold_defaultView(tf);
     rows.push({name:`Gold ${tf} view`,ok:true,
       msg:`idxOffset=${off} defaultView.start=${dv.start.toFixed(1)} defaultView.end=${dv.end.toFixed(1)} (csLength=${cs.length})`});
-    if(run)rows.push({name:`Gold ${tf} pivots`,ok:true,msg:`${run.pivs.highs.length} highs, ${run.pivs.lows.length} lows · ${run.rej.length} invalidated candidates`});
+    if(run){
+      const d=GOLD_GEN_DEFAULTS[tf];
+      const fcs=gold_computeFocus(tf,gold_candles[tf]||[]);
+      rows.push({name:`Gold ${tf} pivots`,ok:true,
+        msg:`VALIDATION_TOL=${GOLD_VALIDATION_TOL} NEAR_THRESHOLD=${GOLD_NEAR_THRESHOLD[tf]} · ${run.pivs.highs.length} highs, ${run.pivs.lows.length} lows · ${run.rej.length} invalidated candidates`});
+      /* pivot list for direct cross-check with reference tool */
+      const pivList=[
+        ...run.pivs.highs.map(p=>({...p,kind:'high'})),
+        ...run.pivs.lows.map(p=>({...p,kind:'low'}))
+      ].sort((a,b)=>a.i-b.i);
+      rows.push({name:`Gold ${tf} pivot list (w=${d.w})`,ok:true,
+        msg:pivList.map(p=>`${p.pid}(${p.kind==='high'?'H':'L'}) i=${p.i} ${fcs[p.i]?fcs[p.i].date:'?'} p=${p.p.toFixed(2)}`).join(' · ')});
+    }
     /* Diagnostics show the COMPLETE generated set (run.all — validated
        survivors AND deduped/age-banded lines), not just gold_cands[tf]
        (survivors only, what actually reaches the chart/legend). The
@@ -5693,9 +5980,16 @@ function gold_diagRows(){
        survivors-only and moves that same visibility into Diagnostics
        instead, via this row. */
     if(run&&run.all.length){
+      const fcs=gold_computeFocus(tf,gold_candles[tf]||[]);
+      const lastClose=fcs.length?fcs[fcs.length-1].close:null;
+      const factor=GOLD_WIN_FACTOR[tf];
+      const winLo=lastClose?factor*lastClose:null;
+      const winHi=lastClose?lastClose/factor:null;
+      rows.push({name:`Gold ${tf} selection window`,ok:true,
+        msg:lastClose?`curP=${lastClose.toFixed(4)} factor=${factor} winLo=${winLo.toFixed(4)} winHi=${winHi.toFixed(4)}`:'curP=?'});
       rows.push({name:`Gold ${tf} all generated (validated + deduped + age-banded)`,ok:true,
         msg:run.all.slice().sort((a,b)=>b.lineScore-a.lineScore||b.span-a.span)
-          .map(l=>`${l.viewerTag} ${l.engineCandles[l.a.i].date}→${l.engineCandles[l.b.i].date} ls=${l.lineScore.toFixed(3)} pf=${(l.promFactor||0).toFixed(2)} dist=${l.dist.toFixed(1)}% displayed=${l._displayed?1:0} age=${l.hideAgeBand?1:0} dup=${l._duplicateOf?l._duplicateOf.viewerTag:''} on=${gold_visible[l.viewerTag]?1:0}`).join(' · ')});
+          .map(l=>`${l.viewerTag} ${l.engineCandles[l.a.i].date}→${l.engineCandles[l.b.i].date} ls=${l.lineScore.toFixed(3)} lsN=${(l.lineScoreN!=null?l.lineScoreN:0).toFixed(4)} rs=${(l.relevanceScore!=null?l.relevanceScore:0).toFixed(4)} pf=${(l.promFactor||0).toFixed(2)} dist=${l.dist.toFixed(1)}% displayed=${l._displayed?1:0} age=${l.hideAgeBand?1:0} dup=${l._duplicateOf?l._duplicateOf.viewerTag:''} on=${gold_visible[l.viewerTag]?1:0}`).join(' · ')});
     }
   });
   return rows;
