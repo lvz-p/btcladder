@@ -989,11 +989,13 @@ function buildTipHTML(tip,cur){
     const projPrice=typeof tl_projectLineAtTime==='function'?tl_projectLineAtTime(tl,projT):null;
     const projLabel=prefix==='D'?'30d':prefix==='W'?'60d':'90d';
     const pCls=pctCls(tip.d);
+    let miniSvg=null;try{miniSvg=ttBuildMiniChart(tip);}catch(e){console.warn('ttBuildMiniChart error:',e);}
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
       `<div style="font-size:13px;color:var(--muted);line-height:2.2;padding:2px 0 0">` +
       `<div>Anchors: ${dateA} → ${dateB}</div>` +
       (projPrice&&projPrice>0?`<div>${projLabel} projection: <span style="color:${tip.col};font-weight:600">${fmt(projPrice)}</span></div>`:'') +
-      `</div>`;
+      `</div>`+
+      (miniSvg?`<div style="margin-top:8px">${miniSvg}</div>`:'');
   } else if(tip.isGoldOverlay){
     /* BTC/XAUt trendline translated into BTC/USDT terms. Deliberately
        NO projected/future value here — unlike native trendlines (which
@@ -1025,6 +1027,95 @@ function showTooltip(tip,cur){
   $('ttDiv').style.display=h.showDiv?'':'none';
   $('ttMembers').innerHTML=h.membersHTML;
   $('tooltip').classList.add('show');
+}
+
+
+function ttBuildMiniChart(tip){
+  const tl=tip.tlLine;
+  if(!tl||!tl.engineCandles||!tl.line)return null;
+  const tf=tl.tf;
+  const allCs=tl_candles[tf]||[];
+  if(!allCs.length)return null;
+
+  const log=tf==='1M';
+  const off=(tl_idxOffset&&tl_idxOffset[tf])||0;
+
+  /* zoom window: A1 minus context candles → last real candle + right margin
+     gives tight view focused on the trendline action regardless of timeframe */
+  const ctxL=tf==='1d'?10:tf==='1w'?6:3;
+  const ctxR=tf==='1d'?8: tf==='1w'?5:3;
+  const a1InAll=tl.a.i+off;
+  const iStart=Math.max(0,a1InAll-ctxL);
+  const iEnd=Math.min(allCs.length-1,allCs.length-1+ctxR);
+  const cs=allCs.slice(iStart,iEnd+1);
+  if(!cs.length)return null;
+
+  /* SVG: width fits tooltip, height = 75% */
+  const W=180,H=Math.round(W*0.75);
+  const PAD={t:5,r:4,b:5,l:4};
+  const cW=W-PAD.l-PAD.r;
+  const cH=H-PAD.t-PAD.b;
+
+  /* price range from visible candles */
+  let pMin=Infinity,pMax=-Infinity;
+  for(const cv of cs){pMin=Math.min(pMin,cv.low);pMax=Math.max(pMax,cv.high);}
+  if(pMax<=pMin)return null;
+
+  /* padding done in log space for monthly to avoid negative values */
+  let sMin,sMax;
+  if(log){
+    const lMin=Math.log(Math.max(pMin,1)),lMax=Math.log(Math.max(pMax,1));
+    const lPad=(lMax-lMin)*0.06;
+    sMin=lMin-lPad; sMax=lMax+lPad;
+  } else {
+    const lPad=(pMax-pMin)*0.06;
+    sMin=pMin-lPad; sMax=pMax+lPad;
+  }
+  if(sMax<=sMin)return null;
+
+  const yOf=p=>{
+    const v=log?Math.log(Math.max(p,1)):p;
+    return PAD.t+cH*(1-(v-sMin)/(sMax-sMin));
+  };
+  const xOf=i=>(i/(cs.length-1||1))*cW+PAD.l;
+
+  /* candles */
+  let candlesSVG='';
+  const bw=Math.max(1,cW/cs.length*0.5);
+  for(let i=0;i<cs.length;i++){
+    const cv=cs[i];
+    const x=xOf(i);
+    const yH=yOf(cv.high),yL=yOf(cv.low),yO=yOf(cv.open),yC=yOf(cv.close);
+    const yTop=Math.min(yO,yC),yBot=Math.max(yO,yC);
+    const bodyH=Math.max(1,yBot-yTop);
+    const col=cv.close>=cv.open?'rgba(255,255,255,0.55)':'rgba(255,255,255,0.25)';
+    candlesSVG+=`<line x1="${x.toFixed(1)}" y1="${yH.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yL.toFixed(1)}" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>`;
+    candlesSVG+=`<rect x="${(x-bw/2).toFixed(1)}" y="${yTop.toFixed(1)}" width="${bw.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${col}" rx="0.5"/>`;
+  }
+
+  /* anchor positions in view space */
+  const aViewI=a1InAll-iStart;
+  const bViewI=(tl.b.i+off)-iStart;
+  const toFocusI=viewI=>viewI+(iStart-off);
+  const lineCol=tip.col||'#94a3b8';
+
+  /* trendline ray: from A1 to right edge */
+  let lineSVG='';
+  const rayStart=Math.max(0,aViewI);
+  const rayEnd=cs.length-1;
+  if(rayStart<=rayEnd){
+    const lx0=xOf(rayStart),ly0=yOf(tl.line.project(toFocusI(rayStart)));
+    const lx1=xOf(rayEnd),  ly1=yOf(tl.line.project(toFocusI(rayEnd)));
+    if(isFinite(ly0)&&isFinite(ly1))
+      lineSVG=`<line x1="${lx0.toFixed(1)}" y1="${ly0.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="${lineCol}" stroke-width="1.5" stroke-linecap="round"/>`;
+  }
+
+  /* anchor dots */
+  let anchorsSVG='';
+  if(aViewI>=0&&aViewI<cs.length){const ay=yOf(tl.a.p);if(isFinite(ay))anchorsSVG+=`<circle cx="${xOf(aViewI).toFixed(1)}" cy="${ay.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
+  if(bViewI>=0&&bViewI<cs.length){const by=yOf(tl.b.p);if(isFinite(by))anchorsSVG+=`<circle cx="${xOf(bViewI).toFixed(1)}" cy="${by.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
+
+  return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:rgba(0,0,0,0.25)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
 }
 function hideTip(){const tt=$('tooltip');tt.classList.remove('show');tt.style.left='-9999px';tt.style.top='0';}
 
@@ -1449,7 +1540,6 @@ function renderChart(cur,ma,oc,tl=[]){
     (function(){
       const tt=$('tooltip');
       if(!tt)return;
-      tt.style.pointerEvents='auto';
       let dragActive=false,dragOX=0,dragOY=0;
       tt.addEventListener('touchstart',e=>{
         if(!tt.classList.contains('show'))return;
