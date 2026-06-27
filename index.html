@@ -510,7 +510,6 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
   <div class="tt-range" id="ttRange" style="display:none"></div>
   <div class="tt-divider" id="ttDiv" style="display:none"></div>
   <div class="tt-members" id="ttMembers"></div>
-  <div id="ttChart" style="display:none;margin-top:8px"></div>
 </div>
 
 
@@ -994,11 +993,7 @@ function buildTipHTML(tip,cur){
       `<div style="font-size:13px;color:var(--muted);line-height:2.2;padding:2px 0 0">` +
       `<div>Anchors: ${dateA} → ${dateB}</div>` +
       (projPrice&&projPrice>0?`<div>${projLabel} projection: <span style="color:${tip.col};font-weight:600">${fmt(projPrice)}</span></div>`:'') +
-      `</div>`+
-      `<div style="margin-top:6px;border-top:.5px solid var(--border);padding-top:6px;text-align:center">` +
-      `<button id="ttChartBtn" onclick="ttToggleChart()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 8px;line-height:1.4;letter-spacing:.04em">▾ chart</button>` +
       `</div>`;
-    window._ttChartTip=tip;
   } else if(tip.isGoldOverlay){
     /* BTC/XAUt trendline translated into BTC/USDT terms. Deliberately
        NO projected/future value here — unlike native trendlines (which
@@ -1029,103 +1024,7 @@ function showTooltip(tip,cur){
   $('ttRange').style.display=h.showRange?'':'none';
   $('ttDiv').style.display=h.showDiv?'':'none';
   $('ttMembers').innerHTML=h.membersHTML;
-  /* reset mini chart on every new tooltip */
-  const ttc=$('ttChart');if(ttc){ttc.style.display='none';ttc.innerHTML='';}
-  window._ttChartTip=null;
   $('tooltip').classList.add('show');
-}
-
-function ttToggleChart(){
-  const ttc=$('ttChart');if(!ttc)return;
-  const tip=window._ttChartTip;
-  if(!tip||!tip.tlLine){return;}
-  if(ttc.style.display!=='none'){ttc.style.display='none';ttc.innerHTML='';const b=$('ttChartBtn');if(b)b.textContent='▾ chart';return;}
-  const svg=ttBuildMiniChart(tip);
-  if(!svg)return;
-  ttc.innerHTML=svg;
-  ttc.style.display='block';
-  const b=$('ttChartBtn');if(b)b.textContent='▴ chart';
-}
-
-function ttBuildMiniChart(tip){
-  const tl=tip.tlLine;
-  if(!tl||!tl.engineCandles||!tl.line)return null;
-  const tf=tl.tf;
-  const allCs=tl_candles[tf]||[];
-  if(!allCs.length)return null;
-
-  /* same default view as the main chart */
-  const dv=tl_defaultView(tf);
-  const iStart=Math.max(0,Math.floor(dv.start));
-  const iEnd=Math.min(allCs.length-1,Math.ceil(dv.end));
-  const cs=allCs.slice(iStart,iEnd+1);
-  if(!cs.length)return null;
-
-  /* SVG dimensions — fits tooltip inner width (290px - 26px padding = 264px) */
-  const W=244,H=244;
-  const PAD={t:6,r:4,b:6,l:4};
-  const cW=W-PAD.l-PAD.r;
-  const cH=H-PAD.t-PAD.b;
-
-  /* price range from candles only (no line influence on scale) */
-  let yMin=Infinity,yMax=-Infinity;
-  for(const cv of cs){yMin=Math.min(yMin,cv.low);yMax=Math.max(yMax,cv.high);}
-  const pad=(yMax-yMin)*0.06;
-  yMin-=pad;yMax+=pad;
-  if(yMax<=yMin)return null;
-
-  const xOf=i=>(i/(cs.length-1||1))*cW+PAD.l;
-  const yOf=p=>PAD.t+cH*(1-(p-yMin)/(yMax-yMin));
-
-  /* candles — monochrome thin lines */
-  let candlesSVG='';
-  const bw=Math.max(1,cW/cs.length*0.5);
-  for(let i=0;i<cs.length;i++){
-    const cv=cs[i];
-    const x=xOf(i);
-    const yHigh=yOf(cv.high);
-    const yLow=yOf(cv.low);
-    const yO=yOf(cv.open);
-    const yC=yOf(cv.close);
-    const yTop=Math.min(yO,yC);
-    const yBot=Math.max(yO,yC);
-    const bodyH=Math.max(1,yBot-yTop);
-    const col=cv.close>=cv.open?'rgba(255,255,255,0.55)':'rgba(255,255,255,0.25)';
-    candlesSVG+=`<line x1="${x.toFixed(1)}" y1="${yHigh.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yLow.toFixed(1)}" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>`;
-    candlesSVG+=`<rect x="${(x-bw/2).toFixed(1)}" y="${yTop.toFixed(1)}" width="${bw.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${col}" rx="0.5"/>`;
-  }
-
-  /* trendline — project across full view (including margin past data) */
-  /* anchor indices are in focus-space; map to allCs space, then to view slice */
-  const off=tl_idxOffset?.(tf)??0;
-  /* a.i and b.i are focus-space indices; engineCandles = focus array */
-  /* to draw in view space: viewI = (focusI + off) - iStart */
-  const aViewI=(tl.a.i+off)-iStart;
-  const bViewI=(tl.b.i+off)-iStart;
-
-  /* project across full width: from left edge (i=0 in view) to right edge */
-  /* use line.project which takes focus-space index */
-  /* focus-space index = viewI - off + iStart ... = viewI + (iStart - off) */
-  const toFocusI=viewI=>viewI+(iStart-off);
-  const p0=tl.line.project(toFocusI(0));
-  const p1=tl.line.project(toFocusI(cs.length-1));
-  const ly0=yOf(p0),ly1=cs.length>1?yOf(p1):ly0;
-
-  /* clip trendline to chart bounds */
-  const x0=xOf(0),x1=xOf(cs.length-1);
-  const lineCol=tip.col||'#94a3b8';
-  const lineSVG=`<line x1="${x0.toFixed(1)}" y1="${yOf(p0).toFixed(1)}" x2="${x1.toFixed(1)}" y2="${yOf(p1).toFixed(1)}" stroke="${lineCol}" stroke-width="1.5" stroke-linecap="round"/>`;
-
-  /* anchor dots */
-  const axA=xOf(aViewI),ayA=yOf(tl.a.p);
-  const axB=xOf(bViewI),ayB=yOf(tl.b.p);
-  let anchorsSVG='';
-  if(aViewI>=0&&aViewI<cs.length)
-    anchorsSVG+=`<circle cx="${axA.toFixed(1)}" cy="${ayA.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;
-  if(bViewI>=0&&bViewI<cs.length)
-    anchorsSVG+=`<circle cx="${axB.toFixed(1)}" cy="${ayB.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;
-
-  return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:rgba(0,0,0,0.25)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
 }
 function hideTip(){const tt=$('tooltip');tt.classList.remove('show');tt.style.left='-9999px';tt.style.top='0';}
 
