@@ -1540,6 +1540,7 @@ function renderChart(cur,ma,oc,tl=[]){
     (function(){
       const tt=$('tooltip');
       if(!tt)return;
+      tt.style.pointerEvents='auto';
       let dragActive=false,dragOX=0,dragOY=0;
       tt.addEventListener('touchstart',e=>{
         if(!tt.classList.contains('show'))return;
