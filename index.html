@@ -2960,7 +2960,6 @@ function hs_renderLegend(){
     const off=tl_visible[l.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn hs-leg-btn'+(off?' off':'');
-    b.style.borderColor='rgba(203,213,225,0.4)';
     b.innerHTML='<span style="display:inline-block;padding:0 5px;border-radius:3px;background:'+(off?'rgba(255,255,255,.12)':col)+';vertical-align:middle;font-size:11px;font-weight:700;line-height:14px;color:'+(off?'rgba(255,255,255,.3)':'#000')+';font-family:var(--mono)">'+l.label+'</span>';
     b.title=l.label+' · $'+Math.round(l.price).toLocaleString()+' · '+l.hlRole;
     b.onclick=()=>{tl_visible[l.viewerTag]=off;tl_draw(tlViewerMode);};
@@ -2990,8 +2989,7 @@ function gold_renderUsdOverlayLegend(mode){
     const off=btcXautOverlayVisible[o.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn gold-ov-leg-btn'+(off?' off':'');
-    b.style.borderColor=(()=>{const h=col.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),bl=parseInt(h.slice(4,6),16);return`rgba(${r},${g},${bl},0.4)`;})();
-    b.innerHTML=`<span style="color:${off?'rgba(255,255,255,.25)':col}">${o.viewerTag}</span>`;
+    b.innerHTML=`<span style="color:${col}">${o.viewerTag}</span>`;
     b.title=o.viewerTag+' · BTC/XAUt trendline translated to implied BTC/USD';
     b.onclick=()=>{btcXautOverlayVisible[o.viewerTag]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
@@ -3019,9 +3017,8 @@ function tl_renderLegend(lines,visibleMap,pairObj){
     const isWick=c.anchorBasis==='wick';
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
-    b.style.borderColor=col.replace('#','')===col?col:(()=>{const h=col.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),bl=parseInt(h.slice(4,6),16);return`rgba(${r},${g},${bl},0.4)`;})();
     /* no pip — color conveys support/resistance; wick vs close shown on SVG only */
-    b.innerHTML=`<span style="color:${off?'rgba(255,255,255,.25)':col}">${c.viewerTag}</span>`;
+    b.innerHTML=`<span style="color:${col}">${c.viewerTag}</span>`;
     b.onclick=()=>{visibleMap[c.viewerTag]=off;tl_draw(tlViewerMode);};
     el.appendChild(b);
   });
