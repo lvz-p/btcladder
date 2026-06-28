@@ -133,7 +133,7 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 
 /* CHART */
 .chart-shell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;position:relative}
-.chart-inner{display:grid;grid-template-columns:var(--axis-w,44px) 1fr 260px;align-items:stretch;position:relative}
+.chart-inner{display:grid;grid-template-columns:var(--axis-w,44px) 1fr 260px;align-items:stretch;position:relative;overflow:visible}
 .axis-price-col{padding:0;position:relative;flex-shrink:0;border-right:1px solid var(--border)}
 .tick-lbl{position:absolute;right:8px;font-size:12px;color:var(--muted);font-family:var(--mono);transform:translateY(-50%);white-space:nowrap;line-height:1}
 .canvas-col{position:relative;overflow:hidden}
@@ -153,11 +153,13 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 @media(pointer:coarse){.hover-zone,.hover-zone.hz-zone,.canvas-col *{pointer-events:none}
 .canvas-col{pointer-events:auto!important}}
 .hover-zone.hz-zone{transform:none;z-index:8}
+#ladderXhair{position:absolute;top:0;left:0;right:0;height:1px;background:transparent;border-top:1px dashed rgba(255,255,255,0.35);pointer-events:none;display:none;z-index:20}
+#ladderXhairLabel{position:absolute;right:0;top:0;transform:translateY(-50%);background:var(--surface2);border:.5px solid var(--border2);border-radius:3px;padding:1px 5px;font-size:11px;font-family:var(--mono);color:var(--text);white-space:nowrap;pointer-events:none}
 
 /* LABELS */
 /* fix: tighten pct gap — use gap on flex container, not margin-left:auto */
 .lbl-item{position:absolute;left:0;right:0;display:flex;align-items:center;gap:5px;transform:translateY(-50%);cursor:pointer;z-index:1;padding:0 8px}
-.lbl-item:hover{opacity:.75}
+.lbl-item:hover{opacity:1}.lbl-badge:hover{opacity:.75}
 .lbl-badge{font-size:12px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;font-family:var(--mono);line-height:1.4}
 .lbl-ocname{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
 /* fix: pct sits right after badge/name with a small gap, no wide spacer */
@@ -472,6 +474,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
       </div>
     </div>
     <div class="labels-col" id="labelsCol"></div>
+    <div id="ladderXhair"><span id="ladderXhairLabel"></span></div>
   </div>
 </div>
 <div class="sbs-divider" id="sbsDivider"><div class="sbs-grip"></div></div>
@@ -668,6 +671,9 @@ let autoZone=gs('autoZone','true')!=='false';
 /* ── ZOOM / PAN STATE ── */
 let zoomLo=null,zoomHi=null; /* null = use preset */
 let isPanning=false,panStartY=0,panStartLo=0,panStartHi=0;
+let _mouseIsDown=false;
+document.addEventListener('mousedown',()=>{_mouseIsDown=true;});
+document.addEventListener('mouseup',()=>{_mouseIsDown=false;});
 let isTouchPanning=false;
 let momentumRaf=null,velHistory=[];
 let userZoomed=false; /* true when user has manually zoomed/panned */
@@ -957,7 +963,7 @@ function buildTipHTML(tip,cur){
     const distStr=tip.distPct!=null?`${tip.distPct.toFixed(1)}% from current price`:'';
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${roleLabel} · ${tip.priceMin?fmt(tip.priceMin)+' – '+fmt(tip.priceMax):fmt(tip.price)}</span>`;
     showRange=false;showDiv=false;
-    membersHTML=`<div style="font-size:13px;color:var(--text);line-height:2.2;padding:4px 0"><div style="color:${tip.col};font-weight:600;margin-bottom:2px">Strength: ${strengthLabel}</div><div style="color:var(--muted)">· visited ${tip.hlOverlap||0} weeks</div><div style="color:var(--muted)">· defended ${tip.hlRej||0} times</div></div>`;
+    membersHTML=`<div style="font-size:13px;color:var(--text);line-height:1.7;padding:4px 0"><div style="color:${tip.col};font-weight:600;margin-bottom:2px">Strength: ${strengthLabel}</div><div style="color:var(--muted)">· visited ${tip.hlOverlap||0} weeks</div><div style="color:var(--muted)">· defended ${tip.hlRej||0} times</div></div>`;
   } else if(tip.isZone){
     headHTML=`<span class="tt-headbadge" style="background:rgba(255,255,255,.10);color:rgba(255,255,255,.85);border:.5px dashed rgba(255,255,255,.35)">ZONE</span><span class="tt-headlabel">${tip.label}</span>`;
     rangeHTML=`${fmt(tip.min)} – ${fmt(tip.max)}`;
@@ -991,11 +997,16 @@ function buildTipHTML(tip,cur){
     const pCls=pctCls(tip.d);
     const miniSvg=ttBuildMiniChart(tip);
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
-      `<div style="font-size:13px;color:var(--muted);line-height:2.2;padding:2px 0 0">` +
+      `<div style="font-size:13px;color:var(--muted);line-height:1.7;padding:2px 0 0">` +
       (projPrice&&projPrice>0?`<div>${projLabel} projection: <span style="color:${tip.col};font-weight:600">${fmt(projPrice)}</span></div>`:'') +
       `<div>${dateA} → ${dateB}</div>` +
       `</div>`+
-      (miniSvg?`<div style="margin-top:8px">${miniSvg}</div>`:'');
+      (miniSvg?(()=>{
+        const isGold=tip.isGoldOverlay;
+        const pairKey=isGold?'gold':'btc';
+        const tf=tip.tlLine&&tip.tlLine.tf||'1d';
+        return`<div style="margin-top:4px;cursor:pointer" title="Open in chart" onclick="window._openChartAtTf('${tf}','${pairKey}','${tip.code}')">${miniSvg}</div>`;
+      })():'');
   } else if(tip.isGoldOverlay){
     const tfName=tip.code&&tip.code.length>1?(tip.code[1].toUpperCase()==='D'?'Daily':tip.code[1].toUpperCase()==='W'?'Weekly':'Monthly'):'';
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} Trend</span>`;
@@ -1101,7 +1112,7 @@ function ttBuildMiniChart(tip){
   if(aViewI>=0&&aViewI<cs.length){const ay=yOf(tl.a.p);if(isFinite(ay))anchorsSVG+=`<circle cx="${xOf(aViewI).toFixed(1)}" cy="${ay.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
   if(bViewI>=0&&bViewI<cs.length){const by=yOf(tl.b.p);if(isFinite(by))anchorsSVG+=`<circle cx="${xOf(bViewI).toFixed(1)}" cy="${by.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
 
-  return`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:rgba(0,0,0,0.25)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
+  return`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:var(--surface);border:.5px solid var(--border)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
 }
 function hideTip(){const tt=$('tooltip');tt.classList.remove('show');tt.style.left='-9999px';tt.style.top='0';}
 
@@ -1159,7 +1170,8 @@ function renderChart(cur,ma,oc,tl=[]){
   $('axisPriceCol').style.position='relative';
   $('axisPriceCol').innerHTML=ticks.map(v=>
     `<div class="tick-lbl" style="top:${(toY(v)/H*100).toFixed(2)}%">${fmtTick(v)}</div>`
-  ).join('');
+  ).join('')+
+  '<div id="ladderXhairAxisLabel" style="display:none;position:absolute;left:0;right:0;top:0;transform:translateY(-50%);background:var(--surface);border:.5px solid var(--border2);border-radius:3px;padding:1px 4px;font-size:11px;font-family:var(--mono);color:var(--text);font-weight:700;white-space:nowrap;z-index:30;text-align:right;pointer-events:none"></div>';
 
   /* ── CANVAS ── */
   let canvas='';
@@ -1479,33 +1491,43 @@ function renderChart(cur,ma,oc,tl=[]){
   }
   window._hlCode=hlCode;
   window._clearHl=clearHl;
+  /* re-apply highlight if a tip is currently pinned — must be after hlCode/clearHl
+     reassigned so they reference fresh DOM nodes from new labelsHTML */
+  if(window._pinnedTipCode&&window._hlCode){
+    window._hlCode(window._pinnedTipCode);
+    $('tooltip').style.pointerEvents='auto';
+  }
   /* suppress mouseenter/mousemove if touch just fired */
   window._recentTouch=false;
-  $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
-    /* desktop only — no touch on canvas */
-    el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
-    el.addEventListener('mouseleave',()=>{if(window._recentTouch)return;hideTip();clearHl()});
-  });
-  window._pinnedTipCode=null; /* null = hover mode; set = pinned/clicked */
+  /* canvas hover-zones: no tooltip on hover — crosshair handles canvas interaction */
+  if(!window._pinnedTipCode)window._pinnedTipCode=null; /* null = hover mode; set = pinned/clicked */
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
     const code=el.dataset.code;
-    /* desktop hover — shows tooltip following cursor */
-    el.addEventListener('mouseenter',()=>{
-      if(window._recentTouch)return;
-      if(window._pinnedTipCode)return; /* don't disturb pinned tooltip */
-      showTooltip(window._tipMap.get(code),window._cur);hlCode(code);
-    });
-    el.addEventListener('mouseleave',()=>{
-      if(window._recentTouch)return;
-      if(window._pinnedTipCode)return; /* don't hide pinned tooltip on mouseleave */
-      hideTip();clearHl();
-    });
+    /* desktop hover — only on the badge itself, not the full row width */
+    const badgeEl=el.querySelector('.lbl-badge,.zone-badge,.dgrp-badge');
+    if(badgeEl){
+      badgeEl.addEventListener('mouseenter',()=>{
+        if(window._recentTouch)return;
+        if(_mouseIsDown||isPanning)return;
+        if(window._pinnedTipCode)return;
+        showTooltip(window._tipMap.get(code),window._cur);hlCode(code);
+      });
+      badgeEl.addEventListener('mouseleave',()=>{
+        if(window._recentTouch)return;
+        if(window._pinnedTipCode)return;
+        hideTip();clearHl();
+      });
+    }
     /* desktop click on badge — pins/unpins tooltip */
     const badge=el.querySelector('.lbl-badge,.zone-badge,.dgrp-badge');
     if(badge){
       badge.addEventListener('click',e=>{
         if(window._recentTouch)return;
         e.stopPropagation();
+        /* if pinned code is stale (hover replaced it), clear it so click opens fresh */
+        if(window._pinnedTipCode&&window._pinnedTipCode!==code&&!$('tooltip').classList.contains('show')){
+          window._pinnedTipCode=null;
+        }
         if(window._pinnedTipCode===code){
           /* unpin: back to hover mode */
           window._pinnedTipCode=null;
@@ -1652,6 +1674,9 @@ function renderChart(cur,ma,oc,tl=[]){
     isPanning=true;
     panStartY=e.clientY;panStartLo=clo;panStartHi=chi;
     canvas.style.cursor='grabbing';
+    /* hide crosshair while panning */
+    const _xh=document.getElementById('ladderXhair');if(_xh)_xh.style.display='none';
+    const _xhl=document.getElementById('ladderXhairAxisLabel');if(_xhl)_xhl.style.display='none';
     e.preventDefault();
   });
 
@@ -1672,6 +1697,110 @@ function renderChart(cur,ma,oc,tl=[]){
   });
 
   canvas.addEventListener('dblclick',()=>resetZoom());
+})();
+
+/* ── LADDER CROSSHAIR — price indicator on canvas hover / long-press ── */
+(function initLadderCrosshair(){
+  const canvas=$('canvasCol');
+  const xhair=$('ladderXhair');
+  const xhairLbl=$('ladderXhairLabel');
+  if(!canvas||!xhair||!xhairLbl)return;
+
+  function priceAtY(clientY){
+    const rect=canvas.getBoundingClientRect();
+    const lo=canvas._lo,hi=canvas._hi;
+    if(!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo)return null;
+    const H=rect.height;if(!H)return null;
+    const yFrac=(clientY-rect.top)/H;
+    return hi-(hi-lo)*yFrac;
+  }
+
+  function nearestSignal(clientY){
+    const lines=canvas.querySelectorAll('.lvl-line');
+    let best=null,bestDist=Infinity;
+    lines.forEach(l=>{
+      const r=l.getBoundingClientRect();
+      const lineY=r.top+r.height/2;
+      const dist=Math.abs(clientY-lineY);
+      if(dist<bestDist){bestDist=dist;best=l;}
+    });
+    return(best&&bestDist<14)?best.dataset.code||null:null;
+  }
+
+  function showXhair(clientY){
+    if(_mouseIsDown||isPanning)return;
+    const price=priceAtY(clientY);
+    if(!price||price<=0)return;
+    const ciRect=($('chartInner')||canvas).getBoundingClientRect();
+    const axisEl=$('axisPriceCol');
+    const axisRect=axisEl?axisEl.getBoundingClientRect():null;
+    const labelsEl=$('labelsCol');
+    const labelsRect=labelsEl?labelsEl.getBoundingClientRect():null;
+    /* xhair line: spans from canvas left edge to canvas right edge */
+    const lineLeft=axisRect?(axisRect.right-ciRect.left):0;
+    const lineRight=labelsRect?(ciRect.right-labelsRect.left):0;
+    xhair.style.left=lineLeft+'px';
+    xhair.style.right=lineRight+'px';
+    xhair.style.width='';
+    const yPx=(clientY-ciRect.top).toFixed(1);
+    xhair.style.top=yPx+'px';
+    xhair.style.display='block';
+    /* axis label: full price, positioned in axis column */
+    const axisLbl=document.getElementById('ladderXhairAxisLabel');
+    if(axisLbl){
+      const priceStr='$'+Math.round(price).toLocaleString();
+      axisLbl.textContent=priceStr;
+      const axisH=axisRect?axisRect.height:1;
+      const yAxisPct=((clientY-(axisRect?axisRect.top:ciRect.top))/axisH*100).toFixed(2);
+      axisLbl.style.top=yAxisPct+'%';
+      axisLbl.style.display='block';
+    }
+    /* hide old right-side label */
+    xhairLbl.style.display='none';
+  }
+
+  function hideXhair(){
+    xhair.style.display='none';
+    const axisLbl=document.getElementById('ladderXhairAxisLabel');
+    if(axisLbl)axisLbl.style.display='none';
+  }
+
+  /* desktop */
+  canvas.addEventListener('mousemove',e=>{
+    if(window._recentTouch||isPanning||_mouseIsDown)return;
+    showXhair(e.clientY);
+  },{passive:true});
+  /* fallback: listen on document in case canvas events are eaten */
+  document.addEventListener('mousemove',e=>{
+    if(window._recentTouch||isPanning||_mouseIsDown)return;
+    const rect=canvas.getBoundingClientRect();
+    if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom){
+      hideXhair();return;
+    }
+    showXhair(e.clientY);
+  },{passive:true});
+  canvas.addEventListener('mouseleave',()=>{if(!window._recentTouch)hideXhair();});
+
+  /* mobile long-press */
+  let _xhTimer=null,_xhActive=false,_xhStartY=0;
+  canvas.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    _xhStartY=e.touches[0].clientY;
+    _xhActive=false;
+    clearTimeout(_xhTimer);
+    _xhTimer=setTimeout(()=>{_xhActive=true;showXhair(_xhStartY);},400);
+  },{passive:true});
+  canvas.addEventListener('touchmove',e=>{
+    if(e.touches.length!==1){clearTimeout(_xhTimer);hideXhair();_xhActive=false;return;}
+    const dy=Math.abs(e.touches[0].clientY-_xhStartY);
+    if(dy>8&&!_xhActive){clearTimeout(_xhTimer);_xhTimer=null;return;}
+    if(_xhActive)showXhair(e.touches[0].clientY);
+  },{passive:true});
+  canvas.addEventListener('touchend',()=>{
+    clearTimeout(_xhTimer);_xhTimer=null;
+    if(_xhActive){setTimeout(hideXhair,800);}
+    _xhActive=false;
+  },{passive:true});
 })();
 
 /* ── TOUCH PAN/ZOOM — mobile only, canvas middle column ──
@@ -1821,6 +1950,56 @@ function renderChart(cur,ma,oc,tl=[]){
 /* ── CLICK ── */
 window.handleClick=function(codeKey){
   /* interaction now handled by badge click/touch listeners — this is a no-op */
+};
+
+/* navigate chart card to the timeframe and pair of a trendline */
+window._openChartAtTf=function(tf,pairKey,viewerTag){
+  if(!tf||!pairKey)return;
+  /* dismiss tooltip */
+  window._pinnedTipCode=null;
+  hideTip();
+  $('tooltip').style.pointerEvents='none';
+  if(window._clearHl)window._clearHl();
+  /* set pair */
+  tlActivePairKey=pairKey;
+  const tlPS=document.getElementById('tlPairSelect');
+  if(tlPS)tlPS.value=pairKey;
+  /* set timeframe mode */
+  tlViewerMode=tf;
+  /* reset zoom to default view for this tf so the line is visible */
+  if(!tl_draw._vs)tl_draw._vs={};
+  const vk=tlActivePairKey+'|'+tf;
+  const pair=tlActivePair();
+  tl_draw._vs[vk]=pair.defaultView(tf);
+  /* force the clicked signal ON so it's always visible */
+  if(viewerTag){
+    if(pairKey==='gold'){
+      if(typeof btcXautOverlayVisible!=='undefined')btcXautOverlayVisible[viewerTag]=true;
+    } else {
+      tl_visible[viewerTag]=true;
+    }
+  }
+  /* show chart card */
+  const chartCard=document.getElementById('tlSection');
+  const ladderCard=document.getElementById('chartShell');
+  if(_sideBySide){
+    if(typeof sizeChartCard==='function')sizeChartCard();
+    tl_draw(tf);
+  } else {
+    if(_activeView!=='chart'){
+      _activeView='chart';
+      if(ladderCard)ladderCard.style.display='none';
+      if(chartCard)chartCard.style.display='block';
+      if(typeof sizeChartCard==='function')sizeChartCard();
+      _tlFirstRender();
+    } else {
+      tl_draw(tf);
+    }
+  }
+  /* for gold, ensure data loaded */
+  if(pairKey==='gold'){
+    gold_ensureLoaded().then(()=>tl_draw(tf)).catch(()=>{});
+  }
 };
 
 /* called when a member badge inside a pinned zone/group tooltip is clicked */
@@ -2247,7 +2426,10 @@ function tl_validateLine(cs,line,type,a,b,tolPct,basis,log){
 function btc_isInvalidated(cs,line,type,a,b,basis,log){
   const tolFrac=basis==='wick'?0:TL_VALIDATION_TOL/100;
   const tolLog=Math.log(1+tolFrac);
-  for(let i=a.i;i<cs.length-1;i++){
+  /* wick basis: last candle included (wick already happened — immediate breach)
+     close basis: last candle excluded (wait for candle close to confirm) */
+  const loopEnd=basis==='wick'?cs.length:cs.length-1;
+  for(let i=a.i;i<loopEnd;i++){
     if(i===a.i||i===b.i)continue;
     const lpY=line.projectY(i);
     const pp=tl_selectedPrice(cs[i],type,basis);
@@ -2716,13 +2898,19 @@ function tl_getDefaultOn(tag,price,cur){
 function hs_renderLegend(){
   const el=document.getElementById('tlLegend');
   if(!el)return;
-  el.querySelectorAll('.hs-leg-btn').forEach(b=>b.remove());
+  el.querySelectorAll('.hs-leg-btn,.hs-leg-sep').forEach(b=>b.remove());
   if(!hs_levels.length)return;
+  /* separator before H-levels group */
+  const sep=document.createElement('span');
+  sep.className='hs-leg-sep';
+  sep.style.cssText='display:inline-block;width:1px;height:16px;background:var(--border2);margin:0 4px;align-self:center;opacity:0.7';
+  el.appendChild(sep);
   hs_levels.forEach(l=>{
     const col='#cbd5e1';
     const off=tl_visible[l.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn hs-leg-btn'+(off?' off':'');
+    b.style.borderColor='rgba(203,213,225,0.4)';
     b.innerHTML='<span style="display:inline-block;padding:0 5px;border-radius:3px;background:'+(off?'rgba(255,255,255,.12)':col)+';vertical-align:middle;font-size:11px;font-weight:700;line-height:14px;color:'+(off?'rgba(255,255,255,.3)':'#000')+';font-family:var(--mono)">'+l.label+'</span>';
     b.title=l.label+' · $'+Math.round(l.price).toLocaleString()+' · '+l.hlRole;
     b.onclick=()=>{tl_visible[l.viewerTag]=off;tl_draw(tlViewerMode);};
@@ -2739,14 +2927,20 @@ function hs_renderLegend(){
 function gold_renderUsdOverlayLegend(mode){
   const el=document.getElementById('tlLegend');
   if(!el)return;
-  el.querySelectorAll('.gold-ov-leg-btn').forEach(b=>b.remove());
+  el.querySelectorAll('.gold-ov-leg-btn,.gold-ov-leg-sep').forEach(b=>b.remove());
   const ov=btcXautOverlays[mode]||[];
   if(!ov.length)return;
+  /* separator before gold overlays group */
+  const sep=document.createElement('span');
+  sep.className='gold-ov-leg-sep';
+  sep.style.cssText='display:inline-block;width:1px;height:16px;background:var(--border2);margin:0 4px;align-self:center;opacity:0.7';
+  el.appendChild(sep);
   ov.forEach(o=>{
     const col='#fde047';
     const off=btcXautOverlayVisible[o.viewerTag]===false;
     const b=document.createElement('button');
     b.className='tl-leg-btn gold-ov-leg-btn'+(off?' off':'');
+    b.style.borderColor=(()=>{const h=col.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),bl=parseInt(h.slice(4,6),16);return`rgba(${r},${g},${bl},0.4)`;})();
     b.innerHTML=`<span style="color:${off?'rgba(255,255,255,.25)':col}">${o.viewerTag}</span>`;
     b.title=o.viewerTag+' · BTC/XAUt trendline translated to implied BTC/USD';
     b.onclick=()=>{btcXautOverlayVisible[o.viewerTag]=off;tl_draw(tlViewerMode);};
@@ -2775,6 +2969,7 @@ function tl_renderLegend(lines,visibleMap,pairObj){
     const isWick=c.anchorBasis==='wick';
     const b=document.createElement('button');
     b.className='tl-leg-btn'+(off?' off':'');
+    b.style.borderColor=col.replace('#','')===col?col:(()=>{const h=col.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),bl=parseInt(h.slice(4,6),16);return`rgba(${r},${g},${bl},0.4)`;})();
     /* no pip — color conveys support/resistance; wick vs close shown on SVG only */
     b.innerHTML=`<span style="color:${off?'rgba(255,255,255,.25)':col}">${c.viewerTag}</span>`;
     b.onclick=()=>{visibleMap[c.viewerTag]=off;tl_draw(tlViewerMode);};
@@ -6097,7 +6292,7 @@ function gold_rebuildUsdOverlays(){
     btcXautOverlays[tf]=gold_translateToUsd(tf);
     btcXautOverlays[tf].forEach(o=>{
       if(!(o.viewerTag in btcXautOverlayVisible)){
-        btcXautOverlayVisible[o.viewerTag]=gold_visible[o.viewerTag]===true;
+        btcXautOverlayVisible[o.viewerTag]=false; /* off by default on BTC/USDT chart — user can enable */
       }
     });
   });
