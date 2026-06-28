@@ -1051,7 +1051,8 @@ function ttBuildMiniChart(tip){
   const cs=allCs.slice(iStart,iEnd+1);
   if(!cs.length)return null;
 
-  const W=140,H=Math.round(W*0.75);
+  const isMob=window.innerWidth<641;
+  const W=isMob?110:140,H=Math.round(W*0.75);
   const PAD={t:5,r:4,b:5,l:4};
   const cW=W-PAD.l-PAD.r;
   const cH=H-PAD.t-PAD.b;
@@ -1563,9 +1564,21 @@ function renderChart(cur,ma,oc,tl=[]){
         hideTip();clearHl();
         const t=e.touches[0];
         const tt=$('tooltip');
-        tt.style.left=(t.clientX-110)+'px';
-        tt.style.top=(t.clientY-140)+'px';
+        /* show first so we can measure size, then reposition */
+        tt.style.left='-9999px';tt.style.top='0';
         showTooltip(window._tipMap.get(code),window._cur);
+        requestAnimationFrame(()=>{
+          const tw=tt.offsetWidth||220,th=tt.offsetHeight||200;
+          /* prefer above the thumb, centered on touch X */
+          let x=t.clientX-tw/2;
+          let y=t.clientY-th-12;
+          /* flip below if too close to top */
+          if(y<8)y=t.clientY+12;
+          /* clamp to viewport */
+          x=Math.max(8,Math.min(window.innerWidth-tw-8,x));
+          y=Math.max(8,Math.min(window.innerHeight-th-8,y));
+          tt.style.left=x+'px';tt.style.top=y+'px';
+        });
         hlCode(code);
         e.stopPropagation();
       },{passive:true});
@@ -1968,45 +1981,59 @@ window._openChartAtTf=function(tf,pairKey,viewerTag){
   hideTip();
   $('tooltip').style.pointerEvents='none';
   if(window._clearHl)window._clearHl();
-  /* set pair */
+  /* set pair and timeframe */
   tlActivePairKey=pairKey;
   const tlPS=document.getElementById('tlPairSelect');
   if(tlPS)tlPS.value=pairKey;
-  /* set timeframe mode */
   tlViewerMode=tf;
-  /* reset zoom to default view for this tf so the line is visible */
+  /* sync timeframe toggle buttons to reflect new mode */
+  const _tfBtnMap={'1d':'tlDailyBtn','1w':'tlWeeklyBtn','1M':'tlMonthlyBtn'};
+  ['tlDailyBtn','tlWeeklyBtn','tlMonthlyBtn'].forEach(id=>{
+    const b=document.getElementById(id);if(b)b.classList.remove('active');
+  });
+  const _activeBtn=document.getElementById(_tfBtnMap[tf]);
+  if(_activeBtn)_activeBtn.classList.add('active');
+  /* reset zoom */
   if(!tl_draw._vs)tl_draw._vs={};
   const vk=tlActivePairKey+'|'+tf;
-  const pair=tlActivePair();
-  tl_draw._vs[vk]=pair.defaultView(tf);
-  /* force the clicked signal ON so it's always visible */
+  tl_draw._vs[vk]=tlActivePair().defaultView(tf);
+  /* force signal visible */
   if(viewerTag){
-    if(pairKey==='gold'){
-      if(typeof btcXautOverlayVisible!=='undefined')btcXautOverlayVisible[viewerTag]=true;
-    } else {
-      tl_visible[viewerTag]=true;
-    }
+    if(pairKey==='gold'){if(typeof btcXautOverlayVisible!=='undefined')btcXautOverlayVisible[viewerTag]=true;}
+    else{tl_visible[viewerTag]=true;}
   }
-  /* show chart card */
   const chartCard=document.getElementById('tlSection');
   const ladderCard=document.getElementById('chartShell');
-  if(_sideBySide){
+  const savedScroll=window.scrollY;
+  function _doRender(){
     if(typeof sizeChartCard==='function')sizeChartCard();
-    tl_draw(tf);
-  } else {
-    if(_activeView!=='chart'){
-      _activeView='chart';
-      if(ladderCard)ladderCard.style.display='none';
-      if(chartCard)chartCard.style.display='block';
-      if(typeof sizeChartCard==='function')sizeChartCard();
-      _tlFirstRender();
-    } else {
-      tl_draw(tf);
-    }
+    if(pairKey==='gold'){gold_ensureLoaded().then(()=>tl_draw(tf)).catch(()=>{});}
+    else{_tlFirstRender?_tlFirstRender():tl_draw(tf);}
   }
-  /* for gold, ensure data loaded */
-  if(pairKey==='gold'){
-    gold_ensureLoaded().then(()=>tl_draw(tf)).catch(()=>{});
+  if(_sideBySide){
+    /* SBS: no view switch needed, just redraw */
+    _doRender();
+  } else if(_activeView!=='chart'){
+    /* fade out ladder, fade in chart — same as switchView() */
+    const icon=document.getElementById('viewSwitchIcon');
+    ladderCard.style.opacity='0';
+    ladderCard.style.transition='opacity .18s';
+    setTimeout(()=>{
+      ladderCard.style.display='none';
+      ladderCard.style.opacity='1';
+      chartCard.style.display='block';
+      window.scrollTo({top:savedScroll,behavior:'instant'});
+      chartCard.style.opacity='0';
+      chartCard.style.transition='opacity .18s';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{chartCard.style.opacity='1';}));
+      if(icon)icon.innerHTML=_svgLadder;
+      _activeView='chart';
+      _doRender();
+    },180);
+  } else {
+    /* already on chart card, just redraw */
+    if(pairKey==='gold'){gold_ensureLoaded().then(()=>tl_draw(tf)).catch(()=>{});}
+    else{tl_draw(tf);}
   }
 };
 
