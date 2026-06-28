@@ -1782,24 +1782,29 @@ function renderChart(cur,ma,oc,tl=[]){
   canvas.addEventListener('mouseleave',()=>{if(!window._recentTouch)hideXhair();});
 
   /* mobile long-press */
-  let _xhTimer=null,_xhActive=false,_xhStartY=0;
+  let _xhTimer=null,_xhActive=false,_xhStartY=0,_xhStartX=0;
+  window._xhActive=false;
   canvas.addEventListener('touchstart',e=>{
     if(e.touches.length!==1)return;
     _xhStartY=e.touches[0].clientY;
+    _xhStartX=e.touches[0].clientX;
     _xhActive=false;
     clearTimeout(_xhTimer);
-    _xhTimer=setTimeout(()=>{_xhActive=true;showXhair(_xhStartY);},400);
+    _xhTimer=setTimeout(()=>{_xhActive=true;window._xhActive=true;showXhair(_xhStartY);},500);
   },{passive:true});
   canvas.addEventListener('touchmove',e=>{
     if(e.touches.length!==1){clearTimeout(_xhTimer);hideXhair();_xhActive=false;return;}
     const dy=Math.abs(e.touches[0].clientY-_xhStartY);
-    if(dy>8&&!_xhActive){clearTimeout(_xhTimer);_xhTimer=null;return;}
-    if(_xhActive)showXhair(e.touches[0].clientY);
+    const dx=Math.abs(e.touches[0].clientX-_xhStartX);
+    /* cancel long-press if significant movement before activation */
+    if(!_xhActive&&(dy>20||dx>20)){clearTimeout(_xhTimer);_xhTimer=null;return;}
+    /* once active, follow finger and suppress panning */
+    if(_xhActive){showXhair(e.touches[0].clientY);}
   },{passive:true});
   canvas.addEventListener('touchend',()=>{
     clearTimeout(_xhTimer);_xhTimer=null;
-    if(_xhActive){setTimeout(hideXhair,800);}
-    _xhActive=false;
+    hideXhair();
+    _xhActive=false;window._xhActive=false;
   },{passive:true});
 })();
 
@@ -1819,6 +1824,8 @@ function renderChart(cur,ma,oc,tl=[]){
   function getTouchDist(t1,t2){return Math.abs(t1.clientY-t2.clientY)||1}
 
   canvas.addEventListener('touchstart',e=>{
+    /* if crosshair long-press is active, don't start pan */
+    if(window._xhActive)return;
     /* close MSM tooltip if open and tap is outside it */
     const tip=document.getElementById('msmTooltip');
     if(tip&&tip.style.display!=='none'){
@@ -1867,6 +1874,7 @@ function renderChart(cur,ma,oc,tl=[]){
 
   document.addEventListener('touchmove',e=>{
     const cur=window._cur||lastCurrent;if(!cur)return;
+    if(window._xhActive)return; /* crosshair active — don't pan */
     if(e.touches.length===1&&isTouchPanning){
       /* pan - touch-action:none on canvas handles scroll prevention */
       const rect=canvas.getBoundingClientRect();
