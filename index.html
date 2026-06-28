@@ -1554,35 +1554,50 @@ function renderChart(cur,ma,oc,tl=[]){
         });
       });
       /* mobile: badge tap opens pinned tooltip */
+      let _badgeTouchMoved=false,_badgeTouchStartY=0,_badgeTouchStartX=0;
       badge.addEventListener('touchstart',e=>{
         window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
+        _badgeTouchMoved=false;
+        _badgeTouchStartY=e.touches[0].clientY;
+        _badgeTouchStartX=e.touches[0].clientX;
+        /* don't open tooltip yet — wait for touchend to confirm it's a tap not a pan */
+        e.stopPropagation();
+      },{passive:true});
+      badge.addEventListener('touchmove',e=>{
+        const dy=Math.abs(e.touches[0].clientY-_badgeTouchStartY);
+        const dx=Math.abs(e.touches[0].clientX-_badgeTouchStartX);
+        if(dy>8||dx>8)_badgeTouchMoved=true;
+        e.stopPropagation();
+      },{passive:true});
+      badge.addEventListener('touchend',e=>{
+        e.stopPropagation();
+        if(_badgeTouchMoved){
+          /* was a pan — don't open tooltip, ensure highlight is clear */
+          if(window._clearHl)window._clearHl();
+          return;
+        }
+        /* was a tap — open/close tooltip */
         if(window._pinnedTipCode===code){
-          window._pinnedTipCode=null;$('tooltip').style.pointerEvents='none';hideTip();clearHl();e.stopPropagation();return;
+          window._pinnedTipCode=null;$('tooltip').style.pointerEvents='none';hideTip();clearHl();return;
         }
         window._pinnedTipCode=code;
         $('tooltip').style.pointerEvents='auto';
         hideTip();clearHl();
-        const t=e.touches[0];
+        const touch=e.changedTouches[0];
         const tt=$('tooltip');
-        /* show first so we can measure size, then reposition */
         tt.style.left='-9999px';tt.style.top='0';
         showTooltip(window._tipMap.get(code),window._cur);
         requestAnimationFrame(()=>{
           const tw=tt.offsetWidth||220,th=tt.offsetHeight||200;
-          /* prefer above the thumb, centered on touch X */
-          let x=t.clientX-tw/2;
-          let y=t.clientY-th-12;
-          /* flip below if too close to top */
-          if(y<8)y=t.clientY+12;
-          /* clamp to viewport */
+          let x=touch.clientX-tw/2;
+          let y=touch.clientY-th-12;
+          if(y<8)y=touch.clientY+12;
           x=Math.max(8,Math.min(window.innerWidth-tw-8,x));
           y=Math.max(8,Math.min(window.innerHeight-th-8,y));
           tt.style.left=x+'px';tt.style.top=y+'px';
         });
         hlCode(code);
-        e.stopPropagation();
       },{passive:true});
-      badge.addEventListener('touchend',e=>{e.stopPropagation();},{passive:true});
     }
   });
   /* click outside unpins on desktop */
