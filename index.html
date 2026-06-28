@@ -1615,7 +1615,7 @@ function renderChart(cur,ma,oc,tl=[]){
   if(!window._tdismissSet){
     window._tdismissSet=true;
     document.addEventListener('touchstart',e=>{
-      hideTip();clearHl();
+      hideTip();if(window._clearHl)window._clearHl();window._pinnedTipCode=null;$('tooltip').style.pointerEvents='none';
       /* if touch didn't start on canvas, reset ladder pan/pinch state */
       const canvasEl=$('canvasCol');
       if(canvasEl&&!canvasEl.contains(e.target)){
