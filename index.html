@@ -184,7 +184,7 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 .zone-pct.pos{color:var(--green)}.zone-pct.neg{color:var(--red)}.zone-pct.near{color:var(--amber)}
 
 /* TOOLTIP */
-.tooltip{position:fixed;z-index:9999;pointer-events:none;background:var(--surface);border:.5px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.5);opacity:0;transition:opacity .08s;min-width:180px;max-width:290px;left:-9999px;top:0}
+.tooltip{position:fixed;z-index:9999;pointer-events:none;background:var(--surface);border:.5px solid var(--border2);border-radius:10px;padding:10px 12px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.5);opacity:0;transition:opacity .08s;min-width:150px;max-width:240px;left:-9999px;top:0}
 .tooltip.show{opacity:1}
 .tt-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .tt-headbadge{font-size:12px;font-weight:800;padding:2px 7px;border-radius:4px;font-family:var(--mono);line-height:1.4;flex-shrink:0}
@@ -928,7 +928,7 @@ function buildTipHTML(tip,cur){
         const subItems=(m.items||[]).map(x=>{
           const xCls=pctCls(x.d);
           return`<div class="tt-member" style="padding-left:8px;opacity:.8">
-            <span class="tt-mbadge" style="background:${x.bg};color:${x.col}">${x.code}</span>
+            <span class="tt-mbadge" style="background:${x.bg};color:${x.col};cursor:pointer" data-tipcode="${x.code}" onclick="window._tipClickMember('${x.code}')">${x.code}</span>
             ${x.isOC?`<span class="tt-mname">${x.label}</span>`:''}
             <span class="tt-mprice">${fmt(x.price)}</span>
             <span class="tt-mpct ${xCls}">${pctStr(x.d)}</span>
@@ -944,7 +944,7 @@ function buildTipHTML(tip,cur){
         </div>`;
       }
       return`<div class="tt-member">
-        <span class="tt-mbadge" style="background:${m.bg};color:${m.col}">${m.code}</span>
+        <span class="tt-mbadge" style="background:${m.bg};color:${m.col};cursor:pointer" data-tipcode="${m.code}" onclick="window._tipClickMember('${m.code}')">${m.code}</span>
         ${m.isOC&&m.label?`<span class="tt-mname">${m.label}</span>`:''}
         <span class="tt-mprice">${fmt(m.price)}</span>
         <span class="tt-mpct ${pCls}">${pctStr(m.d)}</span>
@@ -965,7 +965,7 @@ function buildTipHTML(tip,cur){
     membersHTML=(tip.items||[]).map(x=>{
       const pCls=pctCls(x.d);
       return`<div class="tt-member">
-        <span class="tt-mbadge" style="background:${x.bg};color:${x.col}">${x.code}</span>
+        <span class="tt-mbadge" style="background:${x.bg};color:${x.col};cursor:pointer" data-tipcode="${x.code}" onclick="window._tipClickMember('${x.code}')">${x.code}</span>
         ${x.isOC?`<span class="tt-mname">${x.label}</span>`:''}
         <span class="tt-mprice">${fmt(x.price)}</span>
         <span class="tt-mpct ${pCls}">${pctStr(x.d)}</span>
@@ -989,27 +989,18 @@ function buildTipHTML(tip,cur){
     const projPrice=typeof tl_projectLineAtTime==='function'?tl_projectLineAtTime(tl,projT):null;
     const projLabel=prefix==='D'?'30d':prefix==='W'?'60d':'90d';
     const pCls=pctCls(tip.d);
-    let miniSvg=null;try{miniSvg=ttBuildMiniChart(tip);}catch(e){console.warn('ttBuildMiniChart error:',e);}
+    const miniSvg=ttBuildMiniChart(tip);
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
       `<div style="font-size:13px;color:var(--muted);line-height:2.2;padding:2px 0 0">` +
-      `<div>Anchors: ${dateA} → ${dateB}</div>` +
       (projPrice&&projPrice>0?`<div>${projLabel} projection: <span style="color:${tip.col};font-weight:600">${fmt(projPrice)}</span></div>`:'') +
+      `<div>${dateA} → ${dateB}</div>` +
       `</div>`+
       (miniSvg?`<div style="margin-top:8px">${miniSvg}</div>`:'');
   } else if(tip.isGoldOverlay){
-    /* BTC/XAUt trendline translated into BTC/USDT terms. Deliberately
-       NO projected/future value here — unlike native trendlines (which
-       can project forward in their own price domain), a meaningful
-       forward projection in USD terms would require knowing gold's
-       future price, which isn't available. Shows only the most recent
-       REAL value, explicitly labeled "as of" that date so it reads as
-       a snapshot, not a live or projected number. */
     const tfName=tip.code&&tip.code.length>1?(tip.code[1].toUpperCase()==='D'?'Daily':tip.code[1].toUpperCase()==='W'?'Weekly':'Monthly'):'';
-    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} BTC/XAUt Trend</span>`;
+    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} Trend</span>`;
     const pCls=pctCls(tip.d);
-    const asOfStr=tip.goldOverlayAsOf?`<div>As of ${tip.goldOverlayAsOf}</div>`:'';
-    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
-      `<div style="font-size:13px;color:var(--muted);line-height:2.2;padding:2px 0 0">${asOfStr}<div>Implied BTC/USDT value of this BTC/XAUt trendline</div></div>`;
+    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`;
   } else {
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
     const pCls=pctCls(tip.d);
@@ -1040,8 +1031,7 @@ function ttBuildMiniChart(tip){
   const log=tf==='1M';
   const off=(tl_idxOffset&&tl_idxOffset[tf])||0;
 
-  /* zoom window: A1 minus context candles → last real candle + right margin
-     gives tight view focused on the trendline action regardless of timeframe */
+  /* zoom: A1 minus context → last real candle + right margin */
   const ctxL=tf==='1d'?10:tf==='1w'?6:3;
   const ctxR=tf==='1d'?8: tf==='1w'?5:3;
   const a1InAll=tl.a.i+off;
@@ -1050,8 +1040,7 @@ function ttBuildMiniChart(tip){
   const cs=allCs.slice(iStart,iEnd+1);
   if(!cs.length)return null;
 
-  /* SVG: width fits tooltip, height = 75% */
-  const W=180,H=Math.round(W*0.75);
+  const W=140,H=Math.round(W*0.75);
   const PAD={t:5,r:4,b:5,l:4};
   const cW=W-PAD.l-PAD.r;
   const cH=H-PAD.t-PAD.b;
@@ -1061,22 +1050,19 @@ function ttBuildMiniChart(tip){
   for(const cv of cs){pMin=Math.min(pMin,cv.low);pMax=Math.max(pMax,cv.high);}
   if(pMax<=pMin)return null;
 
-  /* padding done in log space for monthly to avoid negative values */
+  /* padding in log space for monthly to avoid negative values */
   let sMin,sMax;
   if(log){
     const lMin=Math.log(Math.max(pMin,1)),lMax=Math.log(Math.max(pMax,1));
     const lPad=(lMax-lMin)*0.06;
-    sMin=lMin-lPad; sMax=lMax+lPad;
+    sMin=lMin-lPad;sMax=lMax+lPad;
   } else {
     const lPad=(pMax-pMin)*0.06;
-    sMin=pMin-lPad; sMax=pMax+lPad;
+    sMin=pMin-lPad;sMax=pMax+lPad;
   }
   if(sMax<=sMin)return null;
 
-  const yOf=p=>{
-    const v=log?Math.log(Math.max(p,1)):p;
-    return PAD.t+cH*(1-(v-sMin)/(sMax-sMin));
-  };
+  const yOf=p=>{const v=log?Math.log(Math.max(p,1)):p;return PAD.t+cH*(1-(v-sMin)/(sMax-sMin));};
   const xOf=i=>(i/(cs.length-1||1))*cW+PAD.l;
 
   /* candles */
@@ -1099,7 +1085,7 @@ function ttBuildMiniChart(tip){
   const toFocusI=viewI=>viewI+(iStart-off);
   const lineCol=tip.col||'#94a3b8';
 
-  /* trendline ray: from A1 to right edge */
+  /* ray from A1 to right edge */
   let lineSVG='';
   const rayStart=Math.max(0,aViewI);
   const rayEnd=cs.length-1;
@@ -1115,7 +1101,7 @@ function ttBuildMiniChart(tip){
   if(aViewI>=0&&aViewI<cs.length){const ay=yOf(tl.a.p);if(isFinite(ay))anchorsSVG+=`<circle cx="${xOf(aViewI).toFixed(1)}" cy="${ay.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
   if(bViewI>=0&&bViewI<cs.length){const by=yOf(tl.b.p);if(isFinite(by))anchorsSVG+=`<circle cx="${xOf(bViewI).toFixed(1)}" cy="${by.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
 
-  return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:rgba(0,0,0,0.25)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
+  return`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:rgba(0,0,0,0.25)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
 }
 function hideTip(){const tt=$('tooltip');tt.classList.remove('show');tt.style.left='-9999px';tt.style.top='0';}
 
@@ -1333,6 +1319,24 @@ function renderChart(cur,ma,oc,tl=[]){
       })):null
     };
     tipMap.set(code,tip);
+    /* register each zone member individually so _tipClickMember can look them up */
+    if(l.type==='zone'){
+      l.items.forEach(x=>{
+        const xCode=levelCode(x);
+        if(!tipMap.has(xCode)){
+          tipMap.set(xCode,{
+            code:xCode,label:x.label,price:x.price,d:pct(x.price,cur),
+            col:levelColor(x),bg:levelBg(x),
+            isOC:x.sourceType==='onchain',
+            isHoriz:x.sourceType==='horizontal',
+            isTL:x.sourceType==='trendline',tlLine:x._tlLine||null,
+            isGoldOverlay:x.sourceType==='goldOverlay',goldOverlayAsOf:x.asOfDate||null,
+            hlRole:x.hlRole,hlScore:x.score,hlOverlap:x.overlapCount,hlRej:x.rejections,distPct:x.distPct,
+            priceMin:x.priceMin,priceMax:x.priceMax
+          });
+        }
+      });
+    }
 
     if(l.type==='zone'){
       const yTop=toY(l.max),yBot=toY(l.min);
@@ -1473,6 +1477,8 @@ function renderChart(cur,ma,oc,tl=[]){
     $('canvasCol').querySelectorAll('.lvl-line').forEach(x=>{x.style.opacity=x.dataset.opacity||'0.65';x.style.height='1px'});
     $('labelsCol').querySelectorAll('[data-code]').forEach(x=>{x.style.opacity=x.dataset.opacity||'1'});
   }
+  window._hlCode=hlCode;
+  window._clearHl=clearHl;
   /* suppress mouseenter/mousemove if touch just fired */
   window._recentTouch=false;
   $('canvasCol').querySelectorAll('.hover-zone').forEach(el=>{
@@ -1480,30 +1486,81 @@ function renderChart(cur,ma,oc,tl=[]){
     el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
     el.addEventListener('mouseleave',()=>{if(window._recentTouch)return;hideTip();clearHl()});
   });
+  window._pinnedTipCode=null; /* null = hover mode; set = pinned/clicked */
   $('labelsCol').querySelectorAll('[data-code]').forEach(el=>{
-    /* desktop hover on full row */
-    el.addEventListener('mouseenter',()=>{if(window._recentTouch)return;showTooltip(window._tipMap.get(el.dataset.code),window._cur);hlCode(el.dataset.code)});
-    el.addEventListener('mouseleave',()=>{if(window._recentTouch)return;hideTip();clearHl()});
-    /* mobile: only badge opens tooltip */
+    const code=el.dataset.code;
+    /* desktop hover — shows tooltip following cursor */
+    el.addEventListener('mouseenter',()=>{
+      if(window._recentTouch)return;
+      if(window._pinnedTipCode)return; /* don't disturb pinned tooltip */
+      showTooltip(window._tipMap.get(code),window._cur);hlCode(code);
+    });
+    el.addEventListener('mouseleave',()=>{
+      if(window._recentTouch)return;
+      if(window._pinnedTipCode)return; /* don't hide pinned tooltip on mouseleave */
+      hideTip();clearHl();
+    });
+    /* desktop click on badge — pins/unpins tooltip */
     const badge=el.querySelector('.lbl-badge,.zone-badge,.dgrp-badge');
     if(badge){
+      badge.addEventListener('click',e=>{
+        if(window._recentTouch)return;
+        e.stopPropagation();
+        if(window._pinnedTipCode===code){
+          /* unpin: back to hover mode */
+          window._pinnedTipCode=null;
+          $('tooltip').style.pointerEvents='none';
+          hideTip();clearHl();
+          return;
+        }
+        /* pin: freeze tooltip in current position */
+        window._pinnedTipCode=code;
+        $('tooltip').style.pointerEvents='auto';
+        showTooltip(window._tipMap.get(code),window._cur);
+        hlCode(code);
+        /* reposition after render so size is known */
+        requestAnimationFrame(()=>{
+          const tt=$('tooltip');
+          const w=tt.offsetWidth||220,h=tt.offsetHeight||200;
+          let x=e.clientX+16,y=e.clientY-10;
+          if(x+w>window.innerWidth-8)x=e.clientX-w-12;
+          if(x<8)x=8;
+          if(y+h>window.innerHeight-8)y=e.clientY-h-8;
+          if(y<8)y=8;
+          tt.style.left=x+'px';tt.style.top=y+'px';
+        });
+      });
+      /* mobile: badge tap opens pinned tooltip */
       badge.addEventListener('touchstart',e=>{
         window._recentTouch=true;setTimeout(()=>{window._recentTouch=false;},500);
+        if(window._pinnedTipCode===code){
+          window._pinnedTipCode=null;$('tooltip').style.pointerEvents='none';hideTip();clearHl();e.stopPropagation();return;
+        }
+        window._pinnedTipCode=code;
+        $('tooltip').style.pointerEvents='auto';
         hideTip();clearHl();
         const t=e.touches[0];
         const tt=$('tooltip');
         tt.style.left=(t.clientX-110)+'px';
         tt.style.top=(t.clientY-140)+'px';
-        showTooltip(window._tipMap.get(el.dataset.code),window._cur);
-        hlCode(el.dataset.code);
+        showTooltip(window._tipMap.get(code),window._cur);
+        hlCode(code);
         e.stopPropagation();
       },{passive:true});
-      /* stop touchend from bubbling to document dismiss listener */
-      badge.addEventListener('touchend',e=>{
-        e.stopPropagation();
-      },{passive:true});
+      badge.addEventListener('touchend',e=>{e.stopPropagation();},{passive:true});
     }
   });
+  /* click outside unpins on desktop */
+  if(!window._clickOutsideSet){
+    window._clickOutsideSet=true;
+    document.addEventListener('mousedown',e=>{
+      if(!window._pinnedTipCode)return;
+      const tt=$('tooltip');
+      if(tt.contains(e.target))return; /* click inside tooltip — keep pinned */
+      if(e.target.closest&&e.target.closest('.lbl-badge,.zone-badge,.dgrp-badge'))return; /* badge click handled above */
+      window._pinnedTipCode=null;hideTip();$('tooltip').style.pointerEvents='none';if(window._clearHl)window._clearHl();
+    });
+  }
   /* document touchstart: dismiss tooltip — only fires when stopPropagation not called */
   if(!window._tdismissSet){
     window._tdismissSet=true;
@@ -1524,7 +1581,8 @@ function renderChart(cur,ma,oc,tl=[]){
   if(!window._mmSet){
     window._mmSet=true;
     document.addEventListener('mousemove',e=>{
-      if(window._recentTouch)return; /* suppress synthetic mousemove after touch */
+      if(window._recentTouch)return;
+      if(window._pinnedTipCode)return; /* pinned — don't reposition on mousemove */
       const _modal=document.getElementById('infoModal');if(_modal&&_modal.style.display!=='none')return;
       const tt=$('tooltip');
       if(!tt.classList.contains('show'))return;
@@ -1540,7 +1598,6 @@ function renderChart(cur,ma,oc,tl=[]){
     (function(){
       const tt=$('tooltip');
       if(!tt)return;
-      tt.style.pointerEvents='auto';
       let dragActive=false,dragOX=0,dragOY=0;
       tt.addEventListener('touchstart',e=>{
         if(!tt.classList.contains('show'))return;
@@ -1763,21 +1820,29 @@ function renderChart(cur,ma,oc,tl=[]){
 
 /* ── CLICK ── */
 window.handleClick=function(codeKey){
-  if(!window._tipMap||!window.sendPrompt)return;
-  const tip=window._tipMap.get(codeKey);
+  /* interaction now handled by badge click/touch listeners — this is a no-op */
+};
+
+/* called when a member badge inside a pinned zone/group tooltip is clicked */
+window._tipClickMember=function(code){
+  if(!window._tipMap)return;
+  const tip=window._tipMap.get(code);
   if(!tip)return;
-  const cur=window._cur||lastCurrent;
-  if(tip.isGroup){
-    const names=tip.members.map(m=>m.code).join(', ');
-    const mid=avg(tip.members.map(m=>m.price));
-    window.sendPrompt(`There are ${tip.members.length} levels very close together: ${names}, around ${fmt(mid)}. What does this confluence indicate?`);
-  } else if(tip.isZone){
-    const names=(tip.items||[]).map(x=>x.code).join(', ');
-    window.sendPrompt(`Confluence zone: ${names} between ${fmt(tip.min)} and ${fmt(tip.max)} (${pctStr(pct(tip.price,cur))} from current BTC). What does this zone historically indicate?`);
-  } else {
-    const d=pct(tip.price,cur||tip.price);
-    window.sendPrompt(`Tell me about the ${tip.label||tip.code} level at ${fmt(tip.price)} — ${pctStr(d)} ${d>=0?'above':'below'} current BTC. What does this level historically indicate?`);
-  }
+  /* pin this signal's own tooltip, replacing the current one */
+  window._pinnedTipCode=code;
+  showTooltip(tip,window._cur||lastCurrent);
+  if(window._hlCode)window._hlCode(code);
+  /* reposition: keep current tooltip position, just clamp to viewport */
+  requestAnimationFrame(()=>{
+    const tt=$('tooltip');
+    const w=tt.offsetWidth||220,h=tt.offsetHeight||200;
+    let x=parseFloat(tt.style.left||0);
+    let y=parseFloat(tt.style.top||80);
+    if(x+w>window.innerWidth-8)x=window.innerWidth-w-8;
+    if(x<8)x=8;
+    if(y+h>window.innerHeight-8)y=window.innerHeight-h-8;
+    tt.style.left=x+'px';tt.style.top=y+'px';
+  });
 };
 
 /* ── TABLE ── */
@@ -4796,7 +4861,7 @@ function msmShowTooltip(ev){
     const fire=_msmFire(d);
     const zoneCol={CAP:'#2563eb',ACC:'#60a5fa',NEU:'#94a3b8',PRE:'#d97706',DIS:'#b91c1c'};
     const soprGates={CAP:sopr<=0.99,ACC:sopr<1.00,PRE:sopr>1.01,DIS:sopr>=1.02};
-    let h='<div style="color:#64748b;font-size:11px;margin-bottom:6px;letter-spacing:.03em">Zone thresholds · TMM+STHCB</div>';
+    let h='';
     /* exclusive boundaries: ACC starts where CAP ends, PRE ends where DIS starts */
     const capHi=fire.CAP?fire.CAP.hi:null;
     const disLo=fire.DIS?fire.DIS.lo:null;
