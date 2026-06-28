@@ -1009,9 +1009,13 @@ function buildTipHTML(tip,cur){
       })():'');
   } else if(tip.isGoldOverlay){
     const tfName=tip.code&&tip.code.length>1?(tip.code[1].toUpperCase()==='D'?'Daily':tip.code[1].toUpperCase()==='W'?'Weekly':'Monthly'):'';
+    const tfKey=tip.code&&tip.code.length>1?(tip.code[1].toUpperCase()==='D'?'1d':tip.code[1].toUpperCase()==='W'?'1w':'1M'):'1d';
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} Trend</span>`;
     const pCls=pctCls(tip.d);
-    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`;
+    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
+      `<div style="margin-top:6px;border-top:.5px solid var(--border);padding-top:6px">` +
+      `<button onclick="window._openChartAtTf('${tfKey}','gold','${tip.code}')" style="background:none;border:.5px solid var(--border2);border-radius:4px;cursor:pointer;font-size:11px;color:var(--muted);padding:3px 8px;width:100%;text-align:left;font-family:var(--mono)">View in chart →</button>` +
+      `</div>`;
   } else {
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
     const pCls=pctCls(tip.d);
@@ -1814,6 +1818,9 @@ function renderChart(cur,ma,oc,tl=[]){
   window._xhActive=false;
   canvas.addEventListener('touchstart',e=>{
     if(e.touches.length!==1)return;
+    /* don't start crosshair if touch is on the tooltip (member badge taps) */
+    const tt=document.getElementById('tooltip');
+    if(tt&&tt.classList.contains('show')&&tt.contains(e.target))return;
     _xhStartY=e.touches[0].clientY;
     _xhStartX=e.touches[0].clientX;
     _xhActive=false;
