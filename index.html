@@ -995,27 +995,38 @@ function buildTipHTML(tip,cur){
     const projPrice=typeof tl_projectLineAtTime==='function'?tl_projectLineAtTime(tl,projT):null;
     const projLabel=prefix==='D'?'30d':prefix==='W'?'60d':'90d';
     const pCls=pctCls(tip.d);
-    const miniSvg=ttBuildMiniChart(tip);
+    const _tl=tip.tlLine;
+    const _tf=_tl&&_tl.tf||'1d';
+    const _allCs=tl_candles[_tf]||[];
+    const _off=(tl_idxOffset&&tl_idxOffset[_tf])||0;
+    const _dv=tl_defaultView(_tf);
+    const _log=_tf==='1M';
+    const _others=(tl_cands[_tf]||[]).filter(o=>o.viewerTag!==tip.code).slice(0,3);
+    const _clickJs=`window._openChartAtTf('${_tf}','btc','${tip.code}')`;
+    let miniSvg=null;try{miniSvg=ttBuildMiniChart(_tl,tip.col,_allCs,_off,_dv,_log,_others,_clickJs);}catch(e){}
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
       `<div style="font-size:13px;color:var(--muted);line-height:1.7;padding:2px 0 0">` +
       (projPrice&&projPrice>0?`<div>${projLabel} projection: <span style="color:${tip.col};font-weight:600">${fmt(projPrice)}</span></div>`:'') +
       `<div>${dateA} → ${dateB}</div>` +
       `</div>`+
-      (miniSvg?(()=>{
-        const isGold=tip.isGoldOverlay;
-        const pairKey=isGold?'gold':'btc';
-        const tf=tip.tlLine&&tip.tlLine.tf||'1d';
-        return`<div style="margin-top:4px;cursor:pointer" title="Open in chart" onclick="window._openChartAtTf('${tf}','${pairKey}','${tip.code}')">${miniSvg}</div>`;
-      })():'');
+      (miniSvg?`<div style="margin-top:4px">${miniSvg}</div>`:'');
   } else if(tip.isGoldOverlay){
     const tfName=tip.code&&tip.code.length>1?(tip.code[1].toUpperCase()==='D'?'Daily':tip.code[1].toUpperCase()==='W'?'Weekly':'Monthly'):'';
     const tfKey=tip.code&&tip.code.length>1?(tip.code[1].toUpperCase()==='D'?'1d':tip.code[1].toUpperCase()==='W'?'1w':'1M'):'1d';
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${tfName} Trend</span>`;
     const pCls=pctCls(tip.d);
+    /* mini chart using BTC/XAUt ratio candles */
+    const _gSrc=(gold_cands[tfKey]||[]).find(o=>o.viewerTag===tip.code)||null;
+    const _gAllCs=gold_candles[tfKey]||[];
+    const _gOff=gold_idxOffset[tfKey]||0;
+    const _gDv=gold_defaultView(tfKey);
+    const _gLog=tfKey==='1M';
+    const _gOthers=(gold_cands[tfKey]||[]).filter(o=>o.viewerTag!==tip.code).slice(0,3);
+    const _gClickJs=`window._openChartAtTf('${tfKey}','gold','${tip.code}')`;
+    let _goldMiniSvg=null;
+    if(_gSrc){try{_goldMiniSvg=ttBuildMiniChart(_gSrc,tip.col,_gAllCs,_gOff,_gDv,_gLog,_gOthers,_gClickJs);}catch(e){}}
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
-      `<div style="margin-top:6px;border-top:.5px solid var(--border);padding-top:6px">` +
-      `<button onclick="window._openChartAtTf('${tfKey}','gold','${tip.code}')" style="background:none;border:.5px solid var(--border2);border-radius:4px;cursor:pointer;font-size:11px;color:var(--muted);padding:3px 8px;width:100%;text-align:left;font-family:var(--mono)">View in chart →</button>` +
-      `</div>`;
+      (_goldMiniSvg?`<div style="margin-top:4px">${_goldMiniSvg}</div>`:'');
   } else {
     headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
     const pCls=pctCls(tip.d);
@@ -1036,22 +1047,25 @@ function showTooltip(tip,cur){
 }
 
 
-function ttBuildMiniChart(tip){
-  const tl=tip.tlLine;
-  if(!tl||!tl.engineCandles||!tl.line)return null;
-  const tf=tl.tf;
-  const allCs=tl_candles[tf]||[];
-  if(!allCs.length)return null;
+/* ttBuildMiniChart — generic mini chart renderer.
+   params:
+     focusedLine : candidate object with .line, .a, .b, .engineCandles
+     lineCol     : CSS color for the focused line
+     allCs       : full candle array for this pair/tf (used for zoom window)
+     idxOffset   : offset from full array to focus array
+     dv          : {start, end} default view (from tl_defaultView or equivalent)
+     log         : bool — use log y-scale (monthly)
+     otherLines  : array of other candidate objects to draw as ghost lines (max 3)
+     onClickJs   : optional JS string to execute when SVG is clicked
+*/
+function ttBuildMiniChart(focusedLine, lineCol, allCs, idxOffset, dv, log, otherLines, onClickJs){
+  if(!focusedLine||!focusedLine.line||!allCs||!allCs.length)return null;
 
-  const log=tf==='1M';
-  const off=(tl_idxOffset&&tl_idxOffset[tf])||0;
+  const off=idxOffset||0;
 
-  /* zoom: A1 minus context → last real candle + right margin */
-  const ctxL=tf==='1d'?10:tf==='1w'?6:3;
-  const ctxR=tf==='1d'?8: tf==='1w'?5:3;
-  const a1InAll=tl.a.i+off;
-  const iStart=Math.max(0,a1InAll-ctxL);
-  const iEnd=Math.min(allCs.length-1,allCs.length-1+ctxR);
+  /* zoom window from provided default view */
+  const iStart=Math.max(0,Math.floor(dv.start));
+  const iEnd=Math.min(allCs.length-1,Math.ceil(dv.end));
   const cs=allCs.slice(iStart,iEnd+1);
   if(!cs.length)return null;
 
@@ -1066,7 +1080,7 @@ function ttBuildMiniChart(tip){
   for(const cv of cs){pMin=Math.min(pMin,cv.low);pMax=Math.max(pMax,cv.high);}
   if(pMax<=pMin)return null;
 
-  /* padding in log space for monthly to avoid negative values */
+  /* padding — in log space for monthly */
   let sMin,sMax;
   if(log){
     const lMin=Math.log(Math.max(pMin,1)),lMax=Math.log(Math.max(pMax,1));
@@ -1080,6 +1094,21 @@ function ttBuildMiniChart(tip){
 
   const yOf=p=>{const v=log?Math.log(Math.max(p,1)):p;return PAD.t+cH*(1-(v-sMin)/(sMax-sMin));};
   const xOf=i=>(i/(cs.length-1||1))*cW+PAD.l;
+  const toFocusI=viewI=>viewI+(iStart-off);
+
+  /* ghost lines (max 3): monochrome, thin, drawn first */
+  let ghostSVG='';
+  for(const o of (otherLines||[]).slice(0,3)){
+    if(!o.line)continue;
+    const oA1=(o.a.i+off)-iStart;
+    const rayS=Math.max(0,oA1);
+    const rayE=cs.length-1;
+    if(rayS>rayE)continue;
+    const gx0=xOf(rayS),gy0=yOf(o.line.project(toFocusI(rayS)));
+    const gx1=xOf(rayE),gy1=yOf(o.line.project(toFocusI(rayE)));
+    if(!isFinite(gy0)||!isFinite(gy1))continue;
+    ghostSVG+=`<line x1="${gx0.toFixed(1)}" y1="${gy0.toFixed(1)}" x2="${gx1.toFixed(1)}" y2="${gy1.toFixed(1)}" stroke="rgba(255,255,255,0.35)" stroke-width="0.8" stroke-linecap="round"/>`;
+  }
 
   /* candles */
   let candlesSVG='';
@@ -1095,29 +1124,25 @@ function ttBuildMiniChart(tip){
     candlesSVG+=`<rect x="${(x-bw/2).toFixed(1)}" y="${yTop.toFixed(1)}" width="${bw.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${col}" rx="0.5"/>`;
   }
 
-  /* anchor positions in view space */
-  const aViewI=a1InAll-iStart;
-  const bViewI=(tl.b.i+off)-iStart;
-  const toFocusI=viewI=>viewI+(iStart-off);
-  const lineCol=tip.col||'#94a3b8';
-
-  /* ray from A1 to right edge */
+  /* focused line: signal color, 1.5px, with anchor dots */
+  const aViewI=(focusedLine.a.i+off)-iStart;
+  const bViewI=(focusedLine.b.i+off)-iStart;
   let lineSVG='';
   const rayStart=Math.max(0,aViewI);
   const rayEnd=cs.length-1;
   if(rayStart<=rayEnd){
-    const lx0=xOf(rayStart),ly0=yOf(tl.line.project(toFocusI(rayStart)));
-    const lx1=xOf(rayEnd),  ly1=yOf(tl.line.project(toFocusI(rayEnd)));
+    const lx0=xOf(rayStart),ly0=yOf(focusedLine.line.project(toFocusI(rayStart)));
+    const lx1=xOf(rayEnd),  ly1=yOf(focusedLine.line.project(toFocusI(rayEnd)));
     if(isFinite(ly0)&&isFinite(ly1))
       lineSVG=`<line x1="${lx0.toFixed(1)}" y1="${ly0.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="${lineCol}" stroke-width="1.5" stroke-linecap="round"/>`;
   }
 
-  /* anchor dots */
   let anchorsSVG='';
-  if(aViewI>=0&&aViewI<cs.length){const ay=yOf(tl.a.p);if(isFinite(ay))anchorsSVG+=`<circle cx="${xOf(aViewI).toFixed(1)}" cy="${ay.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
-  if(bViewI>=0&&bViewI<cs.length){const by=yOf(tl.b.p);if(isFinite(by))anchorsSVG+=`<circle cx="${xOf(bViewI).toFixed(1)}" cy="${by.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
+  if(aViewI>=0&&aViewI<cs.length){const ay=yOf(focusedLine.a.p);if(isFinite(ay))anchorsSVG+=`<circle cx="${xOf(aViewI).toFixed(1)}" cy="${ay.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
+  if(bViewI>=0&&bViewI<cs.length){const by=yOf(focusedLine.b.p);if(isFinite(by))anchorsSVG+=`<circle cx="${xOf(bViewI).toFixed(1)}" cy="${by.toFixed(1)}" r="2.5" fill="${lineCol}" opacity="0.9"/>`;}
 
-  return`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:var(--surface);border:.5px solid var(--border)">${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
+  const clickAttr=onClickJs?` onclick="${onClickJs}" style="cursor:pointer"`:'';
+  return`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:var(--surface);border:.5px solid var(--border)"${clickAttr}>${ghostSVG}${candlesSVG}${lineSVG}${anchorsSVG}</svg>`;
 }
 function hideTip(){const tt=$('tooltip');tt.classList.remove('show');tt.style.left='-9999px';tt.style.top='0';}
 
