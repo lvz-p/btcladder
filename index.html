@@ -2449,7 +2449,8 @@ function tl_detectPivots(cs,w,basis){
   const hv=c=>basis==='wick'?c.high:c.close;
   const lv=c=>basis==='wick'?c.low:c.close;
   const last=cs.length-1;
-  for(let i=w;i<=last-1;i++){
+  /* exclude last-1 and last: require 1 closed candle confirmation after pivot */
+  for(let i=w;i<=last-2;i++){
     const wRight=Math.min(w,last-i);
     if(wRight<1)continue;
     let isH=true,isL=true;
@@ -5901,7 +5902,8 @@ function gold_detectPivots(cs,w,basis){
   const hv=c=>basis==='wick'?c.high:c.close;
   const lv=c=>basis==='wick'?c.low:c.close;
   const last=cs.length-1;
-  for(let i=w;i<=last-1;i++){
+  /* exclude last-1 and last: require 1 closed candle confirmation after pivot */
+  for(let i=w;i<=last-2;i++){
     const wRight=Math.min(w,last-i);
     if(wRight<1)continue;
     let isH=true,isL=true;
@@ -6438,7 +6440,7 @@ function gold_diagRows(){
       const last=focusCs.length-1;
       const i=targetIdxFocus;
       const wRight=Math.min(w,last-i);
-      const inRange=(i>=w)&&(i<=last-1)&&(wRight>=1);
+      const inRange=(i>=w)&&(i<=last-2)&&(wRight>=1);
       let isH=true;
       const detail=[];
       if(inRange){
@@ -6451,7 +6453,7 @@ function gold_diagRows(){
         }
       }
       _diagRows.push({name:'3) Manual w=3 high-pivot replication for 2026-01-14 (gold_detectPivots\' exact logic, inlined)',ok:inRange,
-        msg:!inRange?`OUT OF RANGE for pivot detection: i=${i} w=${w} last=${last} wRight=${Math.min(w,last-i)} (needs i>=w AND i<=last-1 AND wRight>=1 — fails one of those bounds, meaning it's too close to the edge of the FOCUS window to ever be tested as a pivot, regardless of its actual value)`
+        msg:!inRange?`OUT OF RANGE for pivot detection: i=${i} w=${w} last=${last} wRight=${Math.min(w,last-i)} (needs i>=w AND i<=last-2 AND wRight>=1 — fails one of those bounds, meaning it's too close to the edge of the FOCUS window to ever be tested as a pivot, regardless of its actual value)`
           :`center=${targetDate}(${focusCs[i].close.toFixed(4)}) | neighbors: ${detail.join(', ')} | RESULT: isHighPivot=${isH}`});
     }
 
