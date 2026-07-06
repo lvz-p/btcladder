@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.0';
+const VERSION='v2.5.3';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -957,13 +957,11 @@ function buildTipHTML(tip,cur){
       </div>`;
     }).join('<div class="tt-divider"></div>');
   } else if(tip.isHoriz){
-    const roleLabel=tip.hlRole==='support'?'Support':tip.hlRole==='resistance'?'Resistance':'Reversal';
     const scoreNum=Math.round(tip.hlScore||0);
-    const strengthLabel=scoreNum>=70?`Strong (${scoreNum})`:scoreNum>=50?`Moderate (${scoreNum})`:`Weak (${scoreNum})`;
-    const distStr=tip.distPct!=null?`${tip.distPct.toFixed(1)}% from current price`:'';
-    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${roleLabel} · ${tip.priceMin?fmt(tip.priceMin)+' – '+fmt(tip.priceMax):fmt(tip.price)}</span>`;
+    const strengthLabel=scoreNum>=70?'Strong':scoreNum>=50?'Moderate':'Weak';
+    headHTML=`<span class="tt-headbadge" style="background:${tip.bg};color:${tip.col}">${tip.code}</span><span class="tt-headlabel">${strengthLabel} · score ${scoreNum}</span>`;
     showRange=false;showDiv=false;
-    membersHTML=`<div style="font-size:13px;color:var(--text);line-height:1.7;padding:4px 0"><div style="color:${tip.col};font-weight:600;margin-bottom:2px">Strength: ${strengthLabel}</div><div style="color:var(--muted)">· visited ${tip.hlOverlap||0} weeks</div><div style="color:var(--muted)">· defended ${tip.hlRej||0} times</div></div>`;
+    membersHTML=`<div style="font-size:13px;color:var(--text);line-height:1.7;padding:4px 0"><div style="color:var(--muted)">· visited ${tip.hlOverlap||0} weeks</div><div style="color:var(--muted)">· defended ${tip.hlRej||0} times</div></div>`;
   } else if(tip.isZone){
     headHTML=`<span class="tt-headbadge" style="background:rgba(255,255,255,.10);color:rgba(255,255,255,.85);border:.5px dashed rgba(255,255,255,.35)">ZONE</span><span class="tt-headlabel">${tip.label}</span>`;
     rangeHTML=`${fmt(tip.min)} – ${fmt(tip.max)}`;
@@ -1028,7 +1026,10 @@ function buildTipHTML(tip,cur){
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`+
       (_goldMiniSvg?`<div style="margin-top:4px">${_goldMiniSvg}</div>`:'');
   } else {
-    headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
+    /* parse MA name from code e.g. D200MA → 200-day SMA, W100MA → 100-week SMA */
+    const _maMatch=tip.code&&tip.code.match(/^([DWM])(\d+)MA$/);
+    const _maName=_maMatch?(()=>{const [,tf,p]=_maMatch;const unit=tf==='D'?'day':tf==='W'?'week':'month';return`${p}-${unit} SMA`;})():null;
+    headHTML=`<span class="tt-headbadge" style="background:${tip.bg||'rgba(255,255,255,.08)'};color:${tip.col||'#fff'}">${tip.code}</span>${_maName?`<span class="tt-headlabel">${_maName}</span>`:tip.isOC?`<span class="tt-headlabel">${tip.label}</span>`:''}`;
     const pCls=pctCls(tip.d);
     membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span><span class="tt-mpct ${pCls}">${pctStr(tip.d)}</span></div>`;
   }
@@ -5263,20 +5264,7 @@ function _renderDiagToEl(el){
     });
   }
   const goldRows=(typeof gold_diagRows==='function')?gold_diagRows():[];
-  /* TEMP — touch-pan perf diag. window._tlPerfLog is populated by
-     setView()'s RAF scheduling (see the instrumentation there). Each
-     entry: gapSinceLastCall = ms between this pointermove/setView call
-     and the previous one (how fast input events are arriving);
-     wasPendingCancelled = true if this call cancelled an already-
-     scheduled-but-not-yet-run redraw (i.e. that frame's redraw never
-     happened, superseded by a newer one); waitForRafMs = ms between
-     scheduling and the RAF callback actually running (browser's own
-     frame-scheduling delay); drawMs = how long tl_draw(mode,true)
-     itself took once it started. */
-  const perfRows=(window._tlPerfLog&&window._tlPerfLog.length)?[{
-    name:'Touch-pan perf (last 40 setView calls)',ok:true,
-    msg:window._tlPerfLog.map((e,i)=>`#${i} gap=${e.gapSinceLastCall}ms cancelled=${e.wasPendingCancelled} wait=${e.waitForRafMs}ms draw=${e.drawMs}ms`).join(' · ')
-  }]:[{name:'Touch-pan perf',ok:false,msg:'no data yet — pan/zoom the chart, then reopen Diagnostics'}];
+  const perfRows=[];
   const rows=[...lastPriceRows.map(r=>({name:'Price: '+r.name,ok:r.ok,msg:r.msg})),...lastDiag,...lastOnchainDiag,...(lastTlDiag||[]),...tlSummary,hsRow,hsAllRow,urpdRow,...geomRows,...goldRows,...perfRows];
   if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No diagnostic data yet — refresh first.</p>';return;}
   const plainText=rows.map(r=>`${r.name}\t${r.ok?'OK':'Fail'}\t${String(r.msg||'')}`).join('\n');
