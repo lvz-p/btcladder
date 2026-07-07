@@ -169,7 +169,7 @@ button.leg.tog#msmBtn.on{background:rgba(100,116,139,.10)!important;border-color
 
 /* BTC label */
 .btc-lbl{position:absolute;left:0;right:0;display:flex;align-items:center;gap:5px;transform:translateY(-50%);z-index:2;padding:0 8px;pointer-events:none}
-.btc-lbl-badge{font-size:12px;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--btc-dim);color:var(--btc);border:.5px solid rgba(247,147,26,.55);font-family:var(--mono);white-space:nowrap;line-height:1.4}
+.btc-lbl-badge{font-size:12px;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--btc-dim);color:var(--btc);border:.5px solid rgba(247,147,26,.55);font-family:var(--mono);white-space:nowrap;line-height:1.4;pointer-events:auto;cursor:pointer}
 .btc-lbl-price{font-size:12px;font-weight:700;color:var(--btc);font-family:var(--mono);white-space:nowrap}
 
 /* display group label */
@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.3';
+const VERSION='v2.5.4';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -831,17 +831,12 @@ function isVisible(l){if(l.type==='current')return true;if(l.sourceType==='trend
 }if(l.sourceType==='horizontal')return ladderFilters.HL!==false;if(l.sourceType==='onchain')return catFilters.onchain!==false;return catFilters[l.group]!==false}
 function withinProx(l,cur){if(l.type==='current'||proxFilter==='all'||userZoomed)return true;const lim=Number(proxFilter);return!Number.isFinite(lim)||Math.abs(pct(l.price,cur))<=lim}
 function getLevels(cur,ma,oc,tl=[]){
-  return[...ma,...oc,...tl,...getGoldOverlayLevels(),...hs_levels,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
+  return[...ma,...oc,...tl,...lastSupplyLevels,...getGoldOverlayLevels(),...hs_levels,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
     .filter(l=>Number.isFinite(l.price)&&l.price>0).filter(isVisible).filter(l=>withinProx(l,cur))
     .sort((a,b)=>a.price-b.price);
 }
 function getAllLevels(cur,ma,oc,tl=[]){
-  /* unfiltered — used for next lower/higher which ignores display filters.
-     Gold overlay levels included here too, same as every other source —
-     this function intentionally ignores isVisible/toggle state for all
-     level types, so a toggled-off overlay still counts for next-lower/
-     higher purposes exactly like an unchecked native trendline would. */
-  return[...ma,...oc,...tl,...getGoldOverlayLevels(),...hs_levels,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
+  return[...ma,...oc,...tl,...lastSupplyLevels,...getGoldOverlayLevels(),...hs_levels,{label:'Current BTC',price:cur,type:'current',group:'BTC'}]
     .filter(l=>Number.isFinite(l.price)&&l.price>0)
     .sort((a,b)=>a.price-b.price);
 }
@@ -923,7 +918,9 @@ function buildTipHTML(tip,cur){
 
   if(tip.isBtc){
     headHTML=`<span class="tt-headbadge" style="background:var(--btc-dim);color:var(--btc)">BTC</span><span class="tt-headlabel">Current price</span>`;
-    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span></div>`;
+    const _pct=lastSupplyThresholds&&lastSupplyThresholds.pctInProfit!=null?lastSupplyThresholds.pctInProfit:null;
+    membersHTML=`<div class="tt-member"><span class="tt-mprice" style="font-size:13px">${fmt(tip.price)}</span></div>`+
+      (_pct!=null?`<div style="font-size:13px;color:var(--muted);line-height:1.7;padding:2px 0 0"><div>${_pct}% of supply in profit</div></div>`:'');
   } else if(tip.isGroup){
     headHTML=`<span class="tt-headbadge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.75)">×${tip.members.length} levels</span>`;
     showDiv=true;
@@ -1440,8 +1437,8 @@ function renderChart(cur,ma,oc,tl=[]){
 
       /* BTC single label */
       if(l.type==='current'){
-        labelsHTML+=`<div class="btc-lbl" style="top:${midPct}%">
-          <div class="btc-lbl-badge">BTC</div>
+        labelsHTML+=`<div class="btc-lbl" data-code="BTC" style="top:${midPct}%">
+          <div class="btc-lbl-badge lbl-badge" data-code="BTC">BTC</div>
           <div class="btc-lbl-price">${fmt(cur)}</div>
         </div>`;
         return;
@@ -2268,6 +2265,18 @@ async function refreshAll(){
     }
     if(ur?.status==='fulfilled')lastUrpd=ur.value;
     else lastUrpd=[];
+    /* compute S50/S95 supply threshold levels from URPD */
+    if(lastUrpd.length&&lastCurrent){
+      const _st=computeSupplyThresholds(lastUrpd,lastCurrent);
+      lastSupplyThresholds=_st;
+      const _ocBase={sourceType:'onchain',group:'onchain',title:'On-chain',period:null};
+      if(_st.s50&&Number.isFinite(_st.s50))
+        lastSupplyLevels=[
+          {..._ocBase,label:'50% supply in profit',short:'S50',price:_st.s50},
+          _st.s95&&Number.isFinite(_st.s95)?{..._ocBase,label:'95% supply in profit',short:'S95',price:_st.s95}:null
+        ].filter(Boolean);
+      else lastSupplyLevels=[];
+    } else {lastSupplyLevels=[];lastSupplyThresholds={pctInProfit:null,s50:null,s95:null};}
     /* refresh viewer if already open */
     tlViewerReady=true;
     if(document.getElementById('tlSection')?.style.display!=='none')tl_draw(tlViewerMode);
@@ -4538,6 +4547,7 @@ let lastTrendlines=[];
 
 /* ── URPD DATA ── */
 let lastUrpd=[];let showUrpd=gs('showUrpd','true')!=='false';
+let lastSupplyLevels=[];let lastSupplyThresholds={pctInProfit:null,s50:null,s95:null};
 const URPD_BIN=500;/* $500 bins */
 
 async function getUrpd(){
@@ -4546,17 +4556,20 @@ async function getUrpd(){
     const r=await fetchJsonTimed(url,9000);
     const rows=Array.isArray(r)?r:(r.buckets||r.data||r.rows||r.urpd||[]);
     if(!rows.length)throw new Error('No URPD rows');
+
     /* extract price and realized cap from each row */
     const getP=row=>Number(row.price_floor??row.price??row.floor??row.bucket??row.priceFloor??NaN);
     const getC=row=>Number(row.realized_cap??row.realizedCap??row.cap??row.usd??row.value??row.realized_value??NaN);
+    const getS=row=>Number(row.supply??row.btc??row.coins??row.coin_supply??NaN); /* BTC quantity directly */
     /* build bins */
     const map=new Map();
     for(const row of rows){
-      const p=getP(row),c=getC(row);
+      const p=getP(row),c=getC(row),s=getS(row);
       if(!Number.isFinite(p)||!Number.isFinite(c))continue;
       const lo=Math.floor(p/URPD_BIN)*URPD_BIN;
-      if(!map.has(lo))map.set(lo,{lo,hi:lo+URPD_BIN,cap:0});
+      if(!map.has(lo))map.set(lo,{lo,hi:lo+URPD_BIN,cap:0,supply:0});
       map.get(lo).cap+=c;
+      if(Number.isFinite(s))map.get(lo).supply+=s;
     }
     const bins=[...map.values()].sort((a,b)=>a.lo-b.lo);
     const globalMax=Math.max(...bins.map(b=>b.cap),1);
@@ -4568,6 +4581,41 @@ async function getUrpd(){
   }
 }
 
+
+/* ── SUPPLY IN PROFIT THRESHOLDS ────────────────────────────────────────────
+   Walks URPD bins to compute:
+   - pctInProfit(cur): % of total realized cap with cost basis < cur price
+   - thresholdPrice(pct): price level where pct% of supply is in profit
+── */
+function computeSupplyThresholds(urpd, curPrice){
+  if(!urpd||!urpd.length)return{pctInProfit:null,s50:null,s95:null};
+  /* exclude only the true zero-cost bin (lost/genesis coins with realized_cap=0)
+     Coins with price_floor=$1-$499 are real early coins, all in profit — include them */
+  const bins=[...urpd].filter(b=>!(b.lo===0&&b.cap===0)).sort((a,b)=>a.lo-b.lo);
+  /* use direct BTC supply if available, else approximate from realized_cap / midpoint */
+  const hasSupply=bins.some(b=>b.supply>0);
+  const getBtc=b=>hasSupply?b.supply:(b.cap/((b.lo+b.hi)/2||1));
+  const totalBtc=bins.reduce((s,b)=>s+getBtc(b),0);
+  if(!totalBtc)return{pctInProfit:null,s50:null,s95:null};
+
+  let cum=0,s50=null,s95=null;
+  for(const b of bins){
+    cum+=getBtc(b);
+    const frac=cum/totalBtc;
+    if(s50===null&&frac>=0.50)s50=b.lo;
+    if(s95===null&&frac>=0.95)s95=b.lo;
+    if(s50&&s95)break;
+  }
+  /* % in profit: BTC in bins below curPrice, partial for the bin containing curPrice */
+  const inProfit=bins.reduce((s,b)=>{
+    const btc=getBtc(b);
+    if(b.hi<=curPrice)return s+btc;
+    if(b.lo<curPrice)return s+btc*(curPrice-b.lo)/(b.hi-b.lo);
+    return s;
+  },0);
+  const pctInProfit=Math.round(inProfit/totalBtc*100);
+  return{pctInProfit,s50,s95};
+}
 
 /* ── ANIMATED PRICE COUNTER ────────────────────────────────────────────────
    Each digit spins on its own wheel, shortest path direction.
@@ -4696,6 +4744,11 @@ async function refreshPriceOnly(){
     window._prevPrice=lastCurrent;
     const _lut2=document.getElementById('lastUpdateTime');if(_lut2)_lut2.textContent=new Date().toLocaleTimeString();
     if(typeof msmUpdate==='function'&&lastCurrent)msmUpdate(lastCurrent);
+    /* recompute supply thresholds — % in profit changes with every price tick */
+    if(lastUrpd.length&&lastCurrent){
+      const _st=computeSupplyThresholds(lastUrpd,lastCurrent);
+      lastSupplyThresholds=_st;
+    }
     try{
       const tk = await fetchJson('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
       const chg = Number(tk?.priceChangePercent);
@@ -5241,8 +5294,9 @@ function _renderDiagToEl(el){
   });
   const bestBin=lastUrpd.length?lastUrpd.reduce((a,b)=>b.norm>a.norm?b:a,lastUrpd[0]):null;
   const urpdRow=bestBin
-    ?{name:'URPD',ok:true,msg:`${lastUrpd.length} bins · strongest bin: ${fmt(bestBin.lo)}–${fmt(bestBin.hi)}`}
+    ?{name:'URPD',ok:true,msg:`${lastUrpd.length} bins · strongest bin: ${fmt(bestBin.lo)}–${fmt(bestBin.hi)} · S50=${lastSupplyThresholds.s50?fmt(lastSupplyThresholds.s50):'?'} S95=${lastSupplyThresholds.s95?fmt(lastSupplyThresholds.s95):'?'} inProfit=${lastSupplyThresholds.pctInProfit!=null?lastSupplyThresholds.pctInProfit+'%':'?'}`}
     :{name:'URPD',ok:false,msg:'No data loaded'};
+
   const hsRow=hs_levels.length
     ?{name:'H/S Levels',ok:true,msg:'SHOWN: '+hs_levels.map(l=>l.label+' $'+Math.round(l.price/1000)+'k sc:'+l.score.toFixed(0)+' rel:'+l.relevance.toFixed(2)+' dist:'+(l.distPct||0).toFixed(0)+'%').join(' · ')}
     :{name:'H/S Levels',ok:false,msg:'not computed yet'};
