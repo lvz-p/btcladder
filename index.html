@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.5';
+const VERSION='v2.5.6';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -3818,6 +3818,19 @@ function tl_draw(mode,fast=false){
       });
       path.addEventListener('mouseleave',()=>{if(tipEl)tipEl.style.display='none';});
       svg.appendChild(path);
+      /* anchor dots — hollow circles matching the line color */
+      (o.anchors||[]).forEach(({date,usd})=>{
+        const ai=dIdx.get(date);
+        if(ai===undefined||ai<vs||ai>ve)return;
+        const cx=x(ai),cy=y(usd);
+        if(!Number.isFinite(cy))return;
+        const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('r',3.5);
+        dot.setAttribute('fill','none');dot.setAttribute('stroke',col);
+        dot.setAttribute('stroke-width','1.5');
+        dot.setAttribute('opacity',gold_visible[o.viewerTag]===true?'0.9':'0.55');
+        svg.appendChild(dot);
+      });
     });
   }
 
@@ -6406,7 +6419,17 @@ function gold_translateToUsd(tf){
       if(!g)continue; /* no real gold/USD price for this date — skip, never fabricate */
       points.push({date,usd:ratioVal*g.close}); /* plain date-keyed point — no array index stored or implied */
     }
-    return{viewerTag:c.viewerTag,type:c.type,sourceTf:tf,points};
+    /* compute anchor USD values: ratio at anchor × gold/USD price on that date */
+    const anchors=[];
+    for(const anchor of [c.a,c.b]){
+      const aDate=goldCs[anchor.i]?.date;
+      if(!aDate)continue;
+      const ag=usdMap.get(aDate);
+      if(!ag)continue;
+      const usd=c.line.project(anchor.i)*ag.close;
+      if(Number.isFinite(usd)&&usd>0)anchors.push({date:aDate,usd});
+    }
+    return{viewerTag:c.viewerTag,type:c.type,sourceTf:tf,points,anchors};
   }).filter(o=>o.points.length>=2); /* need at least 2 points to draw anything */
 }
 
