@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.6';
+const VERSION='v2.5.7';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -4230,7 +4230,13 @@ async function tl_fetchOCData(){
   function tl_showCrosshairAt(clientX,clientY){
     const svg=getSvg();if(!svg)return;
     const rect=svg.getBoundingClientRect();
-    const svgH=520,svgPad={t:12,b:36};
+    const svgH=520;
+    /* pad.t/pad.b must match what tl_draw actually used to render the
+       chart (svg._tlPad), not a hardcoded guess — b was hardcoded to
+       36 here while tl_draw uses b:52, a fixed 16px mismatch that
+       skewed every crosshair price reading (worse at extreme zoom
+       levels, and worse near the bottom of the chart). */
+    const svgPad=svg._tlPad?{t:svg._tlPad.t,b:svg._tlPad.b}:{t:12,b:36};
     const chartH=svgH-svgPad.t-svgPad.b;
     const mouseYsvg=(clientY-rect.top)/rect.height*svgH;
     const syPos=Math.max(svgPad.t,Math.min(svgPad.t+chartH,mouseYsvg));
