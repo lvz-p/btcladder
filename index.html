@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.7';
+const VERSION='v2.5.8';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -5150,24 +5150,43 @@ function _msmVPR(price,d){
   return lo!==null?{sig,lo,hi}:null;
 }
 function _msmFire(d){
-  /* compute full price ranges for all zones based on TMM+STHCB only */
+  /* compute exact price ranges for all zones based on TMM+STHCB only.
+     Each zone's condition (tp<=T && sp<=T, or tp>=T && sp>=T for the
+     "above" zones) is monotonic in price — as p rises, p/tmm and
+     p/sthcb both rise, and _msmPct is a non-decreasing function of its
+     input — so there is exactly one crossing point per zone. Binary
+     search finds that crossing to $1 precision, matching exactly what
+     _msmSig() computes at the live price. (Previously this scanned a
+     fixed 800-step grid across a 0.1x-6x TMM span, which only had
+     ~$200-300 resolution near current price and could report a
+     boundary the live badge had already crossed — e.g. showing price
+     as outside a zone's displayed range while the badge, computed
+     exactly, still showed that zone.) */
   const zones={CAP:{tmmT:15,sthT:15},ACC:{tmmT:35,sthT:35},PRE:{tmmT:65,sthT:65},DIS:{tmmT:85,sthT:85}};
   const res={};
-  const STEPS=800;
-  const lo=d.tmm*0.1,hi=d.tmm*6.0;
-  const step=(hi-lo)/STEPS;
-  /* for each zone find lo and hi price boundaries */
+  const domLo=d.tmm*0.1,domHi=d.tmm*6.0;
+  const EPS=1; /* $1 precision */
+  function inZone(p,z,above){
+    const tp=_msmPct(p/d.tmm,_msmData.tmmH),sp=_msmPct(p/d.sthcb,_msmData.sthH);
+    return above?(tp>=z.tmmT&&sp>=z.sthT):(tp<=z.tmmT&&sp<=z.sthT);
+  }
   for(const [name,z] of Object.entries(zones)){
-    let zLo=null,zHi=null;
     const above=name==='PRE'||name==='DIS';
-    for(let i=0;i<=STEPS;i++){
-      const p=lo+i*step;
-      const tp=_msmPct(p/d.tmm,_msmData.tmmH);
-      const sp=_msmPct(p/d.sthcb,_msmData.sthH);
-      const inZone=above?(tp>=z.tmmT&&sp>=z.sthT):(tp<=z.tmmT&&sp<=z.sthT);
-      if(inZone){if(zLo===null)zLo=p;zHi=p;}
+    if(!above){
+      /* "below" zones (CAP/ACC): true near domLo, false near domHi */
+      if(!inZone(domLo,z,above))continue; /* not in zone anywhere in domain */
+      if(inZone(domHi,z,above)){res[name]={lo:domLo,hi:domHi};continue;} /* in zone throughout domain */
+      let lo=domLo,hi=domHi;
+      while(hi-lo>EPS){const mid=(lo+hi)/2;if(inZone(mid,z,above))lo=mid;else hi=mid;}
+      res[name]={lo:domLo,hi:lo};
+    }else{
+      /* "above" zones (PRE/DIS): false near domLo, true near domHi */
+      if(!inZone(domHi,z,above))continue;
+      if(inZone(domLo,z,above)){res[name]={lo:domLo,hi:domHi};continue;}
+      let lo=domLo,hi=domHi;
+      while(hi-lo>EPS){const mid=(lo+hi)/2;if(inZone(mid,z,above))hi=mid;else lo=mid;}
+      res[name]={lo:hi,hi:domHi};
     }
-    if(zLo!==null)res[name]={lo:zLo,hi:zHi};
   }
   return res;
 }
