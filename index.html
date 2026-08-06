@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.8';
+const VERSION='v2.5.9';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -1395,7 +1395,7 @@ function renderChart(cur,ma,oc,tl=[]){
       /* fix: zone hover zone — same z-index as line hover zones, tooltip triggered on hover */
       canvas+=`<div class="hover-zone hz-zone" data-code="${code}" style="top:${topPct}%;height:${hPct}%"></div>`;
     } else {
-      const _ghost=l.ghost&&l.sourceType==='trendline';
+      const _ghost=l.ghost&&(l.sourceType==='trendline'||l.sourceType==='goldOverlay');
       if(l.sourceType==='horizontal'){const zT=toY(l.priceMax||l.price),zB=toY(l.priceMin||l.price);const zTP=(zT/H*100).toFixed(3),zH2=Math.max(0.3,((zB-zT)/H*100)).toFixed(3);let zRGB='203,213,225';canvas+=`<div style="position:absolute;left:0;top:${zTP}%;height:${zH2}%;width:100%;background:rgba(${zRGB},0.06);pointer-events:none"></div>`;}
       canvas+=`<div class="lvl-line" data-code="${code}" style="top:${yPct}%;background:${_ghost?'transparent':col};${_ghost?'background-image:repeating-linear-gradient(to right,'+col+' 0,'+col+' 4px,transparent 4px,transparent 8px)':''};opacity:${_ghost?'0.25':'0.65'}" data-opacity="${_ghost?'0.25':'0.65'}"></div>`;
       canvas+=`<div class="lvl-dot" data-code="${code}" style="top:${yPct}%;background:${col};opacity:${_ghost?'0.25':'1'}"></div>`;
@@ -1473,7 +1473,7 @@ function renderChart(cur,ma,oc,tl=[]){
       const col=levelColor(l);const bg=levelBg(l);
       const d=pct(l.price,cur);const dStr=pctStr(d);const dCls=pctCls(d);
       const isOC=l.sourceType==='onchain';
-      const _ghostLbl=l.ghost&&l.sourceType==='trendline';
+      const _ghostLbl=l.ghost&&(l.sourceType==='trendline'||l.sourceType==='goldOverlay');
       labelsHTML+=`<div class="lbl-item" style="top:${midPct}%;${_ghostLbl?'opacity:0.45;':''}" data-opacity="${_ghostLbl?'0.45':'1'}" data-code="${l.tipCode}" onclick="handleClick('${l.tipCode}')">
         <span class="lbl-badge" style="background:${bg};color:${col};border:0.5px solid ${col}44">${_ghostLbl?'⚠ '+levelCode(l):levelCode(l)}</span>
         <span class="lbl-price">${fmt(l.price)}</span>
@@ -2986,6 +2986,7 @@ function getGoldOverlayLevels(){
         tlType:o.type, /* 'support' | 'resistance' */
         label:o.viewerTag,short:o.viewerTag,
         price:last.usd,
+        ghost:o.ghost||false,
         asOfDate:last.date /* surfaced in the tooltip so it's clear this is "as of" a real date, not a live/projected number */
       });
     });
@@ -6056,6 +6057,24 @@ function gold_generateCandidates(points,type,cs,log,minSpace,basis,nearTol){
       if(!Number.isFinite(now)||now<=0)continue;
       const inv=gold_isInvalidated(cs,line,type,a,b,basis,log);
       if(inv.invalidated){rej.push({type,a,b,now,reason:'invalidated',breachIdx:inv.breachIdx,breachDate:inv.breachDate,breachClose:inv.breachClose,lineProj:inv.lineProj});continue;}
+      /* last-candle ghost check: if close-basis line is breached only by
+         the last (unclosed) candle, mark ghost — mirrors
+         btc_generateCandidates' identical check for native BTC/USDT
+         lines. Previously this was hardcoded to false for every
+         BTC/XAUt-derived (GDR/GDS/GWR/GWS/GMR/GMS) line, so a close-
+         basis gold line breached only by the still-open candle never
+         got the ghost/warning treatment the equivalent native line
+         would. */
+      let ghost=false;
+      if(basis==='close'){
+        const i=last;
+        const lpY=line.projectY(i);
+        const pp=cs[i].close;
+        const py=tl_Y(pp,log);
+        const diff=type==='support'?py-lpY:lpY-py;
+        const relDiff=log?diff:diff/lpY;
+        if(relDiff<0)ghost=true;
+      }
       const{hoverRate,hoverCount,total}=gold_hoverScore(cs,line,a.i,last,new Set([a.i,b.i]),log,nearTol);
       const totalSpan=last-a.i;
       const dist=Math.abs((now-cs[last].close)/cs[last].close*100);
@@ -6072,7 +6091,7 @@ function gold_generateCandidates(points,type,cs,log,minSpace,basis,nearTol){
          the decimal point so genuinely different scores (e.g. 0.0008
          vs 0.0003) stop both rounding to the same "0.00" at the
          2-decimal precision diagnostics display them at. */
-      out.push({type,a,b,line,now,dist,lineScore:spanFactor*hoverFactor*100,hoverRate,hoverCount,hoverTotal:total,span:totalSpan,anchorBasis:basis,ghost:false});
+      out.push({type,a,b,line,now,dist,lineScore:spanFactor*hoverFactor*100,hoverRate,hoverCount,hoverTotal:total,span:totalSpan,anchorBasis:basis,ghost});
     }
   }
   return{kept:out,rej};
@@ -6454,7 +6473,7 @@ function gold_translateToUsd(tf){
       const usd=c.line.project(anchor.i)*ag.close;
       if(Number.isFinite(usd)&&usd>0)anchors.push({date:aDate,usd});
     }
-    return{viewerTag:c.viewerTag,type:c.type,sourceTf:tf,points,anchors};
+    return{viewerTag:c.viewerTag,type:c.type,sourceTf:tf,points,anchors,ghost:c.ghost||false,anchorBasis:c.anchorBasis};
   }).filter(o=>o.points.length>=2); /* need at least 2 points to draw anything */
 }
 
