@@ -640,7 +640,7 @@ details[open] summary::before{content:'▾';color:var(--btc);background:var(--bt
 </div>
 
 <script>
-const VERSION='v2.5.9';
+const VERSION='v2.5.10';
 const NS='btcLadder_v86';
 /* ── Trendline config — declared early, used throughout ── */
 const TL_DEFAULTS={
@@ -5119,6 +5119,12 @@ refreshAll().then(()=>{
   if(typeof gold_ensureLoaded==='function'){
     gold_ensureLoaded().then(()=>{
       if(tlActivePairKey==='btc'&&typeof tl_draw==='function')tl_draw(tlViewerMode);
+      /* the chart above updates immediately, but the ladder itself only
+         rebuilds on its own rerender() trigger (next price tick, filter
+         change, zoom, resize) — without this call, gold-derived ladder
+         levels could lag behind the chart by up to a minute after gold
+         finishes its background load. */
+      if(typeof rerender==='function'&&lastCurrent)rerender();
     }).catch(e=>console.warn('eager gold load failed (non-fatal — will retry on manual pair switch)',e));
   }
 });
@@ -5225,8 +5231,8 @@ function msmShowTooltip(ev){
   rows+=row('TMM',`${tp.toFixed(0)}th pct · ${pctDesc(tp)}`);
   rows+=row('STHCB',`${sp.toFixed(0)}th pct · ${pctDesc(sp)}`);
   rows+=row('SOPR',`${sopr.toFixed(4)} · ${soprDesc(sopr)}`);
+  const dateEl=document.getElementById('msmTipDate');if(dateEl)dateEl.textContent='· '+d.date;
   rows+=`<div class="msm-tip-row"><span class="msm-tip-lbl">SOPR gate</span><span class="msm-tip-val">${gateStr}</span></div>`;
-  rows+=row('Data',d.date);
   document.getElementById('msmTipRows').innerHTML=rows;
   const vprEl=document.getElementById('msmTipVpr');
   if(vprEl)vprEl.style.display='none';
@@ -6803,7 +6809,7 @@ if('serviceWorker' in navigator){
 </script>
 <div id="msmTooltip" style="display:none;position:fixed;z-index:999;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <span style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Market State</span>
+    <span style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Market State <span id="msmTipDate" style="color:var(--muted2);text-transform:none;letter-spacing:normal"></span></span>
     <button onclick="document.getElementById('msmTooltip').style.display='none'" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
   </div>
   <div style="margin-bottom:10px;text-align:center">
